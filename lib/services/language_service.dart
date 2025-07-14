@@ -131,10 +131,14 @@ class LanguageService {
         return getLocalizedText('Savaş', 'War');
       case 'sciFi':
         return getLocalizedText('Bilim Kurgu', 'Sci-Fi');
-      case 'history':
-        return getLocalizedText('Tarih', 'History');
       case 'fantasy':
         return getLocalizedText('Fantastik', 'Fantasy');
+      case 'mystery':
+        return getLocalizedText('Gizem', 'Mystery');
+      case 'historical':
+        return getLocalizedText('Tarihi', 'Historical');
+      case 'apocalypse':
+        return getLocalizedText('Kıyamet', 'Apocalypse');
       default:
         return categoryKey;
     }

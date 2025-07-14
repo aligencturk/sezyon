@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../models/game_category.dart';
 import '../services/language_service.dart';
 import '../services/logger_service.dart';
@@ -22,137 +23,52 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_languageService.categorySelectionTitle),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => _openSettings(),
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () => _openSettings(context),
             tooltip: _languageService.settings,
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.deepPurple.shade100,
-              Colors.indigo.shade100,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _languageService.getLocalizedText('Hoş Geldin, Maceracı', 'Welcome, Adventurer'),
+                style: GoogleFonts.cinzel(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                _languageService.categorySelectionSubtitle,
+                style: GoogleFonts.lato(
+                  fontSize: 16,
+                  color: Colors.white.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(height: 30),
+              ...GameCategory.values
+                  .map((category) => CategoryCard(
+                        category: category,
+                        onTap: () => _onCategorySelected(context, category),
+                      ))
+                  .toList(),
             ],
           ),
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Başlık
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.auto_stories,
-                        size: 60,
-                        color: Colors.deepPurple.shade600,
-                      ),
-                      const SizedBox(height: 15),
-                      Text(
-                        _languageService.getLocalizedText(
-                          'Metin Tabanlı RPG Oyunu',
-                          'Text-Based RPG Game',
-                        ),
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        _languageService.categorySelectionSubtitle,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade700,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 40),
-                
-                // Kategori butonları
-                ...GameCategory.values.map((category) => _buildCategoryButton(
-                  context,
-                  category,
-                )).toList(),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }
 
-  /// Kategori butonu oluşturur
-  Widget _buildCategoryButton(BuildContext context, GameCategory category) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      width: double.infinity,
-      height: 80,
-      child: ElevatedButton(
-        onPressed: () => _onCategorySelected(context, category),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _getCategoryColor(category),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-          elevation: 5,
-          shadowColor: Colors.black26,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              _getCategoryIcon(category),
-              size: 30,
-            ),
-            const SizedBox(width: 15),
-            Text(
-              category.displayName,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Kategori seçildiğinde çalışır
   void _onCategorySelected(BuildContext context, GameCategory category) {
     _logger.gameEvent('Kategori seçildi', {'category': category.key});
-    
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -161,48 +77,123 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     );
   }
 
-  /// Ayarlar ekranını açar
-  void _openSettings() async {
+  void _openSettings(BuildContext context) async {
     _logger.gameEvent('Ayarlar ekranı açılıyor');
-    
-    final result = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => const SettingsScreen(),
+          builder: (context) =>
+              SettingsScreen(onLanguageChanged: () => setState(() {}))),
+    );
+  }
+}
+
+/// Kategori kartı widget'ı
+class CategoryCard extends StatefulWidget {
+  final GameCategory category;
+  final VoidCallback onTap;
+
+  const CategoryCard({
+    super.key,
+    required this.category,
+    required this.onTap,
+  });
+
+  @override
+  State<CategoryCard> createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends State<CategoryCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 150),
+    );
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, color) = _getCategoryStyle(widget.category);
+
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) {
+          _controller.reverse();
+          widget.onTap();
+        },
+        onTapCancel: () => _controller.reverse(),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 20),
+          padding: const EdgeInsets.all(25),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [color.withOpacity(0.7), color.withOpacity(0.9)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: 40, color: Colors.white),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Text(
+                  widget.category.displayName,
+                  style: GoogleFonts.cinzel(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 18),
+            ],
+          ),
+        ),
       ),
     );
-    
-    // Ayarlardan dönüldüğünde ekranı yenile
-    if (result == true) {
-      setState(() {});
-    }
   }
 
-  /// Kategoriye göre renk döndürür
-  Color _getCategoryColor(GameCategory category) {
+  (IconData, Color) _getCategoryStyle(GameCategory category) {
     switch (category) {
       case GameCategory.war:
-        return Colors.red.shade600;
+        return (Icons.shield, const Color(0xffc0392b));
       case GameCategory.sciFi:
-        return Colors.blue.shade600;
-      case GameCategory.history:
-        return Colors.brown.shade600;
+        return (Icons.rocket_launch, const Color(0xff2980b9));
       case GameCategory.fantasy:
-        return Colors.purple.shade600;
-    }
-  }
-
-  /// Kategoriye göre ikon döndürür
-  IconData _getCategoryIcon(GameCategory category) {
-    switch (category) {
-      case GameCategory.war:
-        return Icons.military_tech;
-      case GameCategory.sciFi:
-        return Icons.rocket_launch;
-      case GameCategory.history:
-        return Icons.account_balance;
-      case GameCategory.fantasy:
-        return Icons.castle;
+        return (Icons.castle, const Color(0xff8e44ad));
+      case GameCategory.mystery:
+        return (Icons.visibility, const Color(0xff2c3e50));
+      case GameCategory.historical:
+        return (Icons.account_balance, const Color(0xffd35400));
+      case GameCategory.apocalypse:
+        return (Icons.landscape, const Color(0xff7f8c8d));
     }
   }
 } 

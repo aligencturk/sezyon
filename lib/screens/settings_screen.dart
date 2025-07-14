@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../services/language_service.dart';
 import '../services/logger_service.dart';
 
 /// Ayarlar ekranı
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, required this.onLanguageChanged});
+  final VoidCallback onLanguageChanged;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -19,186 +21,119 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_languageService.settings),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
-      body: Container(
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          _buildSectionTitle(
+            context,
+            icon: Icons.language,
+            title: _languageService.language,
+          ),
+          const SizedBox(height: 10),
+          ...AppLanguage.values.map((language) => _buildLanguageOption(language)),
+          const SizedBox(height: 30),
+          _buildSectionTitle(
+            context,
+            icon: Icons.info_outline,
+            title: _languageService.getLocalizedText('Bilgi', 'Information'),
+          ),
+          const SizedBox(height: 10),
+          _buildInfoCard(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(BuildContext context, {required IconData icon, required String title}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Row(
+        children: [
+          Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: GoogleFonts.cinzel(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(AppLanguage language) {
+    bool isSelected = _languageService.currentLanguage == language;
+    return GestureDetector(
+      onTap: () => _changeLanguage(language),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.deepPurple.shade50,
-              Colors.indigo.shade50,
-            ],
+          color: isSelected
+              ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+              : Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: isSelected
+                ? Theme.of(context).colorScheme.primary
+                : Colors.transparent,
+            width: 2,
           ),
         ),
-        child: ListView(
-          padding: const EdgeInsets.all(20),
+        child: Row(
           children: [
-            _buildLanguageSection(),
-            const SizedBox(height: 20),
-            _buildInfoSection(),
+            Text(language.flag, style: const TextStyle(fontSize: 28)),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Text(
+                language.displayName,
+                style: GoogleFonts.lato(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withOpacity(isSelected ? 1.0 : 0.8),
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                Icons.check_circle,
+                color: Theme.of(context).colorScheme.primary,
+              ),
           ],
         ),
       ),
     );
   }
 
-  /// Dil seçimi bölümü
-  Widget _buildLanguageSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
+  Widget _buildInfoCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.language,
-                  color: Colors.deepPurple.shade600,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _languageService.language,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            _buildLanguageOptions(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Dil seçenekleri
-  Widget _buildLanguageOptions() {
-    return Column(
-      children: AppLanguage.values.map((language) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          child: InkWell(
-            onTap: () => _changeLanguage(language),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _languageService.currentLanguage == language
-                    ? Colors.deepPurple.shade100
-                    : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _languageService.currentLanguage == language
-                      ? Colors.deepPurple.shade600
-                      : Colors.grey.shade300,
-                  width: 2,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    language.flag,
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      language.displayName,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: _languageService.currentLanguage == language
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        color: _languageService.currentLanguage == language
-                            ? Colors.deepPurple.shade800
-                            : Colors.black87,
-                      ),
-                    ),
-                  ),
-                  if (_languageService.currentLanguage == language)
-                    Icon(
-                      Icons.check_circle,
-                      color: Colors.deepPurple.shade600,
-                    ),
-                ],
-              ),
-            ),
+      child: Column(
+        children: [
+          _buildInfoItem(
+            Icons.smart_toy,
+            _languageService.getLocalizedText('AI Modeli', 'AI Model'),
+            'Gemini 2.0 Flash',
           ),
-        );
-      }).toList(),
-    );
-  }
-
-  /// Bilgi bölümü
-  Widget _buildInfoSection() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Colors.blue.shade600,
-                  size: 28,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  _languageService.getLocalizedText('Bilgi', 'Information'),
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildInfoItem(
-              Icons.auto_stories,
-              _languageService.getLocalizedText('Oyun Türü', 'Game Type'),
-              _languageService.getLocalizedText(
-                'Metin Tabanlı RPG',
-                'Text-Based RPG',
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoItem(
-              Icons.smart_toy,
-              _languageService.getLocalizedText('AI Modeli', 'AI Model'),
-              'Gemini 2.0 Flash',
-            ),
-            const SizedBox(height: 12),
-            _buildInfoItem(
-              Icons.translate,
-              _languageService.getLocalizedText('Desteklenen Diller', 'Supported Languages'),
-              _languageService.getLocalizedText(
-                'Türkçe, İngilizce',
-                'Turkish, English',
-              ),
-            ),
-          ],
-        ),
+          const Divider(height: 30),
+          _buildInfoItem(
+            Icons.developer_mode,
+            _languageService.getLocalizedText('Geliştirici', 'Developer'),
+            'Ali Genç Türk',
+          ),
+        ],
       ),
     );
   }
 
-  /// Bilgi öğesi
   Widget _buildInfoItem(IconData icon, String title, String value) {
     return Row(
       children: [
@@ -246,6 +181,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final success = await _languageService.setLanguage(language);
     
     if (success && mounted) {
+      widget.onLanguageChanged();
       setState(() {});
       
       // Başarı mesajı göster

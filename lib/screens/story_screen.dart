@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'dart:ui';
 import '../models/game_category.dart';
 import '../models/message.dart';
 import '../services/gemini_service.dart';
@@ -164,9 +166,15 @@ class _StoryScreenState extends State<StoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: Text(_languageService.getAdventureTitle(widget.category.key)),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        backgroundColor: Colors.black.withOpacity(0.3),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -175,28 +183,20 @@ class _StoryScreenState extends State<StoryScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Mesaj listesi
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.grey.shade50,
-                    Colors.grey.shade100,
-                  ],
-                ),
-              ),
-              child: _buildMessageList(),
-            ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF1E1E1E), Color(0xFF121212)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
-          
-          // Giriş alanı
-          if (_gameStarted) _buildInputArea(),
-        ],
+        ),
+        child: Column(
+          children: [
+            Expanded(child: _buildMessageList()),
+            if (_gameStarted) _buildInputArea(),
+          ],
+        ),
       ),
     );
   }
@@ -221,147 +221,145 @@ class _StoryScreenState extends State<StoryScreen> {
 
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
       itemCount: _messages.length + (_isLoading ? 1 : 0),
       itemBuilder: (context, index) {
         if (index >= _messages.length) {
-          // Yükleniyor göstergesi
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 8),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12),
-            ),
-                         child: Row(
-               children: [
-                 const SizedBox(
-                   width: 20,
-                   height: 20,
-                   child: CircularProgressIndicator(strokeWidth: 2),
-                 ),
-                 const SizedBox(width: 12),
-                 Text(_languageService.aiThinking),
-               ],
-             ),
-          );
+          return _buildTypingIndicator();
         }
-
         final message = _messages[index];
         return _buildMessageBubble(message);
       },
     );
   }
 
+  /// AI yazıyor göstergesi
+  Widget _buildTypingIndicator() {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(4),
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              _languageService.aiThinking,
+              style: GoogleFonts.lato(
+                fontStyle: FontStyle.italic,
+                color: Colors.white.withOpacity(0.7),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// Mesaj balonunu oluşturur
   Widget _buildMessageBubble(Message message) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: message.isUser 
-            ? MainAxisAlignment.end 
-            : MainAxisAlignment.start,
-        children: [
-          if (!message.isUser) ...[
-            CircleAvatar(
-              backgroundColor: Colors.deepPurple.shade600,
-              child: const Icon(Icons.auto_stories, color: Colors.white),
-            ),
-            const SizedBox(width: 8),
-          ],
-          
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: message.isUser 
-                    ? Colors.blue.shade600 
-                    : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Text(
-                message.content,
-                style: TextStyle(
-                  color: message.isUser ? Colors.white : Colors.black87,
-                  fontSize: 16,
-                  height: 1.4,
-                ),
-              ),
-            ),
+    final bool isUser = message.isUser;
+    final alignment = isUser ? Alignment.centerRight : Alignment.centerLeft;
+    final color = isUser
+        ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
+        : Theme.of(context).colorScheme.surface.withOpacity(0.8);
+    final borderRadius = isUser
+        ? const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(4),
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          )
+        : const BorderRadius.only(
+            topLeft: Radius.circular(4),
+            topRight: Radius.circular(20),
+            bottomLeft: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+          );
+
+    return Align(
+      alignment: alignment,
+      child: Container(
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: borderRadius,
+        ),
+        child: Text(
+          message.content,
+          style: GoogleFonts.lato(
+            fontSize: 16,
+            height: 1.5,
+            color: Colors.white.withOpacity(0.95),
           ),
-          
-          if (message.isUser) ...[
-            const SizedBox(width: 8),
-            CircleAvatar(
-              backgroundColor: Colors.green.shade600,
-              child: const Icon(Icons.person, color: Colors.white),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
 
   /// Giriş alanını oluşturur
   Widget _buildInputArea() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _textController,
-              decoration: InputDecoration(
-                hintText: _languageService.inputHint,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          color: Colors.black.withOpacity(0.2),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _textController,
+                  decoration: InputDecoration(
+                    hintText: _languageService.inputHint,
+                    prefixIcon: Icon(
+                      Icons.edit,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  maxLines: null,
+                  textCapitalization: TextCapitalization.sentences,
+                  onSubmitted: (_) => _sendMessage(),
+                  enabled: !_isLoading,
+                  style: GoogleFonts.lato(),
                 ),
               ),
-              maxLines: null,
-              textCapitalization: TextCapitalization.sentences,
-              onSubmitted: (_) => _sendMessage(),
-              enabled: !_isLoading,
-            ),
+              const SizedBox(width: 12),
+              FloatingActionButton(
+                onPressed: _isLoading ? null : _sendMessage,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                elevation: 4,
+                child: _isLoading
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.black,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Icon(Icons.send, color: Colors.black),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          FloatingActionButton(
-            onPressed: _isLoading ? null : _sendMessage,
-            backgroundColor: _isLoading 
-                ? Colors.grey 
-                : Theme.of(context).primaryColor,
-            child: _isLoading 
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                : const Icon(Icons.send),
-          ),
-        ],
+        ),
       ),
     );
   }

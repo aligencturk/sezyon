@@ -38,15 +38,18 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   }
 
   void _startIntroAnimation() {
+    // 1. "Hoş geldin Maceracı" yazısı için gecikme
     Timer(const Duration(milliseconds: 500), () {
       if (!mounted) return;
       setState(() => _introStep = _IntroStep.welcome);
     });
-    Timer(const Duration(milliseconds: 1500), () {
+    // 2. Alt başlık (açıklama) için 2 saniye ek gecikme
+    Timer(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
       setState(() => _introStep = _IntroStep.subtitle);
     });
-    Timer(const Duration(milliseconds: 4000), () {
+    // 3. Kategorilerin gösterimi için ek gecikme
+    Timer(const Duration(milliseconds: 5000), () {
       if (!mounted) return;
       setState(() {
         _introStep = _IntroStep.categories;
@@ -73,37 +76,48 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_languageService.categorySelectionTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () => _openSettings(context),
-            tooltip: _languageService.settings,
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              Theme.of(context).colorScheme.surface,
-              Theme.of(context).colorScheme.background,
-            ],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Column(
-          children: [
-            const SizedBox(height: 40),
-            _buildIntroTexts(),
-            const SizedBox(height: 20),
-            Expanded(
-              child: _buildCategoryGrid(),
+      backgroundColor: Colors.black, // Arka planı tamamen siyah yap
+      appBar: _introStep.index >= _IntroStep.finished.index
+          ? AppBar(
+              title: Text(_languageService.categorySelectionTitle),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.settings_outlined),
+                  onPressed: () => _openSettings(context),
+                  tooltip: _languageService.settings,
+                ),
+              ],
+            )
+          : null,
+      body: AnimatedOpacity(
+        duration: const Duration(milliseconds: 300),
+        opacity: _introStep != _IntroStep.initial ? 1.0 : 0.0,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                _introStep.index >= _IntroStep.categories.index
+                    ? Theme.of(context).colorScheme.surface
+                    : Colors.black,
+                _introStep.index >= _IntroStep.categories.index
+                    ? Theme.of(context).colorScheme.background
+                    : Colors.black,
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
             ),
-            _buildIntroControls(),
-          ],
+          ),
+          child: Column(
+            children: [
+              const SizedBox(height: 40),
+              _buildIntroTexts(),
+              const SizedBox(height: 20),
+              Expanded(
+                child: _buildCategoryGrid(),
+              ),
+              _buildIntroControls(),
+            ],
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:sezyon/screens/splash_screen.dart';
 import 'screens/category_selection_screen.dart';
 import 'services/logger_service.dart';
 import 'services/language_service.dart';
@@ -96,7 +97,7 @@ class SezyonApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const CategorySelectionScreen(),
+      home: const SplashScreen(),
     );
   }
 }

@@ -1,40 +1,17 @@
-/// Sohbet mesajını temsil eden model sınıfı
+/// Bir sohbet mesajını temsil eden model
 class Message {
-  final String content;
+  /// Mesajın metni
+  final String text;
+
+  /// Mesajın kullanıcı tarafından mı gönderildiği
   final bool isUser;
-  final DateTime timestamp;
+
+  /// Mesajın animasyonunun tamamlanıp tamamlanmadığı
+  bool isAnimated;
 
   Message({
-    required this.content,
+    required this.text,
     required this.isUser,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
-
-  /// JSON'dan Message nesnesi oluşturur
-  factory Message.fromJson(Map<String, dynamic> json) {
-    return Message(
-      content: json['content'] as String,
-      isUser: json['isUser'] as bool,
-      timestamp: DateTime.parse(json['timestamp'] as String),
-    );
-  }
-
-  /// Message nesnesini JSON'a çevirir
-  Map<String, dynamic> toJson() {
-    return {
-      'content': content,
-      'isUser': isUser,
-      'timestamp': timestamp.toIso8601String(),
-    };
-  }
-
-  /// Kullanıcı mesajı oluşturur
-  factory Message.user(String content) {
-    return Message(content: content, isUser: true);
-  }
-
-  /// AI mesajı oluşturur
-  factory Message.ai(String content) {
-    return Message(content: content, isUser: false);
-  }
+    this.isAnimated = false,
+  });
 } 

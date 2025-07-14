@@ -31,96 +31,71 @@ Future<void> main() async {
     logger.error('Dil servisi başlatılırken hata', e);
   }
   
-  runApp(const MyApp());
+  runApp(const SezyonApp());
 }
 
 /// Ana uygulama widget'ı
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SezyonApp extends StatelessWidget {
+  const SezyonApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final languageService = LanguageService();
-
-    // Karanlık ve şık bir tema oluştur
-    final darkTheme = ThemeData.dark().copyWith(
-      scaffoldBackgroundColor: const Color(0xFF121212),
-      primaryColor: const Color(0xFFBB86FC),
-      colorScheme: const ColorScheme.dark(
-        primary: Color(0xFFBB86FC), // Ana vurgu rengi (butonlar, ikonlar)
-        secondary: Color(0xFF03DAC6), // İkincil vurgu rengi
-        surface: Color(0xFF1E1E1E), // Kartların ve yüzeylerin rengi
-        background: Color(0xFF121212), // Arka plan rengi
-        error: Color(0xFFCF6679), // Hata rengi
-        onPrimary: Colors.black,
-        onSecondary: Colors.black,
-        onSurface: Colors.white,
-        onBackground: Colors.white,
-        onError: Colors.black,
-      ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFF1E1E1E),
-        elevation: 0,
-        centerTitle: true,
-        titleTextStyle: GoogleFonts.cinzel(
-          fontSize: 22,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.5,
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFBB86FC),
-          foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          textStyle: GoogleFonts.lato(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      cardTheme: CardThemeData(
-        color: const Color(0xFF1E1E1E),
-        elevation: 5,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
-        ),
-      ),
-      textTheme: TextTheme(
-        displayLarge: GoogleFonts.cinzel(
-            fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
-        displayMedium: GoogleFonts.cinzel(
-            fontSize: 36, fontWeight: FontWeight.bold, color: Colors.white),
-        headlineSmall: GoogleFonts.cinzel(
-            fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
-        titleLarge: GoogleFonts.lato(
-            fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-        bodyLarge: GoogleFonts.lato(fontSize: 16, color: Colors.white.withOpacity(0.87)),
-        bodyMedium: GoogleFonts.lato(fontSize: 14, color: Colors.white.withOpacity(0.6)),
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: const Color(0xFF2C2C2C),
-        hintStyle: GoogleFonts.lato(color: Colors.white.withOpacity(0.5)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: const BorderSide(color: Color(0xFFBB86FC), width: 2),
-        ),
-      ),
-      useMaterial3: true,
-    );
+    final textTheme = Theme.of(context).textTheme;
+    final darkTheme = ThemeData.dark();
 
     return MaterialApp(
-      title: languageService.appTitle,
+      title: 'Sezyon',
       debugShowCheckedModeBanner: false,
-      theme: darkTheme,
+      theme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: const Color(0xFF121212),
+        primaryColor: const Color(0xFF6A1B9A),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF8E24AA), // Ana butonlar, aktif elemanlar
+          secondary: Color(0xFF4A148C), // İkincil vurgu, AI mesajları
+          background: Color(0xFF121212), // Ana arka plan
+          surface: Color(0xFF1E1E1E), // Kartlar, diyaloglar
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onBackground: Colors.white,
+          onSurface: Colors.white,
+          error: Colors.redAccent,
+          onError: Colors.white,
+        ),
+        textTheme: GoogleFonts.sourceSans3TextTheme(darkTheme.textTheme)
+            .copyWith(
+          displayLarge: GoogleFonts.merriweather(textStyle: textTheme.displayLarge),
+          displayMedium: GoogleFonts.merriweather(textStyle: textTheme.displayMedium),
+          displaySmall: GoogleFonts.merriweather(textStyle: textTheme.displaySmall),
+          headlineLarge: GoogleFonts.merriweather(textStyle: textTheme.headlineLarge),
+          headlineMedium: GoogleFonts.merriweather(textStyle: textTheme.headlineMedium),
+          headlineSmall: GoogleFonts.merriweather(textStyle: textTheme.headlineSmall),
+          titleLarge: GoogleFonts.merriweather(textStyle: textTheme.titleLarge),
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          titleTextStyle: GoogleFonts.merriweather(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+          ),
+          centerTitle: true,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFF8E24AA),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            textStyle: GoogleFonts.sourceSans3(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
       home: const CategorySelectionScreen(),
     );
   }

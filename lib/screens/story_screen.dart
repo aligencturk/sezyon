@@ -1,13 +1,14 @@
+import 'dart:async';
+import 'dart:ui';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:ui';
-import '../models/game_category.dart';
-import '../models/message.dart';
-import '../services/gemini_service.dart';
-import '../services/language_service.dart';
-import '../services/logger_service.dart';
+import 'package:sezyon/models/game_category.dart';
+import 'package:sezyon/models/message.dart';
+import 'package:sezyon/services/gemini_service.dart';
+import 'package:sezyon/services/language_service.dart';
+import 'package:sezyon/services/logger_service.dart';
 
-/// Hikaye oynanış ekranı
 class StoryScreen extends StatefulWidget {
   final GameCategory category;
 
@@ -19,18 +20,20 @@ class StoryScreen extends StatefulWidget {
 
 class _StoryScreenState extends State<StoryScreen> {
   final List<Message> _messages = [];
-  final TextEditingController _textController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  final GeminiService _geminiService = GeminiService();
-  final LanguageService _languageService = LanguageService();
-  final LoggerService _logger = LoggerService();
-  
-  bool _isLoading = false;
-  bool _gameStarted = false;
+  final _textController = TextEditingController();
+  final _scrollController = ScrollController();
+  final _geminiService = GeminiService();
+  late final LanguageService _languageService;
+  late final LoggerService _logger;
+
+  bool _isLoading = true;
+  bool _isAiTyping = false;
 
   @override
   void initState() {
     super.initState();
+    _languageService = LanguageService();
+    _logger = LoggerService();
     _startGame();
   }
 
@@ -41,112 +44,86 @@ class _StoryScreenState extends State<StoryScreen> {
     super.dispose();
   }
 
-  /// Oyunu başlatır ve ilk hikayeyi alır
   Future<void> _startGame() async {
-    _logger.gameEvent('Oyun başlatılıyor', {
-      'category': widget.category.key,
-      'language': _languageService.currentLanguageCode,
-    });
-
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
+    _logger.gameEvent('Oyun başlatılıyor', {'category': widget.category.name});
 
     try {
       final initialPrompt = widget.category.getInitialPrompt();
-      final response = await _geminiService.generateContent(initialPrompt);
+      final initialStory = await _geminiService.generateContent(initialPrompt);
       
-      setState(() {
-        _messages.add(Message.ai(response));
-        _gameStarted = true;
-        _isLoading = false;
-      });
-      
-      _scrollToBottom();
-      _logger.gameEvent('Oyun başarıyla başlatıldı');
+      final firstMessage = Message(text: initialStory, isUser: false);
+      if (mounted) {
+        setState(() {
+          _messages.add(firstMessage);
+          _isLoading = false;
+        });
+      }
+      _logger.gameEvent('İlk hikaye alındı');
     } catch (e, stackTrace) {
-      setState(() {
-        _isLoading = false;
-      });
-      
-      _logger.error('Oyun başlatılırken hata', e, stackTrace);
-      _showErrorDialog(
-        _languageService.getLocalizedText(
-          'Oyun başlatılırken hata oluştu: $e',
-          'Error starting game: $e',
-        ),
-      );
+      _logger.error('Oyun başlatılamadı', e, stackTrace);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _showErrorDialog(e.toString());
+      }
     }
   }
 
-  /// Kullanıcının mesajını gönderir
-  Future<void> _sendMessage() async {
+  void _sendMessage() async {
     final text = _textController.text.trim();
-    if (text.isEmpty || _isLoading) return;
+    if (text.isEmpty) return;
 
-    _logger.gameEvent('Kullanıcı mesajı gönderiliyor', {
-      'messageLength': text.length,
-      'language': _languageService.currentLanguageCode,
-    });
-
-    // Kullanıcı mesajını ekle
+    final userMessage = Message(text: text, isUser: true, isAnimated: true);
     setState(() {
-      _messages.add(Message.user(text));
-      _isLoading = true;
+      _messages.insert(0, userMessage);
+      _isAiTyping = true;
     });
-    
+
+    _logger.gameEvent('Kullanıcı mesaj gönderdi', {'message': text});
+    _scrollController.animateTo(
+      0.0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
     _textController.clear();
-    _scrollToBottom();
 
     try {
-      // Sohbet geçmişini hazırla
-      final labelPlayer = _languageService.getLocalizedText("Oyuncu", "Player");
-      final labelNarrator = _languageService.getLocalizedText("Anlatıcı", "Narrator");
-      
-      List<String> conversationHistory = _messages
-          .map((msg) => '${msg.isUser ? labelPlayer : labelNarrator}: ${msg.content}')
+      final history = _messages
+          .where((m) => m.isAnimated)
+          .map((m) => "${m.isUser ? 'Player' : 'AI'}: ${m.text}")
+          .toList()
+          .reversed
           .toList();
 
-      // Devam prompt'u oluştur ve gönder
-      final continuePrompt = widget.category.getContinuePrompt(text, conversationHistory);
+      final continuePrompt = widget.category.getContinuePrompt(text, history);
       final response = await _geminiService.generateContent(continuePrompt);
-      
-      setState(() {
-        _messages.add(Message.ai(response));
-        _isLoading = false;
-      });
-      
-      _scrollToBottom();
-      _logger.gameEvent('AI yanıtı alındı');
+
+      final aiMessage = Message(text: response, isUser: false);
+      if (mounted) {
+        setState(() {
+          _messages.insert(0, aiMessage);
+          _isAiTyping = false;
+        });
+      }
+      _logger.info('Yapay zeka yanıtı alındı');
     } catch (e, stackTrace) {
-      setState(() {
-        _isLoading = false;
-      });
-      
-      _logger.error('Mesaj gönderilirken hata', e, stackTrace);
-      _showErrorDialog(
-        _languageService.getLocalizedText(
-          'Mesaj gönderilirken hata oluştu: $e',
-          'Error sending message: $e',
-        ),
-      );
+      _logger.error('Yapay zeka yanıtı alınamadı', e, stackTrace);
+      if (mounted) {
+        setState(() => _isAiTyping = false);
+        _showErrorDialog(e.toString());
+      }
     }
   }
 
-  /// En alta kaydırır
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
+  void _restartGame() {
+    _logger.gameEvent('Oyun yeniden başlatılıyor');
+    setState(() {
+      _messages.clear();
+      _isLoading = true;
     });
+    _startGame();
   }
 
-  /// Hata dialog'u gösterir
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -155,7 +132,7 @@ class _StoryScreenState extends State<StoryScreen> {
         content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(context).pop(),
             child: Text(_languageService.ok),
           ),
         ],
@@ -163,208 +140,6 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: Text(_languageService.getAdventureTitle(widget.category.key)),
-        backgroundColor: Colors.black.withOpacity(0.3),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _gameStarted ? () => _showRestartDialog() : null,
-            tooltip: _languageService.restart,
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF1E1E1E), Color(0xFF121212)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Column(
-          children: [
-            Expanded(child: _buildMessageList()),
-            if (_gameStarted) _buildInputArea(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Mesaj listesini oluşturur
-  Widget _buildMessageList() {
-    if (!_gameStarted && _isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 20),
-            Text(
-              _languageService.storyLoading,
-              style: const TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.fromLTRB(16, 100, 16, 16),
-      itemCount: _messages.length + (_isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index >= _messages.length) {
-          return _buildTypingIndicator();
-        }
-        final message = _messages[index];
-        return _buildMessageBubble(message);
-      },
-    );
-  }
-
-  /// AI yazıyor göstergesi
-  Widget _buildTypingIndicator() {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(4),
-            topRight: Radius.circular(20),
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              _languageService.aiThinking,
-              style: GoogleFonts.lato(
-                fontStyle: FontStyle.italic,
-                color: Colors.white.withOpacity(0.7),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Mesaj balonunu oluşturur
-  Widget _buildMessageBubble(Message message) {
-    final bool isUser = message.isUser;
-    final alignment = isUser ? Alignment.centerRight : Alignment.centerLeft;
-    final color = isUser
-        ? Theme.of(context).colorScheme.primary.withOpacity(0.5)
-        : Theme.of(context).colorScheme.surface.withOpacity(0.8);
-    final borderRadius = isUser
-        ? const BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(4),
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          )
-        : const BorderRadius.only(
-            topLeft: Radius.circular(4),
-            topRight: Radius.circular(20),
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
-          );
-
-    return Align(
-      alignment: alignment,
-      child: Container(
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: borderRadius,
-        ),
-        child: Text(
-          message.content,
-          style: GoogleFonts.lato(
-            fontSize: 16,
-            height: 1.5,
-            color: Colors.white.withOpacity(0.95),
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Giriş alanını oluşturur
-  Widget _buildInputArea() {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          color: Colors.black.withOpacity(0.2),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _textController,
-                  decoration: InputDecoration(
-                    hintText: _languageService.inputHint,
-                    prefixIcon: Icon(
-                      Icons.edit,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  maxLines: null,
-                  textCapitalization: TextCapitalization.sentences,
-                  onSubmitted: (_) => _sendMessage(),
-                  enabled: !_isLoading,
-                  style: GoogleFonts.lato(),
-                ),
-              ),
-              const SizedBox(width: 12),
-              FloatingActionButton(
-                onPressed: _isLoading ? null : _sendMessage,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                elevation: 4,
-                child: _isLoading
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          color: Colors.black,
-                          strokeWidth: 2.5,
-                        ),
-                      )
-                    : const Icon(Icons.send, color: Colors.black),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Yeniden başlatma dialog'u gösterir
   void _showRestartDialog() {
     showDialog(
       context: context,
@@ -388,12 +163,185 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
 
-  /// Oyunu yeniden başlatır
-  void _restartGame() {
-    setState(() {
-      _messages.clear();
-      _gameStarted = false;
-    });
-    _startGame();
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: Text(
+          _languageService.getAdventureTitle(widget.category.key),
+          style: GoogleFonts.merriweather(fontSize: 20),
+        ),
+        backgroundColor: Colors.black.withOpacity(0.3),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _messages.isNotEmpty && !_isLoading ? _showRestartDialog : null,
+            tooltip: _languageService.restart,
+          ),
+        ],
+      ),
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/background.jpg'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          Column(
+            children: [
+              Expanded(
+                child: _isLoading && _messages.isEmpty
+                    ? _buildLoadingIndicator()
+                    : _buildMessageList(),
+              ),
+              if (_isAiTyping) _buildTypingIndicator(),
+              _buildMessageInput(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageList() {
+    return ListView.builder(
+      reverse: true,
+      padding: EdgeInsets.fromLTRB(10, MediaQuery.of(context).padding.top + 60, 10, 10),
+      controller: _scrollController,
+      itemCount: _messages.length,
+      itemBuilder: (context, index) {
+        final message = _messages[index];
+        return _buildMessageBubble(message);
+      },
+    );
+  }
+
+  Widget _buildMessageBubble(Message message) {
+    final isUser = message.isUser;
+    return Align(
+      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+        decoration: BoxDecoration(
+          color: isUser
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+          borderRadius: BorderRadius.only(
+            topLeft: const Radius.circular(20),
+            topRight: const Radius.circular(20),
+            bottomLeft: isUser ? const Radius.circular(20) : Radius.zero,
+            bottomRight: isUser ? Radius.zero : const Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              spreadRadius: 1,
+              blurRadius: 5,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: isUser || message.isAnimated
+            ? Text(
+                message.text,
+                style: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16, height: 1.4),
+              )
+            : AnimatedTextKit(
+                animatedTexts: [
+                  TypewriterAnimatedText(
+                    message.text,
+                    textStyle: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16, height: 1.4),
+                    speed: const Duration(milliseconds: 30),
+                  ),
+                ],
+                isRepeatingAnimation: false,
+                totalRepeatCount: 1,
+                onFinished: () {
+                  if (mounted) {
+                    setState(() => message.isAnimated = true);
+                  }
+                },
+              ),
+      ),
+    );
+  }
+  
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
+          const SizedBox(height: 20),
+          Text(
+            _languageService.storyLoading,
+            style: GoogleFonts.sourceSans3(color: Colors.white70, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTypingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2.0),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _languageService.aiThinking,
+            style: GoogleFonts.sourceSans3(color: Colors.white70, fontStyle: FontStyle.italic),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageInput() {
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          color: Colors.black.withOpacity(0.3),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _textController,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    hintText: _languageService.inputHint,
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  ),
+                  style: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16),
+                  onSubmitted: (_) => _sendMessage(),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: _sendMessage,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 } 

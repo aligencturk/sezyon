@@ -80,8 +80,8 @@ class LanguageService {
   String get appTitle => getLocalizedText('RPG Oyunu', 'RPG Game');
   
   String get categorySelectionTitle => getLocalizedText(
-    'Oyun Kategorisi Seçin', 
-    'Choose Game Category'
+    'SEZYON', 
+    'SEZYON'
   );
   
   String get categorySelectionSubtitle => getLocalizedText(

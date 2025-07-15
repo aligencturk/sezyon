@@ -19,15 +19,25 @@ class CategorySelectionScreen extends StatefulWidget {
       _CategorySelectionScreenState();
 }
 
-enum _IntroStep { initial, welcome, subtitle, categories, finished }
+enum _IntroStep {
+  blackScreen,
+  welcomeTyping,
+  welcomeDone,
+  subtitleTyping,
+  animatingUp,
+  categories,
+  finished
+}
 
 class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   late final LoggerService _logger;
   late final LanguageService _languageService;
   
-  _IntroStep _introStep = _IntroStep.initial;
+  _IntroStep _introStep = _IntroStep.blackScreen;
   int _visibleCategoryIndex = -1;
   bool _isSkipped = false;
+  bool _showWelcome = false;
+  bool _showSubtitle = false;
 
   @override
   void initState() {
@@ -38,18 +48,28 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   }
 
   void _startIntroAnimation() {
-    // 1. "Hoş geldin Maceracı" yazısı için gecikme
-    Timer(const Duration(milliseconds: 500), () {
+    Timer(const Duration(seconds: 3), () {
       if (!mounted) return;
-      setState(() => _introStep = _IntroStep.welcome);
+      setState(() {
+        _introStep = _IntroStep.welcomeTyping;
+        _showWelcome = true;
+      });
     });
-    // 2. Alt başlık (açıklama) için 2 saniye ek gecikme
-    Timer(const Duration(milliseconds: 2500), () {
+  }
+
+  void _onWelcomeFinished() {
+    Timer(const Duration(seconds: 2), () {
       if (!mounted) return;
-      setState(() => _introStep = _IntroStep.subtitle);
+      setState(() {
+        _introStep = _IntroStep.subtitleTyping;
+        _showSubtitle = true;
+      });
     });
-    // 3. Kategorilerin gösterimi için ek gecikme
-    Timer(const Duration(milliseconds: 5000), () {
+  }
+
+  void _onSubtitleFinished() {
+    setState(() => _introStep = _IntroStep.animatingUp);
+    Timer(const Duration(milliseconds: 800), () { // Animasyon süresi
       if (!mounted) return;
       setState(() {
         _introStep = _IntroStep.categories;
@@ -57,7 +77,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       });
     });
   }
-  
+
   void _proceedIntro() {
     if (_visibleCategoryIndex < GameCategory.values.length - 1) {
       setState(() => _visibleCategoryIndex++);
@@ -69,6 +89,8 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   void _skipIntro() {
     setState(() {
       _isSkipped = true;
+      _showWelcome = true;
+      _showSubtitle = true;
       _introStep = _IntroStep.finished;
     });
   }
@@ -76,7 +98,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Arka planı tamamen siyah yap
+      backgroundColor: Colors.black,
       appBar: _introStep.index >= _IntroStep.finished.index
           ? AppBar(
               title: Text(_languageService.categorySelectionTitle),
@@ -89,113 +111,105 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
               ],
             )
           : null,
-      body: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: _introStep != _IntroStep.initial ? 1.0 : 0.0,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                _introStep.index >= _IntroStep.categories.index
-                    ? Theme.of(context).colorScheme.surface
-                    : Colors.black,
-                _introStep.index >= _IntroStep.categories.index
-                    ? Theme.of(context).colorScheme.background
-                    : Colors.black,
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              _buildIntroTexts(),
-              const SizedBox(height: 20),
-              Expanded(
-                child: _buildCategoryGrid(),
-              ),
-              _buildIntroControls(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildIntroTexts() {
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 800),
-      opacity: _introStep.index >= _IntroStep.welcome.index ? 1.0 : 0.0,
-      child: Column(
+      body: Stack(
         children: [
-          Text(
-            _languageService.getLocalizedText('Hoş geldin Maceracı', 'Welcome Adventurer'),
-            style: GoogleFonts.merriweather(fontSize: 32, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
+          _buildAnimatedTexts(),
           AnimatedOpacity(
-            duration: const Duration(milliseconds: 800),
-            opacity: _introStep.index >= _IntroStep.subtitle.index ? 1.0 : 0.0,
-            child: _introStep.index >= _IntroStep.subtitle.index 
-              ? AnimatedTextKit(
-                  isRepeatingAnimation: false,
-                  animatedTexts: [
-                    TypewriterAnimatedText(
-                      _languageService.categorySelectionSubtitle,
-                      textAlign: TextAlign.center,
-                      speed: const Duration(milliseconds: 50),
-                      textStyle: GoogleFonts.sourceSans3(fontSize: 18, color: Colors.white70),
-                    ),
-                  ],
-                )
-              : Text( // Placeholder for size calculation
-                  _languageService.categorySelectionSubtitle,
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.sourceSans3(fontSize: 18, color: Colors.transparent),
-                ),
+            opacity: _introStep.index >= _IntroStep.categories.index ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 500),
+            child: Column(
+              children: [
+                SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                Expanded(child: _buildCategoryGrid()),
+                _buildIntroControls(),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCategoryGrid() {
-    return AnimatedOpacity(
-      duration: const Duration(milliseconds: 800),
-      opacity: _introStep.index >= _IntroStep.categories.index ? 1.0 : 0.0,
-      child: AnimationLimiter(
-        child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 0.85,
-          ),
-          padding: const EdgeInsets.all(16),
-          itemCount: _isSkipped 
-              ? GameCategory.values.length 
-              : _introStep.index >= _IntroStep.categories.index 
-                  ? _visibleCategoryIndex + 1 
-                  : 0,
-          itemBuilder: (context, index) {
-            if (index >= GameCategory.values.length) return const SizedBox.shrink();
-            final category = GameCategory.values[index];
-            return AnimationConfiguration.staggeredGrid(
-              position: index,
-              duration: const Duration(milliseconds: 400),
-              columnCount: 2,
-              child: ScaleAnimation(
-                child: FadeInAnimation(
-                  child: CategoryCard(
-                    category: category,
-                    onTap: () => _onCategorySelected(context, category),
+  Widget _buildAnimatedTexts() {
+    return AnimatedAlign(
+      alignment: _introStep.index >= _IntroStep.animatingUp.index
+          ? Alignment.topCenter
+          : Alignment.center,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 60.0, left: 16.0, right: 16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_showWelcome)
+              AnimatedTextKit(
+                key: const ValueKey('welcome'),
+                isRepeatingAnimation: false,
+                onFinished: _onWelcomeFinished,
+                animatedTexts: [
+                  TypewriterAnimatedText(
+                    _languageService.getLocalizedText('Hoş geldin Maceracı', 'Welcome Adventurer'),
+                    speed: const Duration(milliseconds: 100),
+                    textStyle: GoogleFonts.merriweather(fontSize: 32, fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
                   ),
+                ],
+              ),
+            const SizedBox(height: 10),
+            if (_showSubtitle)
+              AnimatedTextKit(
+                key: const ValueKey('subtitle'),
+                isRepeatingAnimation: false,
+                onFinished: _onSubtitleFinished,
+                animatedTexts: [
+                  TypewriterAnimatedText(
+                    _languageService.categorySelectionSubtitle,
+                    textAlign: TextAlign.center,
+                    speed: const Duration(milliseconds: 50),
+                    textStyle: GoogleFonts.sourceSans3(fontSize: 18, color: Colors.white70),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryGrid() {
+    return AnimationLimiter(
+      child: GridView.builder(
+        physics: const BouncingScrollPhysics(),
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+          maxCrossAxisExtent: 160, // Genişliği daha da küçülttük
+          childAspectRatio: 0.9,  // Oranı daha kareye yakın yaptık
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        padding: const EdgeInsets.all(16),
+        itemCount: _isSkipped
+            ? GameCategory.values.length
+            : _introStep.index >= _IntroStep.categories.index
+                ? _visibleCategoryIndex + 1
+                : 0,
+        itemBuilder: (context, index) {
+          if (index >= GameCategory.values.length) return const SizedBox.shrink();
+          final category = GameCategory.values[index];
+          return AnimationConfiguration.staggeredGrid(
+            position: index,
+            duration: const Duration(milliseconds: 400),
+            columnCount: (MediaQuery.of(context).size.width / 160).floor(), // Genişlikle uyumlu hale getirdik
+            child: ScaleAnimation(
+              child: FadeInAnimation(
+                child: CategoryCard(
+                  category: category,
+                  onTap: () => _onCategorySelected(context, category),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -205,30 +219,35 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     final isLastCategory = _visibleCategoryIndex == GameCategory.values.length - 1;
     final isIndexValid = _visibleCategoryIndex >= 0;
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      height: showControls ? 200 : 0,
-      child: SingleChildScrollView(
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 500),
+      opacity: showControls ? 1.0 : 0.0,
+      child: IgnorePointer(
+        ignoring: !showControls,
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              AnimatedSwitcher(
-                duration: const Duration(milliseconds: 500),
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-                child: Text(
-                  isIndexValid
-                      ? GameCategory.values[_visibleCategoryIndex]
-                          .getDescription(_languageService.currentLanguageCode)
-                      : '',
-                  key: ValueKey<int>(_visibleCategoryIndex),
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.sourceSans3(fontSize: 16, color: Colors.white.withOpacity(0.8)),
+              SizedBox(
+                height: 80,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 500),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: Text(
+                    isIndexValid
+                        ? GameCategory.values[_visibleCategoryIndex]
+                            .getDescription(_languageService.currentLanguageCode)
+                        : '',
+                    key: ValueKey<int>(_visibleCategoryIndex),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.sourceSans3(fontSize: 16, color: Colors.white.withOpacity(0.8)),
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -239,9 +258,9 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                   const SizedBox(width: 20),
                   ElevatedButton(
                     onPressed: _proceedIntro,
-                    child: Text(isLastCategory 
-                      ? _languageService.getLocalizedText('Bitir', 'Finish')
-                      : _languageService.getLocalizedText('Devam Et', 'Continue')),
+                    child: Text(isLastCategory
+                        ? _languageService.getLocalizedText('Bitir', 'Finish')
+                        : _languageService.getLocalizedText('Devam Et', 'Continue')),
                   ),
                 ],
               )
@@ -325,7 +344,6 @@ class _CategoryCardState extends State<CategoryCard>
         },
         onTapCancel: () => _controller.reverse(),
         child: Container(
-          margin: const EdgeInsets.only(bottom: 20),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             gradient: LinearGradient(
@@ -348,12 +366,12 @@ class _CategoryCardState extends State<CategoryCard>
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(icon, size: 50, color: Colors.white),
-              const SizedBox(height: 15),
+              Icon(icon, size: 40, color: Colors.white), // İkon boyutunu küçülttük
+              const SizedBox(height: 12),
               Text(
                 LanguageService().getCategoryName(widget.category.key),
                 style: GoogleFonts.merriweather(
-                  fontSize: 22,
+                  fontSize: 18, // Yazı tipi boyutunu küçülttük
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                   shadows: [

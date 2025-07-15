@@ -3,6 +3,7 @@ import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:sezyon/models/game_category.dart';
 import 'package:sezyon/screens/settings_screen.dart';
 import 'package:sezyon/screens/story_screen.dart';
@@ -120,7 +121,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
             child: Column(
               children: [
                 SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-                Expanded(child: _buildCategoryGrid()),
+                Expanded(child: _buildCategoryIntroView()), // Metodu değiştirdik
                 _buildIntroControls(),
               ],
             ),
@@ -138,7 +139,12 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       duration: const Duration(milliseconds: 600),
       curve: Curves.easeInOutCubic,
       child: Padding(
-        padding: const EdgeInsets.only(top: 60.0, left: 16.0, right: 16.0),
+        padding: EdgeInsets.fromLTRB(
+          16.0, // sol
+          _introStep.index >= _IntroStep.animatingUp.index ? 60.0 : 0.0, // üst (koşullu)
+          16.0, // sağ
+          0.0,  // alt
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -177,29 +183,61 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     );
   }
 
-  Widget _buildCategoryGrid() {
+  Widget _buildCategoryIntroView() {
+    // Tanıtım bittiyse veya atlandıysa tüm ızgarayı göster
+    if (_introStep == _IntroStep.finished || _isSkipped) {
+      return _buildFullCategoryGrid();
+    }
+
+    // Tanıtım devam ediyorsa, tek bir kategori göster
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 600),
+      transitionBuilder: (child, animation) {
+        final offsetAnimation = Tween<Offset>(
+          begin: const Offset(1.5, 0.0),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic));
+        
+        return ClipRect(
+          child: SlideTransition(
+            position: offsetAnimation,
+            child: FadeTransition(opacity: animation, child: child),
+          ),
+        );
+      },
+      child: _introStep.index >= _IntroStep.categories.index && _visibleCategoryIndex != -1
+          ? CategoryCard(
+              key: ValueKey<int>(_visibleCategoryIndex), // Animasyonun tetiklenmesi için anahtar
+              category: GameCategory.values[_visibleCategoryIndex],
+              onTap: () {
+                // Intro sırasında tıklamayı engelle, sadece bitince aktif olsun
+                if (_introStep == _IntroStep.finished || _isSkipped) {
+                  _onCategorySelected(context, GameCategory.values[_visibleCategoryIndex]);
+                }
+              },
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildFullCategoryGrid() {
     return AnimationLimiter(
       child: GridView.builder(
         physics: const BouncingScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 160, // Genişliği daha da küçülttük
-          childAspectRatio: 0.9,  // Oranı daha kareye yakın yaptık
+          maxCrossAxisExtent: 160,
+          childAspectRatio: 0.9,
           crossAxisSpacing: 10,
           mainAxisSpacing: 10,
         ),
         padding: const EdgeInsets.all(16),
-        itemCount: _isSkipped
-            ? GameCategory.values.length
-            : _introStep.index >= _IntroStep.categories.index
-                ? _visibleCategoryIndex + 1
-                : 0,
+        itemCount: GameCategory.values.length,
         itemBuilder: (context, index) {
-          if (index >= GameCategory.values.length) return const SizedBox.shrink();
           final category = GameCategory.values[index];
           return AnimationConfiguration.staggeredGrid(
             position: index,
             duration: const Duration(milliseconds: 400),
-            columnCount: (MediaQuery.of(context).size.width / 160).floor(), // Genişlikle uyumlu hale getirdik
+            columnCount: (MediaQuery.of(context).size.width / 160).floor(),
             child: ScaleAnimation(
               child: FadeInAnimation(
                 child: CategoryCard(
@@ -332,7 +370,20 @@ class _CategoryCardState extends State<CategoryCard>
 
   @override
   Widget build(BuildContext context) {
-    final (icon, color) = _getCategoryStyle(widget.category);
+    final lottiePath = _getLottiePath(widget.category);
+
+    // Tarihi kategorisi için animasyonu büyütmek adına bir widget oluştur
+    Widget lottieWidget = Lottie.asset(
+      lottiePath,
+      fit: BoxFit.contain,
+    );
+
+    if (widget.category == GameCategory.historical) {
+      lottieWidget = Transform.scale(
+        scale: 0.8, // Ölçeği daha da artırdık
+        child: lottieWidget,
+      );
+    }
 
     return ScaleTransition(
       scale: _scaleAnimation,
@@ -343,46 +394,50 @@ class _CategoryCardState extends State<CategoryCard>
           widget.onTap();
         },
         onTapCancel: () => _controller.reverse(),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              colors: [
-                color.withOpacity(0.7),
-                color.withOpacity(0.9),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.4),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Stack(
+            alignment: Alignment.center,
+            fit: StackFit.expand,
             children: [
-              Icon(icon, size: 40, color: Colors.white), // İkon boyutunu küçülttük
-              const SizedBox(height: 12),
-              Text(
-                LanguageService().getCategoryName(widget.category.key),
-                style: GoogleFonts.merriweather(
-                  fontSize: 18, // Yazı tipi boyutunu küçülttük
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [
-                    const Shadow(
-                      blurRadius: 10.0,
-                      color: Colors.black,
-                      offset: Offset(2.0, 2.0),
-                    ),
-                  ],
+              // Lottie animasyonu arka plan olarak
+              lottieWidget, // Ölçeklenmiş widget'ı kullan
+              // Okunabilirliği artırmak için karartma filtresi
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.black.withOpacity(0.4),
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.5),
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    stops: const [0.0, 0.5, 1.0],
+                  ),
                 ),
-                textAlign: TextAlign.center,
+              ),
+              // Kategori adı
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    LanguageService().getCategoryName(widget.category.key),
+                    style: GoogleFonts.merriweather(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        const Shadow(
+                          blurRadius: 15.0,
+                          color: Colors.black,
+                          offset: Offset(2.0, 2.0),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ],
           ),
@@ -391,20 +446,20 @@ class _CategoryCardState extends State<CategoryCard>
     );
   }
 
-  (IconData, Color) _getCategoryStyle(GameCategory category) {
+  String _getLottiePath(GameCategory category) {
     switch (category) {
       case GameCategory.war:
-        return (Icons.shield, Colors.red.shade800);
+        return 'assets/images/war.json';
       case GameCategory.sciFi:
-        return (Icons.rocket_launch, Colors.blue.shade800);
+        return 'assets/images/scifi.json';
       case GameCategory.fantasy:
-        return (Icons.auto_stories, Colors.purple.shade800);
+        return 'assets/images/fantasy.json';
       case GameCategory.mystery:
-        return (Icons.question_mark_sharp, Colors.grey.shade800);
+        return 'assets/images/mystery.json';
       case GameCategory.historical:
-        return (Icons.fort, Colors.amber.shade900);
+        return 'assets/images/history.json';
       case GameCategory.apocalypse:
-        return (Icons.warning, Colors.green.shade900);
+        return 'assets/images/apocalypse.json';
     }
   }
 } 

@@ -117,6 +117,8 @@ class LanguageService {
     'Your story is being prepared...'
   );
   
+  String get storyContinuing => getLocalizedText('Hikayenize devam ediliyor...', 'Continuing your story...');
+
   String get aiThinking => getLocalizedText('AI düşünüyor...', 'AI is thinking...');
   
   String get inputHint => getLocalizedText(

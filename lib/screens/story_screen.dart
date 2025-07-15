@@ -28,7 +28,8 @@ class _StoryScreenState extends State<StoryScreen> {
   final FocusNode _focusNode = FocusNode();
 
   bool _isLoading = true;
-  bool _isInteractionDisabled = false;
+  bool _isInteractionDisabled = true;
+  bool _isWaitingForApiResponse = false;
 
   @override
   void initState() {
@@ -47,7 +48,10 @@ class _StoryScreenState extends State<StoryScreen> {
   }
 
   Future<void> _startGame() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _isInteractionDisabled = true;
+    });
     _logger.gameEvent('Oyun başlatılıyor', {'category': widget.category.name});
 
     try {
@@ -59,14 +63,16 @@ class _StoryScreenState extends State<StoryScreen> {
         setState(() {
           _messages.add(firstMessage);
           _isLoading = false;
-          _isInteractionDisabled = true;
         });
       }
       _logger.gameEvent('İlk hikaye alındı');
     } catch (e, stackTrace) {
       _logger.error('Oyun başlatılamadı', e, stackTrace);
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _isInteractionDisabled = false;
+        });
         _showErrorDialog(e.toString());
       }
     }
@@ -80,6 +86,7 @@ class _StoryScreenState extends State<StoryScreen> {
     setState(() {
       _messages.insert(0, userMessage);
       _isInteractionDisabled = true;
+      _isWaitingForApiResponse = true;
     });
 
     _logger.gameEvent('Kullanıcı mesaj gönderdi', {'message': text});
@@ -104,6 +111,7 @@ class _StoryScreenState extends State<StoryScreen> {
       final aiMessage = Message(text: response, isUser: false);
       if (mounted) {
         setState(() {
+          _isWaitingForApiResponse = false;
           _messages.insert(0, aiMessage);
         });
       }
@@ -111,7 +119,10 @@ class _StoryScreenState extends State<StoryScreen> {
     } catch (e, stackTrace) {
       _logger.error('Yapay zeka yanıtı alınamadı', e, stackTrace);
       if (mounted) {
-        setState(() => _isInteractionDisabled = false);
+        setState(() {
+          _isInteractionDisabled = false;
+          _isWaitingForApiResponse = false;
+        });
         _showErrorDialog(e.toString());
       }
     }
@@ -203,7 +214,7 @@ class _StoryScreenState extends State<StoryScreen> {
                     ? const SizedBox.shrink() // Yüklenirken listeyi gösterme
                     : _buildMessageList(),
               ),
-              if (_isInteractionDisabled && _messages.isNotEmpty && !_isLoading) _buildTypingIndicator(),
+              if (_isWaitingForApiResponse) _buildTypingIndicator(),
               _buildMessageInput(),
             ],
           ),
@@ -270,7 +281,7 @@ class _StoryScreenState extends State<StoryScreen> {
             child: AnimatedTextKit(
               animatedTexts: [
                 WavyAnimatedText(
-                  _languageService.aiThinking,
+                  _languageService.storyContinuing,
                   textStyle: GoogleFonts.sourceSans3(color: Colors.white70),
                 ),
               ],
@@ -325,7 +336,12 @@ class _StoryScreenState extends State<StoryScreen> {
                   setState(() {
                     _isInteractionDisabled = false;
                   });
-                  FocusScope.of(context).requestFocus(_focusNode);
+                  // Animasyon tamamlandıktan sonra TextField'a focus ver
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (_focusNode.canRequestFocus) {
+                      _focusNode.requestFocus();
+                    }
+                  });
                 }
               },
             ),
@@ -358,7 +374,7 @@ class _StoryScreenState extends State<StoryScreen> {
   }
 
   Widget _buildMessageInput() {
-    final bool isReadOnly = _isLoading || _isInteractionDisabled;
+    final bool isInteractionLocked = _isLoading || _isInteractionDisabled;
 
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -382,57 +398,62 @@ class _StoryScreenState extends State<StoryScreen> {
               ),
             ),
           ),
-          child: AbsorbPointer(
-            absorbing: isReadOnly,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    focusNode: _focusNode,
-                    controller: _textController,
-                    readOnly: isReadOnly,
-                    style: GoogleFonts.sourceSans3(
-                      color: !isReadOnly ? Colors.white : Colors.grey[600],
-                    ),
-                    decoration: InputDecoration(
-                      hintText: _languageService.inputHint,
-                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                      filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
-                      contentPadding:
-                          const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(25.0),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                    onSubmitted: (_) => !isReadOnly ? _sendMessage() : null,
-                    textCapitalization: TextCapitalization.sentences,
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  focusNode: _focusNode,
+                  controller: _textController,
+                  readOnly: isInteractionLocked,
+                  showCursor: !isInteractionLocked,
+                  enableInteractiveSelection: !isInteractionLocked,
+                  style: GoogleFonts.sourceSans3(
+                    color: !isInteractionLocked ? Colors.white : Colors.grey[600],
                   ),
-                ),
-                const SizedBox(width: 10),
-                Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(25),
-                    onTap: !isReadOnly ? _sendMessage : null,
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: !isReadOnly
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey[800],
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.send_rounded,
-                        color: Colors.white,
-                      ),
+                  decoration: InputDecoration(
+                    hintText: _languageService.inputHint,
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.1),
+                    contentPadding:
+                        const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(25.0),
+                      borderSide: BorderSide.none,
                     ),
                   ),
+                  onSubmitted:
+                      !isInteractionLocked ? (_) => _sendMessage() : null,
+                  onTap: !isInteractionLocked ? () {
+                    if (!_focusNode.hasFocus) {
+                      _focusNode.requestFocus();
+                    }
+                  } : null,
+                  textCapitalization: TextCapitalization.sentences,
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 10),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(25),
+                  onTap: !isInteractionLocked ? _sendMessage : null,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: !isInteractionLocked
+                          ? Theme.of(context).colorScheme.primary
+                          : Colors.grey[800],
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

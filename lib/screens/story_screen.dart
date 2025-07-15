@@ -184,6 +184,7 @@ class _StoryScreenState extends State<StoryScreen> {
       ),
       body: Stack(
         children: [
+          // Arka plan resmi
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -192,18 +193,49 @@ class _StoryScreenState extends State<StoryScreen> {
               ),
             ),
           ),
+          // Ana içerik
           Column(
             children: [
               Expanded(
                 child: _isLoading && _messages.isEmpty
-                    ? _buildLoadingIndicator()
+                    ? const SizedBox.shrink() // Yüklenirken listeyi gösterme
                     : _buildMessageList(),
               ),
               if (_isAiTyping) _buildTypingIndicator(),
               _buildMessageInput(),
             ],
           ),
+          // Yükleme göstergesi ve karartma efekti için katman
+          AnimatedOpacity(
+            opacity: _isLoading ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 800),
+            child: Container(
+              color: Colors.black,
+              child: Center(
+                child: _buildLoadingIndicator(),
+              ),
+            ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: AnimatedTextKit(
+        animatedTexts: [
+          TyperAnimatedText(
+            _languageService.storyLoading, // Değişkeni kullandık
+            textStyle: GoogleFonts.sourceSans3(
+              fontSize: 18,
+              color: Colors.white.withOpacity(0.8),
+            ),
+            speed: const Duration(milliseconds: 100),
+          ),
+        ],
+        isRepeatingAnimation: true,
+        repeatForever: true,
       ),
     );
   }
@@ -273,22 +305,6 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
   
-  Widget _buildLoadingIndicator() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white)),
-          const SizedBox(height: 20),
-          Text(
-            _languageService.storyLoading,
-            style: GoogleFonts.sourceSans3(color: Colors.white70, fontSize: 16),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildTypingIndicator() {
     return Padding(
       padding: const EdgeInsets.all(8.0),

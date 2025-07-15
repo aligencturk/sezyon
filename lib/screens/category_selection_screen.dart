@@ -39,6 +39,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   bool _isSkipped = false;
   bool _showWelcome = false;
   bool _showSubtitle = false;
+  bool _isTransitioning = false;
 
   @override
   void initState() {
@@ -114,16 +115,29 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
           : null,
       body: Stack(
         children: [
-          _buildAnimatedTexts(),
-          AnimatedOpacity(
-            opacity: _introStep.index >= _IntroStep.categories.index ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 500),
-            child: Column(
-              children: [
-                SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-                Expanded(child: _buildCategoryIntroView()), // Metodu değiştirdik
-                _buildIntroControls(),
-              ],
+          // Mevcut tüm içerik
+          Stack(
+            children: [
+              _buildAnimatedTexts(),
+              AnimatedOpacity(
+                opacity: _introStep.index >= _IntroStep.categories.index ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 500),
+                child: Column(
+                  children: [
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                    Expanded(child: _buildCategoryIntroView()),
+                    _buildIntroControls(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Kararma efekti için üst katman
+          IgnorePointer(
+            child: AnimatedOpacity(
+              opacity: _isTransitioning ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 500),
+              child: Container(color: Colors.black),
             ),
           ),
         ],
@@ -310,14 +324,30 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   }
 
   void _onCategorySelected(BuildContext context, GameCategory category) {
+    if (_isTransitioning) return; // Zaten bir geçiş başladıysa tekrar tetikleme
+
     _logger.gameEvent('Kategori seçildi ve hikaye ekranına yönlendiriliyor',
         {'category': category.name});
-    Navigator.push(
-      context,
-      FadePageRoute(
-        child: StoryScreen(category: category),
-      ),
-    );
+    
+    setState(() => _isTransitioning = true);
+
+    // Kararma animasyonunun bitmesini bekle
+    Timer(const Duration(milliseconds: 600), () {
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        FadePageRoute(
+          child: StoryScreen(category: category),
+          transitionDuration: const Duration(milliseconds: 800), // Yeni ekran daha yavaş açılsın
+        ),
+      ).then((_) {
+        // Kullanıcı sohbet ekranından geri geldiğinde kararmayı kaldır
+        if (mounted) {
+          setState(() => _isTransitioning = false);
+        }
+      });
+    });
   }
 
   void _openSettings(BuildContext context) async {

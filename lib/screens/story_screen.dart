@@ -25,9 +25,10 @@ class _StoryScreenState extends State<StoryScreen> {
   final _geminiService = GeminiService();
   late final LanguageService _languageService;
   late final LoggerService _logger;
+  final FocusNode _focusNode = FocusNode();
 
   bool _isLoading = true;
-  bool _isAiTyping = false;
+  bool _isInteractionDisabled = false;
 
   @override
   void initState() {
@@ -41,6 +42,7 @@ class _StoryScreenState extends State<StoryScreen> {
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -57,6 +59,7 @@ class _StoryScreenState extends State<StoryScreen> {
         setState(() {
           _messages.add(firstMessage);
           _isLoading = false;
+          _isInteractionDisabled = true;
         });
       }
       _logger.gameEvent('İlk hikaye alındı');
@@ -76,7 +79,7 @@ class _StoryScreenState extends State<StoryScreen> {
     final userMessage = Message(text: text, isUser: true, isAnimated: true);
     setState(() {
       _messages.insert(0, userMessage);
-      _isAiTyping = true;
+      _isInteractionDisabled = true;
     });
 
     _logger.gameEvent('Kullanıcı mesaj gönderdi', {'message': text});
@@ -102,14 +105,13 @@ class _StoryScreenState extends State<StoryScreen> {
       if (mounted) {
         setState(() {
           _messages.insert(0, aiMessage);
-          _isAiTyping = false;
         });
       }
       _logger.info('Yapay zeka yanıtı alındı');
     } catch (e, stackTrace) {
       _logger.error('Yapay zeka yanıtı alınamadı', e, stackTrace);
       if (mounted) {
-        setState(() => _isAiTyping = false);
+        setState(() => _isInteractionDisabled = false);
         _showErrorDialog(e.toString());
       }
     }
@@ -201,7 +203,7 @@ class _StoryScreenState extends State<StoryScreen> {
                     ? const SizedBox.shrink() // Yüklenirken listeyi gösterme
                     : _buildMessageList(),
               ),
-              if (_isAiTyping) _buildTypingIndicator(),
+              if (_isInteractionDisabled && _messages.isNotEmpty && !_isLoading) _buildTypingIndicator(),
               _buildMessageInput(),
             ],
           ),
@@ -253,108 +255,184 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
 
-  Widget _buildMessageBubble(Message message) {
-    final isUser = message.isUser;
-    return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-        margin: const EdgeInsets.symmetric(vertical: 5),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
-        decoration: BoxDecoration(
-          color: isUser
-              ? Theme.of(context).colorScheme.primary
-              : Theme.of(context).colorScheme.secondary.withOpacity(0.8),
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: isUser ? const Radius.circular(20) : Radius.zero,
-            bottomRight: isUser ? Radius.zero : const Radius.circular(20),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: isUser || message.isAnimated
-            ? Text(
-                message.text,
-                style: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16, height: 1.4),
-              )
-            : AnimatedTextKit(
-                animatedTexts: [
-                  TypewriterAnimatedText(
-                    message.text,
-                    textStyle: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16, height: 1.4),
-                    speed: const Duration(milliseconds: 30),
-                  ),
-                ],
-                isRepeatingAnimation: false,
-                totalRepeatCount: 1,
-                onFinished: () {
-                  if (mounted) {
-                    setState(() => message.isAnimated = true);
-                  }
-                },
-              ),
-      ),
-    );
-  }
-  
   Widget _buildTypingIndicator() {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          const SizedBox(
-            width: 24,
-            height: 24,
-            child: CircularProgressIndicator(strokeWidth: 2.0),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            _languageService.aiThinking,
-            style: GoogleFonts.sourceSans3(color: Colors.white70, fontStyle: FontStyle.italic),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: AnimatedTextKit(
+              animatedTexts: [
+                WavyAnimatedText(
+                  _languageService.aiThinking,
+                  textStyle: GoogleFonts.sourceSans3(color: Colors.white70),
+                ),
+              ],
+              isRepeatingAnimation: true,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMessageInput() {
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          color: Colors.black.withOpacity(0.3),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _textController,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: InputDecoration(
-                    hintText: _languageService.inputHint,
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.6)),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+  Widget _buildMessageBubble(Message message) {
+    final isUserMessage = message.isUser;
+    final alignment =
+        isUserMessage ? Alignment.centerRight : Alignment.centerLeft;
+    final color = isUserMessage
+        ? Theme.of(context).colorScheme.primary
+        : Theme.of(context).colorScheme.secondary.withOpacity(0.6);
+
+    // AI mesajları için animasyonlu metin
+    if (!isUserMessage && !message.isAnimated) {
+      message.isAnimated = true;
+      return Container(
+        padding: const EdgeInsets.all(8.0),
+        margin: const EdgeInsets.symmetric(vertical: 4.0),
+        child: Align(
+          alignment: alignment,
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.8,
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 18.0),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: AnimatedTextKit(
+              animatedTexts: [
+                TyperAnimatedText(
+                  message.text,
+                  textStyle: GoogleFonts.sourceSans3(
+                    color: Colors.white,
+                    fontSize: 16,
                   ),
-                  style: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16),
-                  onSubmitted: (_) => _sendMessage(),
+                  speed: const Duration(milliseconds: 30),
                 ),
+              ],
+              isRepeatingAnimation: false,
+              totalRepeatCount: 1,
+              onFinished: () {
+                if (mounted) {
+                  setState(() {
+                    _isInteractionDisabled = false;
+                  });
+                  FocusScope.of(context).requestFocus(_focusNode);
+                }
+              },
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Align(
+        alignment: alignment,
+        child: Container(
+          constraints: BoxConstraints(
+            maxWidth: MediaQuery.of(context).size.width * 0.8,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 18.0),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            message.text,
+            style: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMessageInput() {
+    final bool isReadOnly = _isLoading || _isInteractionDisabled;
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.only(
+        topLeft: Radius.circular(30.0),
+        topRight: Radius.circular(30.0),
+      ),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 20.0),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.4),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(30.0),
+              topRight: Radius.circular(30.0),
+            ),
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withOpacity(0.2),
+                width: 1.0,
               ),
-              IconButton(
-                icon: const Icon(Icons.send),
-                onPressed: _sendMessage,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ],
+            ),
+          ),
+          child: AbsorbPointer(
+            absorbing: isReadOnly,
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    focusNode: _focusNode,
+                    controller: _textController,
+                    readOnly: isReadOnly,
+                    style: GoogleFonts.sourceSans3(
+                      color: !isReadOnly ? Colors.white : Colors.grey[600],
+                    ),
+                    decoration: InputDecoration(
+                      hintText: _languageService.inputHint,
+                      hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                      filled: true,
+                      fillColor: Colors.white.withOpacity(0.1),
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25.0),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onSubmitted: (_) => !isReadOnly ? _sendMessage() : null,
+                    textCapitalization: TextCapitalization.sentences,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(25),
+                    onTap: !isReadOnly ? _sendMessage : null,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: !isReadOnly
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.grey[800],
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.send_rounded,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

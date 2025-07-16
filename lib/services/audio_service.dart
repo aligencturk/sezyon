@@ -9,6 +9,7 @@ class AudioService {
   AudioService._internal();
 
   final AudioPlayer _backgroundMusicPlayer = AudioPlayer();
+  final AudioPlayer _backgroundMusicPlayer2 = AudioPlayer(); // İkinci player için
   final AudioPlayer _soundEffectPlayer = AudioPlayer();
   final LoggerService _logger = LoggerService();
 
@@ -17,6 +18,7 @@ class AudioService {
   double _musicVolume = 0.5;
   double _soundVolume = 0.7;
   bool _isAppInBackground = false;
+  bool _isUsingPlayer1 = true; // Hangi player'ın aktif olduğunu takip et
 
   /// Müzik çalma durumu
   bool get isMusicEnabled => _isMusicEnabled;
@@ -65,11 +67,17 @@ class AudioService {
     bool played = false;
     for (final musicPath in fileCandidates) {
       try {
-        await _fadeOutCurrentMusic();
-        await _backgroundMusicPlayer.setReleaseMode(ReleaseMode.loop);
-        await _backgroundMusicPlayer.setVolume(0.0);
-        await _backgroundMusicPlayer.play(AssetSource(musicPath));
-        await _fadeInNewMusic();
+        // Hangi player'ı kullanacağımızı belirle
+        final nextPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer2 : _backgroundMusicPlayer;
+        
+        // Yeni müziği başlat (sessiz olarak)
+        await nextPlayer.setReleaseMode(ReleaseMode.loop);
+        await nextPlayer.setVolume(0.0);
+        await nextPlayer.play(AssetSource(musicPath));
+        
+        // Yumuşak geçiş yap
+        await _smoothTransition();
+        
         _logger.info('🎵 Kategori müziği başarıyla çalınıyor: $musicPath');
         played = true;
         break;
@@ -129,10 +137,41 @@ class AudioService {
     }
   }
 
+  /// Yumuşak müzik geçişi yap
+  Future<void> _smoothTransition() async {
+    const transitionDuration = Duration(milliseconds: 1500);
+    const steps = 30;
+    const stepDuration = 1500 ~/ steps;
+    
+    // Hangi player'ın aktif olduğunu belirle
+    final currentPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer : _backgroundMusicPlayer2;
+    final nextPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer2 : _backgroundMusicPlayer;
+    
+    // Mevcut müziği yavaşça azalt ve yeni müziği yavaşça artır
+    for (int i = 0; i <= steps; i++) {
+      final fadeOutVolume = _musicVolume * (steps - i) / steps;
+      final fadeInVolume = _musicVolume * i / steps;
+      
+      // Mevcut müziği azalt
+      await currentPlayer.setVolume(fadeOutVolume);
+      // Yeni müziği artır
+      await nextPlayer.setVolume(fadeInVolume);
+      
+      await Future.delayed(Duration(milliseconds: stepDuration));
+    }
+    
+    // Geçiş tamamlandıktan sonra eski player'ı durdur
+    await currentPlayer.stop();
+    
+    // Aktif player'ı güncelle
+    _isUsingPlayer1 = !_isUsingPlayer1;
+  }
+
   /// Arka plan müziğini durdur
   Future<void> stopBackgroundMusic() async {
     try {
-      await _backgroundMusicPlayer.stop();
+      final currentPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer : _backgroundMusicPlayer2;
+      await currentPlayer.stop();
       _logger.info('🔇 Arka plan müziği durduruldu');
     } catch (e) {
       _logger.error('Müzik durdurulurken hata oluştu', e);
@@ -142,7 +181,8 @@ class AudioService {
   /// Arka plan müziğini duraklat
   Future<void> pauseBackgroundMusic() async {
     try {
-      await _backgroundMusicPlayer.pause();
+      final currentPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer : _backgroundMusicPlayer2;
+      await currentPlayer.pause();
       _logger.info('⏸️ Arka plan müziği duraklatıldı');
     } catch (e) {
       _logger.error('Müzik duraklatılırken hata oluştu', e);
@@ -153,18 +193,18 @@ class AudioService {
   Future<void> playMainMenuMusic() async {
     if (!_isMusicEnabled || _isAppInBackground) return;
 
+    // Hangi player'ı kullanacağımızı belirle
+    final nextPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer2 : _backgroundMusicPlayer;
+
     // Önce OGG formatını dene, yoksa MP3'e geç
     try {
-      // Önce mevcut müziği yavaşça azalt
-      await _fadeOutCurrentMusic();
+      // Ana menü müziğini başlat (OGG) - sessiz olarak
+      await nextPlayer.setReleaseMode(ReleaseMode.loop);
+      await nextPlayer.setVolume(0.0);
+      await nextPlayer.play(AssetSource('audio/ana-menü.ogg'));
       
-      // Ana menü müziğini başlat (OGG)
-      await _backgroundMusicPlayer.setReleaseMode(ReleaseMode.loop);
-      await _backgroundMusicPlayer.setVolume(0.0); // Başlangıçta sessiz
-      await _backgroundMusicPlayer.play(AssetSource('audio/ana-menü.ogg'));
-      
-      // Ana menü müziğini yavaşça artır
-      await _fadeInNewMusic();
+      // Yumuşak geçiş yap
+      await _smoothTransition();
       
       _logger.info('🎵 Ana menü müziği çalınıyor (OGG)');
     } catch (e) {
@@ -172,16 +212,13 @@ class AudioService {
       _logger.info('🎵 OGG bulunamadı, MP3 deneniyor: audio/ana-menü.mp3');
       
       try {
-        // Önce mevcut müziği yavaşça azalt
-        await _fadeOutCurrentMusic();
+        // Ana menü müziğini başlat (MP3) - sessiz olarak
+        await nextPlayer.setReleaseMode(ReleaseMode.loop);
+        await nextPlayer.setVolume(0.0);
+        await nextPlayer.play(AssetSource('audio/ana-menü.mp3'));
         
-        // Ana menü müziğini başlat (MP3)
-        await _backgroundMusicPlayer.setReleaseMode(ReleaseMode.loop);
-        await _backgroundMusicPlayer.setVolume(0.0); // Başlangıçta sessiz
-        await _backgroundMusicPlayer.play(AssetSource('audio/ana-menü.mp3'));
-        
-        // Ana menü müziğini yavaşça artır
-        await _fadeInNewMusic();
+        // Yumuşak geçiş yap
+        await _smoothTransition();
         
         _logger.info('🎵 Ana menü müziği çalınıyor (MP3)');
       } catch (e2) {
@@ -195,7 +232,8 @@ class AudioService {
     if (!_isMusicEnabled) return;
     
     try {
-      await _backgroundMusicPlayer.resume();
+      final currentPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer : _backgroundMusicPlayer2;
+      await currentPlayer.resume();
       _logger.info('▶️ Arka plan müziği devam ettirildi');
     } catch (e) {
       _logger.error('Müzik devam ettirilirken hata oluştu', e);
@@ -219,7 +257,8 @@ class AudioService {
   /// Müzik ses seviyesini ayarla
   Future<void> setMusicVolume(double volume) async {
     _musicVolume = volume.clamp(0.0, 1.0);
-    await _backgroundMusicPlayer.setVolume(_musicVolume);
+    final currentPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer : _backgroundMusicPlayer2;
+    await currentPlayer.setVolume(_musicVolume);
     _logger.info('🔊 Müzik ses seviyesi ayarlandı: $_musicVolume');
   }
 
@@ -254,7 +293,8 @@ class AudioService {
     _isAppInBackground = true;
     
     try {
-      await _backgroundMusicPlayer.pause();
+      final currentPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer : _backgroundMusicPlayer2;
+      await currentPlayer.pause();
       await _soundEffectPlayer.pause();
       _logger.info('⏸️ Uygulama arka plana alındı, müzik duraklatıldı');
     } catch (e) {
@@ -268,7 +308,8 @@ class AudioService {
     
     if (_isMusicEnabled) {
       try {
-        await _backgroundMusicPlayer.resume();
+        final currentPlayer = _isUsingPlayer1 ? _backgroundMusicPlayer : _backgroundMusicPlayer2;
+        await currentPlayer.resume();
         _logger.info('▶️ Uygulama ön plana geldi, müzik devam ediyor');
       } catch (e) {
         _logger.error('Müzik devam ettirilirken hata oluştu', e);
@@ -280,6 +321,7 @@ class AudioService {
   Future<void> dispose() async {
     try {
       await _backgroundMusicPlayer.dispose();
+      await _backgroundMusicPlayer2.dispose();
       await _soundEffectPlayer.dispose();
       _logger.info('🧹 Audio servisi temizlendi');
     } catch (e) {

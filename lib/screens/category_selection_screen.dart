@@ -7,8 +7,10 @@ import 'package:lottie/lottie.dart';
 import 'package:sezyon/models/game_category.dart';
 import 'package:sezyon/screens/settings_screen.dart';
 import 'package:sezyon/screens/story_screen.dart';
+import 'package:sezyon/screens/credits_screen.dart';
 import 'package:sezyon/services/language_service.dart';
 import 'package:sezyon/services/logger_service.dart';
+import 'package:sezyon/services/audio_service.dart';
 import 'package:sezyon/utils/custom_page_route.dart';
 
 /// Oyun kategorisi seçimi ekranı
@@ -33,6 +35,7 @@ enum _IntroStep {
 class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   late final LoggerService _logger;
   late final LanguageService _languageService;
+  final AudioService _audioService = AudioService();
   
   _IntroStep _introStep = _IntroStep.blackScreen;
   int _visibleCategoryIndex = -1;
@@ -105,6 +108,11 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
           ? AppBar(
               title: Text(_languageService.categorySelectionTitle),
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () => _openCredits(context),
+                  tooltip: _languageService.getLocalizedText('Jenerik', 'Credits'),
+                ),
                 IconButton(
                   icon: const Icon(Icons.settings_outlined),
                   onPressed: () => _openSettings(context),
@@ -329,6 +337,9 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     _logger.gameEvent('Kategori seçildi ve hikaye ekranına yönlendiriliyor',
         {'category': category.name});
     
+    // Kategori seçim sesi
+    _audioService.playSoundEffect('audio/button_click.wav');
+    
     setState(() => _isTransitioning = true);
 
     // Kararma animasyonunun bitmesini bekle
@@ -345,9 +356,23 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
         // Kullanıcı sohbet ekranından geri geldiğinde kararmayı kaldır
         if (mounted) {
           setState(() => _isTransitioning = false);
+          // Ana menü müziğine yumuşak geçiş
+          _audioService.playMainMenuMusic();
         }
       });
     });
+  }
+
+  void _openCredits(BuildContext context) async {
+    _logger.gameEvent('Credits ekranı açılıyor');
+    // Credits buton tıklama sesi
+    _audioService.playSoundEffect('audio/button_click.wav');
+    await Navigator.push(
+      context,
+      FadePageRoute(
+        child: const CreditsScreen(),
+      ),
+    );
   }
 
   void _openSettings(BuildContext context) async {

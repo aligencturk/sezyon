@@ -1,0 +1,55 @@
+Bu klasörde aşağıdaki ses dosyalarını eklemeniz gerekiyor:
+
+Müzik Dosyaları:
+✅ ana-menü.mp3 (Ana menü arka plan müziği) - YÜKLENDİ
+- ana-menü.ogg (Ana menü arka plan müziği - opsiyonel, daha küçük dosya)
+
+Kategori Müzikleri (Her kategori için ayrı müzik):
+- savaş.mp3 veya savaş.ogg (Savaş kategorisi müziği)
+- bilimkurgu.mp3 veya bilimkurgu.ogg (Bilim Kurgu kategorisi müziği)
+- fantastik.mp3 veya fantastik.ogg (Fantastik kategorisi müziği)
+✅ gizem.mp3 (Gizem kategorisi müziği) - YÜKLENDİ
+- gizem.ogg (Gizem kategorisi müziği - opsiyonel, daha küçük dosya)
+- tarihi.mp3 veya tarihi.ogg (Tarihi kategorisi müziği)
+- kıyamet.mp3 veya kıyamet.ogg (Kıyamet Sonrası kategorisi müziği)
+
+Ses Efektleri:
+- button_click.wav veya button_click.ogg (Buton tıklama sesi)
+- message_send.wav veya message_send.ogg (Mesaj gönderme sesi)
+- ai_response.wav veya ai_response.ogg (AI yanıt sesi)
+- game_start.wav veya game_start.ogg (Oyun başlangıç sesi)
+- restart.wav veya restart.ogg (Yeniden başlatma sesi)
+- page_turn.wav veya page_turn.ogg (Sayfa çevirme sesi)
+- notification.wav veya notification.ogg (Bildirim sesi)
+- success.wav veya success.ogg (Başarı sesi)
+- error.wav veya error.ogg (Hata sesi)
+
+Özel Sesler:
+- credits.ogg (Credits ekranı müziği - opsiyonel)
+
+Not: Bu dosyaları internetten ücretsiz ses efektleri sitelerinden indirebilir veya kendi ses dosyalarınızı kullanabilirsiniz.
+
+Müzik Akışı:
+1. Uygulama açılır → ana-menü.ogg (varsa) veya ana-menü.mp3 çalar
+2. Kategori seçilir → [kategori].ogg (varsa) veya [kategori].mp3 çalar
+3. Oyun bitince → ana-menü müziğine yumuşak geçiş ile geri döner
+
+Çoklu Format Desteği:
+- Önce OGG formatı denenir (daha küçük dosya boyutu)
+- OGG yoksa MP3 formatı kullanılır
+- Her iki format da desteklenir
+- Yumuşak geçişler her iki format için de çalışır
+
+Yumuşak Geçiş Özellikleri:
+- Müzik geçişleri 1 saniye sürer
+- Mevcut müzik yavaşça azalır
+- Yeni müzik yavaşça artar
+- Tüm müzikler loop modunda çalar
+
+Kategori Müzik Önerileri:
+- war_music.mp3: Dramatik, savaş temalı müzik
+- scifi_music.mp3: Futuristik, uzay temalı müzik
+- fantasy_music.mp3: Epik, büyülü müzik
+- mystery_music.mp3: Gizemli, kasvetli müzik
+- historical_music.mp3: Tarihi dönem müziği
+- apocalypse_music.mp3: Korkutucu, tehlikeli müzik 

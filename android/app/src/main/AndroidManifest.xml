@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Ses izinleri -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    
     <application
         android:label="sezyon"
         android:name="${applicationName}"

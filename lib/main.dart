@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sezyon/screens/splash_screen.dart';
 import 'screens/category_selection_screen.dart';
 import 'services/logger_service.dart';
 import 'services/language_service.dart';
+import 'services/audio_service.dart';
 
 /// Ana uygulama giriş noktası
 Future<void> main() async {
@@ -32,12 +34,52 @@ Future<void> main() async {
     logger.error('Dil servisi başlatılırken hata', e);
   }
   
+  // Audio servisini başlat
+  try {
+    logger.info('🎵 Audio servisi başlatıldı');
+  } catch (e) {
+    logger.error('Audio servisi başlatılırken hata', e);
+  }
+  
   runApp(const SezyonApp());
 }
 
 /// Ana uygulama widget'ı
-class SezyonApp extends StatelessWidget {
+class SezyonApp extends StatefulWidget {
   const SezyonApp({super.key});
+
+  @override
+  State<SezyonApp> createState() => _SezyonAppState();
+}
+
+class _SezyonAppState extends State<SezyonApp> with WidgetsBindingObserver {
+  final AudioService _audioService = AudioService();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.paused:
+        _audioService.onAppPaused();
+        break;
+      case AppLifecycleState.resumed:
+        _audioService.onAppResumed();
+        break;
+      default:
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

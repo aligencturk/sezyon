@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sezyon/screens/category_selection_screen.dart';
 import 'package:sezyon/utils/custom_page_route.dart';
+import 'package:sezyon/services/audio_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -16,6 +17,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  final AudioService _audioService = AudioService();
 
   @override
   void initState() {
@@ -34,7 +36,10 @@ class _SplashScreenState extends State<SplashScreen>
       CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
     );
 
-    _controller.forward();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.forward();
+      _audioService.playMainMenuMusic();
+    });
 
     Timer(const Duration(seconds: 5), () {
       if (mounted) {

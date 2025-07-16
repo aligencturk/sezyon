@@ -126,6 +126,20 @@ class LanguageService {
     'What would you like to do?'
   );
 
+  String get audioSettings => getLocalizedText('Ses Ayarları', 'Audio Settings');
+  
+  String get musicVolume => getLocalizedText('Müzik Sesi', 'Music Volume');
+  
+  String get soundEffectsVolume => getLocalizedText('Ses Efektleri', 'Sound Effects');
+  
+  String get musicEnabled => getLocalizedText('Müzik Açık', 'Music Enabled');
+  
+  String get soundEffectsEnabled => getLocalizedText('Ses Efektleri Açık', 'Sound Effects Enabled');
+  
+  String get mute => getLocalizedText('Sessiz', 'Mute');
+  
+  String get unmute => getLocalizedText('Sesi Aç', 'Unmute');
+
   /// Kategori isimlerini döndürür
   String getCategoryName(String categoryKey) {
     switch (categoryKey) {

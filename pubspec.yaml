@@ -42,6 +42,7 @@ dependencies:
   animated_text_kit: ^4.2.3
   flutter_staggered_animations: ^1.1.1
   lottie: ^3.3.1
+  audioplayers: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -69,6 +70,7 @@ flutter:
   assets:
     - .env
     - assets/images/
+    - assets/audio/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

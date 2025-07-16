@@ -8,6 +8,7 @@ import 'package:sezyon/models/message.dart';
 import 'package:sezyon/services/gemini_service.dart';
 import 'package:sezyon/services/language_service.dart';
 import 'package:sezyon/services/logger_service.dart';
+import 'package:sezyon/services/audio_service.dart';
 
 class StoryScreen extends StatefulWidget {
   final GameCategory category;
@@ -25,25 +26,38 @@ class _StoryScreenState extends State<StoryScreen> {
   final _geminiService = GeminiService();
   late final LanguageService _languageService;
   late final LoggerService _logger;
-  final FocusNode _focusNode = FocusNode();
+  final AudioService _audioService = AudioService();
+  FocusNode? _focusNode;
 
   bool _isLoading = true;
   bool _isInteractionDisabled = true;
   bool _isWaitingForApiResponse = false;
+  double _musicVolume = 0.5;
+  double _soundVolume = 0.7;
+  bool _isMusicEnabled = true;
+  bool _isSoundEnabled = true;
 
   @override
   void initState() {
     super.initState();
     _languageService = LanguageService();
     _logger = LoggerService();
+    _loadAudioSettings();
     _startGame();
+  }
+
+  void _loadAudioSettings() {
+    _musicVolume = _audioService.musicVolume;
+    _soundVolume = _audioService.soundVolume;
+    _isMusicEnabled = _audioService.isMusicEnabled;
+    _isSoundEnabled = _audioService.isSoundEnabled;
   }
 
   @override
   void dispose() {
     _textController.dispose();
     _scrollController.dispose();
-    _focusNode.dispose();
+    _focusNode?.dispose();
     super.dispose();
   }
 
@@ -53,6 +67,12 @@ class _StoryScreenState extends State<StoryScreen> {
       _isInteractionDisabled = true;
     });
     _logger.gameEvent('Oyun başlatılıyor', {'category': widget.category.name});
+
+    // Oyun başlangıç sesi
+    _audioService.playSoundEffect('audio/game_start.wav');
+    
+    // Kategori bazlı müziğe geç
+    await _audioService.playCategoryMusic(widget.category.key);
 
     try {
       final initialPrompt = widget.category.getInitialPrompt();
@@ -81,6 +101,9 @@ class _StoryScreenState extends State<StoryScreen> {
   void _sendMessage() async {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
+
+    // Mesaj gönderme sesi
+    _audioService.playSoundEffect('audio/message_send.wav');
 
     final userMessage = Message(text: text, isUser: true, isAnimated: true);
     setState(() {
@@ -115,6 +138,8 @@ class _StoryScreenState extends State<StoryScreen> {
           _messages.insert(0, aiMessage);
         });
       }
+      // AI yanıt sesi
+      _audioService.playSoundEffect('audio/ai_response.wav');
       _logger.info('Yapay zeka yanıtı alındı');
     } catch (e, stackTrace) {
       _logger.error('Yapay zeka yanıtı alınamadı', e, stackTrace);
@@ -130,6 +155,8 @@ class _StoryScreenState extends State<StoryScreen> {
 
   void _restartGame() {
     _logger.gameEvent('Oyun yeniden başlatılıyor');
+    // Yeniden başlatma sesi
+    _audioService.playSoundEffect('audio/restart.wav');
     setState(() {
       _messages.clear();
       _isLoading = true;
@@ -176,6 +203,131 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
 
+  void _showAudioSettingsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Row(
+            children: [
+              const Icon(Icons.volume_up, color: Colors.blue),
+              const SizedBox(width: 8),
+              Text(_languageService.audioSettings),
+            ],
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Müzik ayarları
+                Row(
+                  children: [
+                    Icon(
+                      _isMusicEnabled ? Icons.music_note : Icons.music_off,
+                      color: _isMusicEnabled ? Colors.green : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _languageService.musicVolume,
+                        style: GoogleFonts.sourceSans3(fontSize: 16),
+                      ),
+                    ),
+                    Switch(
+                      value: _isMusicEnabled,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          _isMusicEnabled = value;
+                        });
+                        _audioService.toggleMusic();
+                      },
+                    ),
+                  ],
+                ),
+                if (_isMusicEnabled) ...[
+                  Slider(
+                    value: _musicVolume,
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 10,
+                    label: '${(_musicVolume * 100).round()}%',
+                    onChanged: (value) {
+                      setDialogState(() {
+                        _musicVolume = value;
+                      });
+                      _audioService.setMusicVolume(value);
+                    },
+                  ),
+                ],
+                const SizedBox(height: 16),
+                // Ses efektleri ayarları
+                Row(
+                  children: [
+                    Icon(
+                      _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
+                      color: _isSoundEnabled ? Colors.green : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _languageService.soundEffectsVolume,
+                        style: GoogleFonts.sourceSans3(fontSize: 16),
+                      ),
+                    ),
+                    Switch(
+                      value: _isSoundEnabled,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          _isSoundEnabled = value;
+                        });
+                        _audioService.toggleSound();
+                      },
+                    ),
+                  ],
+                ),
+                if (_isSoundEnabled) ...[
+                  Slider(
+                    value: _soundVolume,
+                    min: 0.0,
+                    max: 1.0,
+                    divisions: 10,
+                    label: '${(_soundVolume * 100).round()}%',
+                    onChanged: (value) {
+                      setDialogState(() {
+                        _soundVolume = value;
+                      });
+                      _audioService.setSoundVolume(value);
+                    },
+                  ),
+                ],
+                const SizedBox(height: 16),
+                // Test butonu
+                ElevatedButton.icon(
+                  onPressed: _isSoundEnabled ? () {
+                    _audioService.playSoundEffect('audio/message_send.wav');
+                  } : null,
+                  icon: const Icon(Icons.play_arrow),
+                  label: Text(_languageService.getLocalizedText('Test Et', 'Test')),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(_languageService.ok),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,6 +341,11 @@ class _StoryScreenState extends State<StoryScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.volume_up),
+            onPressed: _showAudioSettingsDialog,
+            tooltip: _languageService.audioSettings,
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _messages.isNotEmpty && !_isLoading ? _showRestartDialog : null,
             tooltip: _languageService.restart,
@@ -199,10 +356,15 @@ class _StoryScreenState extends State<StoryScreen> {
         children: [
           // Arka plan resmi
           Container(
-            decoration: const BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage('assets/images/background.jpg'),
-                fit: BoxFit.cover,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.8),
+                  Colors.black.withOpacity(0.6),
+                  Colors.black.withOpacity(0.8),
+                ],
               ),
             ),
           ),
@@ -336,10 +498,10 @@ class _StoryScreenState extends State<StoryScreen> {
                   setState(() {
                     _isInteractionDisabled = false;
                   });
-                  // Animasyon tamamlandıktan sonra TextField'a focus ver
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (_focusNode.canRequestFocus) {
-                      _focusNode.requestFocus();
+                  // Animasyon tamamlandıktan sonra focus ver
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted && _focusNode?.canRequestFocus == true) {
+                      _focusNode?.requestFocus();
                     }
                   });
                 }
@@ -402,11 +564,12 @@ class _StoryScreenState extends State<StoryScreen> {
             children: [
               Expanded(
                 child: TextField(
-                  focusNode: _focusNode,
+                  key: ValueKey('textField_${_isInteractionDisabled}'),
+                  focusNode: _focusNode ??= FocusNode(),
                   controller: _textController,
                   readOnly: isInteractionLocked,
                   showCursor: !isInteractionLocked,
-                  enableInteractiveSelection: !isInteractionLocked,
+                  autofocus: false,
                   style: GoogleFonts.sourceSans3(
                     color: !isInteractionLocked ? Colors.white : Colors.grey[600],
                   ),
@@ -422,13 +585,22 @@ class _StoryScreenState extends State<StoryScreen> {
                       borderSide: BorderSide.none,
                     ),
                   ),
-                  onSubmitted:
-                      !isInteractionLocked ? (_) => _sendMessage() : null,
-                  onTap: !isInteractionLocked ? () {
-                    if (!_focusNode.hasFocus) {
-                      _focusNode.requestFocus();
+                  onSubmitted: !isInteractionLocked ? (value) {
+                    if (value.trim().isNotEmpty) {
+                      _sendMessage();
                     }
                   } : null,
+                  onTap: !isInteractionLocked ? () {
+                    // Klavyeyi zorla aç
+                    _focusNode?.unfocus();
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      if (mounted && !isInteractionLocked) {
+                        _focusNode?.requestFocus();
+                      }
+                    });
+                  } : null,
+                  keyboardType: TextInputType.text,
+                  textInputAction: TextInputAction.send,
                   textCapitalization: TextCapitalization.sentences,
                 ),
               ),
@@ -437,7 +609,11 @@ class _StoryScreenState extends State<StoryScreen> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(25),
-                  onTap: !isInteractionLocked ? _sendMessage : null,
+                  onTap: !isInteractionLocked ? () {
+                    if (_textController.text.trim().isNotEmpty) {
+                      _sendMessage();
+                    }
+                  } : null,
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(

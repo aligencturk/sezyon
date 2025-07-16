@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/language_service.dart';
 import '../services/logger_service.dart';
+import '../services/audio_service.dart';
 
 /// Ayarlar ekranı
 class SettingsScreen extends StatefulWidget {
@@ -15,6 +16,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final LanguageService _languageService = LanguageService();
   final LoggerService _logger = LoggerService();
+  final AudioService _audioService = AudioService();
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +34,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 10),
           ...AppLanguage.values.map((language) => _buildLanguageOption(language)),
+          const SizedBox(height: 30),
+          _buildSectionTitle(
+            context,
+            icon: Icons.music_note,
+            title: _languageService.getLocalizedText('Ses Ayarları', 'Audio Settings'),
+          ),
+          const SizedBox(height: 10),
+          _buildAudioSettingsCard(),
           const SizedBox(height: 30),
           _buildSectionTitle(
             context,
@@ -109,6 +119,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  Widget _buildAudioSettingsCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        children: [
+          _buildAudioToggle(
+            Icons.music_note,
+            _languageService.getLocalizedText('Arka Plan Müziği', 'Background Music'),
+            _audioService.isMusicEnabled,
+            (value) => _toggleMusic(value),
+          ),
+          const SizedBox(height: 15),
+          _buildAudioToggle(
+            Icons.volume_up,
+            _languageService.getLocalizedText('Ses Efektleri', 'Sound Effects'),
+            _audioService.isSoundEnabled,
+            (value) => _toggleSound(value),
+          ),
+          const SizedBox(height: 20),
+          _buildVolumeSlider(
+            Icons.music_note,
+            _languageService.getLocalizedText('Müzik Ses Seviyesi', 'Music Volume'),
+            _audioService.musicVolume,
+            (value) => _setMusicVolume(value),
+          ),
+          const SizedBox(height: 15),
+          _buildVolumeSlider(
+            Icons.volume_up,
+            _languageService.getLocalizedText('Ses Efekti Seviyesi', 'Sound Effects Volume'),
+            _audioService.soundVolume,
+            (value) => _setSoundVolume(value),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInfoCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -131,6 +182,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAudioToggle(IconData icon, String title, bool value, ValueChanged<bool> onChanged) {
+    return Row(
+      children: [
+        Icon(
+          icon,
+          color: Theme.of(context).colorScheme.primary,
+          size: 20,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        Switch(
+          value: value,
+          onChanged: onChanged,
+          activeColor: Theme.of(context).colorScheme.primary,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVolumeSlider(IconData icon, String title, double value, ValueChanged<double> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              icon,
+              color: Theme.of(context).colorScheme.primary,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Text(
+              '${(value * 100).round()}%',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Slider(
+          value: value,
+          onChanged: onChanged,
+          activeColor: Theme.of(context).colorScheme.primary,
+          inactiveColor: Colors.grey.shade700,
+        ),
+      ],
     );
   }
 
@@ -167,6 +287,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ],
     );
+  }
+
+  /// Müziği aç/kapat
+  Future<void> _toggleMusic(bool value) async {
+    // Buton tıklama sesi
+    _audioService.playSoundEffect('audio/button_click.wav');
+    
+    await _audioService.toggleMusic();
+    setState(() {});
+    
+    _logger.gameEvent('Müzik ayarı değiştirildi', {
+      'enabled': _audioService.isMusicEnabled,
+    });
+  }
+
+  /// Ses efektlerini aç/kapat
+  void _toggleSound(bool value) {
+    // Buton tıklama sesi (ses efektleri kapalıysa çalmayacak)
+    if (_audioService.isSoundEnabled) {
+      _audioService.playSoundEffect('audio/button_click.wav');
+    }
+    
+    _audioService.toggleSound();
+    setState(() {});
+    
+    _logger.gameEvent('Ses efekti ayarı değiştirildi', {
+      'enabled': _audioService.isSoundEnabled,
+    });
+  }
+
+  /// Müzik ses seviyesini ayarla
+  Future<void> _setMusicVolume(double value) async {
+    await _audioService.setMusicVolume(value);
+    setState(() {});
+    
+    _logger.gameEvent('Müzik ses seviyesi değiştirildi', {
+      'volume': value,
+    });
+  }
+
+  /// Ses efekti ses seviyesini ayarla
+  Future<void> _setSoundVolume(double value) async {
+    await _audioService.setSoundVolume(value);
+    setState(() {});
+    
+    _logger.gameEvent('Ses efekti ses seviyesi değiştirildi', {
+      'volume': value,
+    });
   }
 
   /// Dil değiştirme

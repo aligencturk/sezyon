@@ -337,8 +337,8 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     _logger.gameEvent('Kategori seçildi ve hikaye ekranına yönlendiriliyor',
         {'category': category.name});
     
-    // Kategori seçim sesi
-    _audioService.playSoundEffect('audio/button_click.wav');
+    // Kategori seçim sesi - mevcut dosya yoksa kaldır
+    // _audioService.playSoundEffect('audio/button_click.wav');
     
     setState(() => _isTransitioning = true);
 
@@ -365,8 +365,8 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
 
   void _openCredits(BuildContext context) async {
     _logger.gameEvent('Credits ekranı açılıyor');
-    // Credits buton tıklama sesi
-    _audioService.playSoundEffect('audio/button_click.wav');
+    // Credits buton tıklama sesi - mevcut dosya yoksa kaldır
+    // _audioService.playSoundEffect('audio/button_click.wav');
     await Navigator.push(
       context,
       FadePageRoute(

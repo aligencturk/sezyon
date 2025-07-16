@@ -291,8 +291,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// Müziği aç/kapat
   Future<void> _toggleMusic(bool value) async {
-    // Buton tıklama sesi
-    _audioService.playSoundEffect('audio/button_click.wav');
+    // Buton tıklama sesi - mevcut dosya yoksa kaldır
+    // _audioService.playSoundEffect('audio/button_click.wav');
     
     await _audioService.toggleMusic();
     setState(() {});
@@ -304,10 +304,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// Ses efektlerini aç/kapat
   void _toggleSound(bool value) {
-    // Buton tıklama sesi (ses efektleri kapalıysa çalmayacak)
-    if (_audioService.isSoundEnabled) {
-      _audioService.playSoundEffect('audio/button_click.wav');
-    }
+    // Buton tıklama sesi (ses efektleri kapalıysa çalmayacak) - mevcut dosya yoksa kaldır
+    // if (_audioService.isSoundEnabled) {
+    //   _audioService.playSoundEffect('audio/button_click.wav');
+    // }
     
     _audioService.toggleSound();
     setState(() {});

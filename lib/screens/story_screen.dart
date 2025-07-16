@@ -68,8 +68,8 @@ class _StoryScreenState extends State<StoryScreen> {
     });
     _logger.gameEvent('Oyun başlatılıyor', {'category': widget.category.name});
 
-    // Oyun başlangıç sesi
-    _audioService.playSoundEffect('audio/game_start.wav');
+    // Oyun başlangıç sesi - mevcut dosya yoksa kaldır
+    // _audioService.playSoundEffect('audio/game_start.wav');
     
     // Kategori bazlı müziğe geç
     await _audioService.playCategoryMusic(widget.category.key);
@@ -102,8 +102,8 @@ class _StoryScreenState extends State<StoryScreen> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
-    // Mesaj gönderme sesi
-    _audioService.playSoundEffect('audio/message_send.wav');
+    // Mesaj gönderme sesi - mevcut dosya yoksa kaldır
+    // _audioService.playSoundEffect('audio/message_send.wav');
 
     final userMessage = Message(text: text, isUser: true, isAnimated: true);
     setState(() {
@@ -138,8 +138,8 @@ class _StoryScreenState extends State<StoryScreen> {
           _messages.insert(0, aiMessage);
         });
       }
-      // AI yanıt sesi
-      _audioService.playSoundEffect('audio/ai_response.wav');
+      // AI yanıt sesi - mevcut dosya yoksa kaldır
+      // _audioService.playSoundEffect('audio/ai_response.wav');
       _logger.info('Yapay zeka yanıtı alındı');
     } catch (e, stackTrace) {
       _logger.error('Yapay zeka yanıtı alınamadı', e, stackTrace);
@@ -155,8 +155,8 @@ class _StoryScreenState extends State<StoryScreen> {
 
   void _restartGame() {
     _logger.gameEvent('Oyun yeniden başlatılıyor');
-    // Yeniden başlatma sesi
-    _audioService.playSoundEffect('audio/restart.wav');
+    // Yeniden başlatma sesi - mevcut dosya yoksa kaldır
+    // _audioService.playSoundEffect('audio/restart.wav');
     setState(() {
       _messages.clear();
       _isLoading = true;
@@ -302,18 +302,18 @@ class _StoryScreenState extends State<StoryScreen> {
                   ),
                 ],
                 const SizedBox(height: 16),
-                // Test butonu
-                ElevatedButton.icon(
-                  onPressed: _isSoundEnabled ? () {
-                    _audioService.playSoundEffect('audio/message_send.wav');
-                  } : null,
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text(_languageService.getLocalizedText('Test Et', 'Test')),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
+                // Test butonu - ses efekti dosyası yoksa kaldır
+                // ElevatedButton.icon(
+                //   onPressed: _isSoundEnabled ? () {
+                //     _audioService.playSoundEffect('audio/message_send.wav');
+                //   } : null,
+                //   icon: const Icon(Icons.play_arrow),
+                //   label: Text(_languageService.getLocalizedText('Test Et', 'Test')),
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: Colors.blue,
+                //     foregroundColor: Colors.white,
+                //   ),
+                // ),
               ],
             ),
           ),

@@ -39,8 +39,8 @@ class _CreditsScreenState extends State<CreditsScreen>
     // Animasyonu başlat
     _scrollController.forward();
     
-    // Credits müziği çal (eğer varsa)
-    _audioService.playSoundEffect('audio/credits.ogg');
+    // Credits müziği çal (eğer varsa) - mevcut dosya yoksa kaldır
+    // _audioService.playSoundEffect('audio/credits.ogg');
   }
 
   @override

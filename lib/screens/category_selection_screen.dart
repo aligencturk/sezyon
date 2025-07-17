@@ -384,6 +384,13 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       ),
     );
   }
+
+  @override
+  void dispose() {
+    // Audio servisini sıfırla (hot restart için)
+    _audioService.reset();
+    super.dispose();
+  }
 }
 
 class CategoryCard extends StatefulWidget {

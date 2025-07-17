@@ -140,8 +140,9 @@ enum GameCategory {
 $history
 
 Oyuncunun son yanıtı: "$userInput"
+Oyuncunun seçtiği eylemi gerçekleştirdiğini varsayarak hikayeyi devam ettir. Oyuncu ne yapmak istediğini söyledi, sen de o eylemin sonucunu anlat. Maksimum 2-3cümle yaz. Sonu açık uçlu olsun ve oyuncuya ne yapacağını sor. Dil Türkçe olmalı. 
 
-Bu yanıta göre hikayeyi kısa ve etkileyici bir şekilde devam ettir. Sonu açık uçlu olsun ve oyuncuya ne yapacağını sor. Dil Türkçe olmalı. Oyuncuya seçenek sunma, sadece hikayeyi ilerlet.
+ÖNEMLİ: Oyuncuya seçenek sunma, seçenek listesi verme, şunları yapabilirsin" gibi ifadeler kullanma. Oyuncunun eylemini gerçekleştirdiğini kabul et ve sonucunu anlat. Çok kısa tut.
 ''';
     } else {
       return '''Previous conversation history:
@@ -149,7 +150,9 @@ $history
 
 Player's last response: "$userInput"
 
-Continue the story briefly and engagingly based on this response. Keep the end open-ended and ask the player what they do next. The language must be English. Do not offer choices to the player, just advance the story.
+Assume the player has performed the action they chose and continue the story accordingly. The player told you what they want to do, now describe the result of that action. Write maximum 2-3entences. Keep the end open-ended and ask the player what they do next. The language must be English. 
+
+IMPORTANT: Do not offer choices to the player, do not list options, do not say "you can do this or that". Assume the player's action was completed and describe the result. Keep it very short.
 ''';
     }
   }

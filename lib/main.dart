@@ -59,6 +59,9 @@ class _SezyonAppState extends State<SezyonApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    
+    // Hot restart sırasında audio servisini sıfırla
+    _audioService.reset();
   }
 
   @override

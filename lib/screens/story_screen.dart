@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sezyon/models/game_category.dart';
 import 'package:sezyon/models/message.dart';
-import 'package:sezyon/services/gemini_service.dart';
+import 'package:sezyon/services/chatgpt_service.dart';
 import 'package:sezyon/services/language_service.dart';
 import 'package:sezyon/services/logger_service.dart';
 import 'package:sezyon/services/audio_service.dart';
@@ -21,16 +21,13 @@ class StoryScreen extends StatefulWidget {
 
 class _StoryScreenState extends State<StoryScreen> {
   final List<Message> _messages = [];
-  final _textController = TextEditingController();
   final _scrollController = ScrollController();
-  final _geminiService = GeminiService();
+  final _chatgptService = ChatGPTService();
   late final LanguageService _languageService;
   late final LoggerService _logger;
   final AudioService _audioService = AudioService();
-  FocusNode? _focusNode;
 
   bool _isLoading = true;
-  bool _isInteractionDisabled = true;
   bool _isWaitingForApiResponse = false;
   double _musicVolume = 0.5;
   double _soundVolume = 0.7;
@@ -55,72 +52,93 @@ class _StoryScreenState extends State<StoryScreen> {
 
   @override
   void dispose() {
-    _textController.dispose();
     _scrollController.dispose();
-    _focusNode?.dispose();
+    
+    // Audio servisini sıfırla (hot restart için)
+    _audioService.reset();
+    
     super.dispose();
   }
 
   Future<void> _startGame() async {
     setState(() {
       _isLoading = true;
-      _isInteractionDisabled = true;
     });
     _logger.gameEvent('Oyun başlatılıyor', {'category': widget.category.name});
 
-    // Oyun başlangıç sesi - mevcut dosya yoksa kaldır
-    // _audioService.playSoundEffect('audio/game_start.wav');
-    
     // Kategori bazlı müziğe geç
     await _audioService.playCategoryMusic(widget.category.key);
 
     try {
       final initialPrompt = widget.category.getInitialPrompt();
-      final initialStory = await _geminiService.generateContent(initialPrompt);
+      final initialStory = await _chatgptService.generateContent(initialPrompt);
       
-      final firstMessage = Message(text: initialStory, isUser: false);
+      // İlk hikayeden sonra seçenekler üret
+      final choices = await _chatgptService.generateChoices(initialStory, []);
+      
+      final firstMessage = Message(
+        text: initialStory, 
+        isUser: false, 
+        hasChoices: true,
+        choices: choices,
+        isAnimated: false, // Başlangıçta animasyon yapılmamış
+      );
+      
+      print('🎮 İlk mesaj oluşturuldu:');
+      print('   - text: ${initialStory.substring(0, 50)}...');
+      print('   - hasChoices: ${firstMessage.hasChoices}');
+      print('   - choices: ${choices.length} seçenek');
+      
       if (mounted) {
         setState(() {
           _messages.add(firstMessage);
           _isLoading = false;
         });
       }
-      _logger.gameEvent('İlk hikaye alındı');
+      _logger.gameEvent('İlk hikaye ve seçenekler alındı');
     } catch (e, stackTrace) {
       _logger.error('Oyun başlatılamadı', e, stackTrace);
       if (mounted) {
         setState(() {
           _isLoading = false;
-          _isInteractionDisabled = false;
         });
         _showErrorDialog(e.toString());
       }
     }
   }
 
-  void _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
+  void _selectChoice(Choice choice) async {
+    print('🎯 _selectChoice çağrıldı: ${choice.text}');
+    print('🎯 Seçenek ID: ${choice.id}');
+    _logger.gameEvent('Kullanıcı seçenek seçti', {'choice': choice.text});
 
-    // Mesaj gönderme sesi - mevcut dosya yoksa kaldır
-    // _audioService.playSoundEffect('audio/message_send.wav');
+    // Eğer zaten API yanıtı bekleniyorsa, yeni seçim yapılmasını engelle
+    if (_isWaitingForApiResponse) {
+      print('🎯 API yanıtı bekleniyor, yeni seçim engellendi');
+      return;
+    }
 
-    final userMessage = Message(text: text, isUser: true, isAnimated: true);
+    // Seçilen seçeneği kullanıcı mesajı olarak ekle
+    final userMessage = Message(text: choice.text, isUser: true, isAnimated: true);
+    print('🎯 Kullanıcı mesajı oluşturuldu');
+    
     setState(() {
       _messages.insert(0, userMessage);
-      _isInteractionDisabled = true;
       _isWaitingForApiResponse = true;
     });
+    print('🎯 State güncellendi - mesaj sayısı: ${_messages.length}');
 
-    _logger.gameEvent('Kullanıcı mesaj gönderdi', {'message': text});
+    // Scroll'u en üste taşı
     _scrollController.animateTo(
       0.0,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
-    _textController.clear();
 
     try {
+      print('🎯 API çağrısı başlatılıyor...');
+      
+      // Sadece animasyonu tamamlanmış mesajları history'ye ekle
       final history = _messages
           .where((m) => m.isAnimated)
           .map((m) => "${m.isUser ? 'Player' : 'AI'}: ${m.text}")
@@ -128,24 +146,41 @@ class _StoryScreenState extends State<StoryScreen> {
           .reversed
           .toList();
 
-      final continuePrompt = widget.category.getContinuePrompt(text, history);
-      final response = await _geminiService.generateContent(continuePrompt);
+      print('🎯 History hazırlandı - ${history.length} mesaj');
+      final continuePrompt = widget.category.getContinuePrompt(choice.text, history);
+      print('🎯 Prompt hazırlandı');
+      
+      print('🎯 ChatGPT API çağrılıyor...');
+      final response = await _chatgptService.generateContentWithHistory(choice.text, history);
+      print('🎯 ChatGPT yanıtı alındı: ${response.substring(0, 50)}...');
 
-      final aiMessage = Message(text: response, isUser: false);
+      // AI yanıtından sonra seçenekler üret
+      print('🎯 Seçenekler üretiliyor...');
+      final choices = await _chatgptService.generateChoices(response, history);
+      print('🎯 ${choices.length} seçenek üretildi');
+      
+      final aiMessage = Message(
+        text: response, 
+        isUser: false, 
+        hasChoices: true,
+        choices: choices,
+        isAnimated: false, // Başlangıçta animasyon yapılmamış
+      );
+      print('🎯 AI mesajı oluşturuldu');
+      
       if (mounted) {
         setState(() {
           _isWaitingForApiResponse = false;
           _messages.insert(0, aiMessage);
         });
+        print('🎯 AI mesajı eklendi, state güncellendi');
       }
-      // AI yanıt sesi - mevcut dosya yoksa kaldır
-      // _audioService.playSoundEffect('audio/ai_response.wav');
-      _logger.info('Yapay zeka yanıtı alındı');
+      
+      _logger.info('Yapay zeka yanıtı ve seçenekler alındı');
     } catch (e, stackTrace) {
       _logger.error('Yapay zeka yanıtı alınamadı', e, stackTrace);
       if (mounted) {
         setState(() {
-          _isInteractionDisabled = false;
           _isWaitingForApiResponse = false;
         });
         _showErrorDialog(e.toString());
@@ -155,8 +190,6 @@ class _StoryScreenState extends State<StoryScreen> {
 
   void _restartGame() {
     _logger.gameEvent('Oyun yeniden başlatılıyor');
-    // Yeniden başlatma sesi - mevcut dosya yoksa kaldır
-    // _audioService.playSoundEffect('audio/restart.wav');
     setState(() {
       _messages.clear();
       _isLoading = true;
@@ -301,19 +334,6 @@ class _StoryScreenState extends State<StoryScreen> {
                     },
                   ),
                 ],
-                const SizedBox(height: 16),
-                // Test butonu - ses efekti dosyası yoksa kaldır
-                // ElevatedButton.icon(
-                //   onPressed: _isSoundEnabled ? () {
-                //     _audioService.playSoundEffect('audio/message_send.wav');
-                //   } : null,
-                //   icon: const Icon(Icons.play_arrow),
-                //   label: Text(_languageService.getLocalizedText('Test Et', 'Test')),
-                //   style: ElevatedButton.styleFrom(
-                //     backgroundColor: Colors.blue,
-                //     foregroundColor: Colors.white,
-                //   ),
-                // ),
               ],
             ),
           ),
@@ -373,21 +393,24 @@ class _StoryScreenState extends State<StoryScreen> {
             children: [
               Expanded(
                 child: _isLoading && _messages.isEmpty
-                    ? const SizedBox.shrink() // Yüklenirken listeyi gösterme
+                    ? const SizedBox.shrink()
                     : _buildMessageList(),
               ),
               if (_isWaitingForApiResponse) _buildTypingIndicator(),
-              _buildMessageInput(),
+              _buildChoiceButtons(),
             ],
           ),
           // Yükleme göstergesi ve karartma efekti için katman
           AnimatedOpacity(
             opacity: _isLoading ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 800),
-            child: Container(
-              color: Colors.black,
-              child: Center(
-                child: _buildLoadingIndicator(),
+            child: IgnorePointer(
+              ignoring: !_isLoading,
+              child: Container(
+                color: Colors.black,
+                child: Center(
+                  child: _buildLoadingIndicator(),
+                ),
               ),
             ),
           ),
@@ -401,7 +424,7 @@ class _StoryScreenState extends State<StoryScreen> {
       child: AnimatedTextKit(
         animatedTexts: [
           TyperAnimatedText(
-            _languageService.storyLoading, // Değişkeni kullandık
+            _languageService.storyLoading,
             textStyle: GoogleFonts.sourceSans3(
               fontSize: 18,
               color: Colors.white.withOpacity(0.8),
@@ -466,6 +489,7 @@ class _StoryScreenState extends State<StoryScreen> {
     // AI mesajları için animasyonlu metin
     if (!isUserMessage && !message.isAnimated) {
       message.isAnimated = true;
+      print('🎬 AI mesajı animasyonu başlatılıyor: ${message.text.substring(0, 30)}...');
       return Container(
         padding: const EdgeInsets.all(8.0),
         margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -494,15 +518,11 @@ class _StoryScreenState extends State<StoryScreen> {
               isRepeatingAnimation: false,
               totalRepeatCount: 1,
               onFinished: () {
+                print('🎬 AI mesajı animasyonu tamamlandı');
                 if (mounted) {
                   setState(() {
-                    _isInteractionDisabled = false;
-                  });
-                  // Animasyon tamamlandıktan sonra focus ver
-                  Future.delayed(const Duration(milliseconds: 300), () {
-                    if (mounted && _focusNode?.canRequestFocus == true) {
-                      _focusNode?.requestFocus();
-                    }
+                    // Animasyon tamamlandığında UI'ı güncelle
+                    print('🎬 State güncellendi - seçenekler gösterilecek');
                   });
                 }
               },
@@ -535,101 +555,107 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
 
-  Widget _buildMessageInput() {
-    final bool isInteractionLocked = _isLoading || _isInteractionDisabled;
+  Widget _buildChoiceButtons() {
+    // Son AI mesajını bul (en üstteki AI mesajı)
+    final lastAiMessage = _messages.where((m) => !m.isUser && m.hasChoices).firstOrNull;
+    
+    print('🎯 _buildChoiceButtons çağrıldı');
+    print('🎯 Toplam mesaj sayısı: ${_messages.length}');
+    print('🎯 AI mesajı bulundu mu: ${lastAiMessage != null}');
+    print('🎯 API yanıtı bekleniyor mu: $_isWaitingForApiResponse');
+    
+    if (lastAiMessage == null || lastAiMessage.choices == null || _isWaitingForApiResponse) {
+      print('🎯 Seçenekler gösterilmiyor - AI mesajı yok veya API yanıtı bekleniyor');
+      return const SizedBox.shrink();
+    }
 
-    return ClipRRect(
-      borderRadius: const BorderRadius.only(
-        topLeft: Radius.circular(30.0),
-        topRight: Radius.circular(30.0),
-      ),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
-        child: Container(
-          padding: const EdgeInsets.fromLTRB(15.0, 10.0, 15.0, 20.0),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.4),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(30.0),
-              topRight: Radius.circular(30.0),
-            ),
-            border: Border(
-              top: BorderSide(
-                color: Colors.white.withOpacity(0.2),
-                width: 1.0,
-              ),
-            ),
+    // AI mesajının animasyonu tamamlanmış mı kontrol et
+    if (!lastAiMessage.isAnimated) {
+      print('🎯 AI mesajının animasyonu henüz tamamlanmamış');
+      return const SizedBox.shrink();
+    }
+    print('🎯 AI mesajı animasyon durumu: ${lastAiMessage.isAnimated}');
+    
+    print('🎯 Seçenekler gösteriliyor - ${lastAiMessage.choices!.length} seçenek');
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.3),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12.0),
+          topRight: Radius.circular(12.0),
+        ),
+        border: Border(
+          top: BorderSide(
+            color: Colors.white.withOpacity(0.1),
+            width: 1,
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  key: ValueKey('textField_${_isInteractionDisabled}'),
-                  focusNode: _focusNode ??= FocusNode(),
-                  controller: _textController,
-                  readOnly: isInteractionLocked,
-                  showCursor: !isInteractionLocked,
-                  autofocus: false,
-                  style: GoogleFonts.sourceSans3(
-                    color: !isInteractionLocked ? Colors.white : Colors.grey[600],
-                  ),
-                  decoration: InputDecoration(
-                    hintText: _languageService.inputHint,
-                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(25.0),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  onSubmitted: !isInteractionLocked ? (value) {
-                    if (value.trim().isNotEmpty) {
-                      _sendMessage();
-                    }
-                  } : null,
-                  onTap: !isInteractionLocked ? () {
-                    // Klavyeyi zorla aç
-                    _focusNode?.unfocus();
-                    Future.delayed(const Duration(milliseconds: 100), () {
-                      if (mounted && !isInteractionLocked) {
-                        _focusNode?.requestFocus();
-                      }
-                    });
-                  } : null,
-                  keyboardType: TextInputType.text,
-                  textInputAction: TextInputAction.send,
-                  textCapitalization: TextCapitalization.sentences,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(25),
-                  onTap: !isInteractionLocked ? () {
-                    if (_textController.text.trim().isNotEmpty) {
-                      _sendMessage();
-                    }
-                  } : null,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: lastAiMessage.choices!.asMap().entries.map((entry) {
+          final index = entry.key;
+          final choice = entry.value;
+          return TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 600 + (index * 150)),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOutQuart,
+            builder: (context, value, child) {
+              return Transform.translate(
+                offset: Offset(0, 20 * (1 - value)),
+                child: Opacity(
+                  opacity: value,
                   child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: !isInteractionLocked
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey[800],
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.send_rounded,
-                      color: Colors.white,
-                    ),
+                    margin: EdgeInsets.only(bottom: index == lastAiMessage.choices!.length - 1 ? 0 : 6),
+                    child: _buildChoiceButton(choice),
                   ),
                 ),
+              );
+            },
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildChoiceButton(Choice choice) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          print('SEÇENEK TIKLANDI: ${choice.text}');
+          _selectChoice(choice);
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Colors.white.withOpacity(0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
               ),
             ],
+          ),
+          child: Text(
+            choice.text,
+            style: GoogleFonts.sourceSans3(
+              fontSize: 13,
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
           ),
         ),
       ),

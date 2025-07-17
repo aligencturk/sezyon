@@ -317,6 +317,29 @@ class AudioService {
     }
   }
 
+  /// Hot restart için tüm müzikleri durdur ve sıfırla
+  Future<void> reset() async {
+    try {
+      // Tüm player'ları durdur
+      await _backgroundMusicPlayer.stop();
+      await _backgroundMusicPlayer2.stop();
+      await _soundEffectPlayer.stop();
+      
+      // Player'ları sıfırla
+      await _backgroundMusicPlayer.setVolume(0.0);
+      await _backgroundMusicPlayer2.setVolume(0.0);
+      await _soundEffectPlayer.setVolume(0.0);
+      
+      // Durumları sıfırla
+      _isUsingPlayer1 = true;
+      _isAppInBackground = false;
+      
+      _logger.info('🔄 Audio servisi hot restart için sıfırlandı');
+    } catch (e) {
+      _logger.error('Audio servisi sıfırlanırken hata oluştu', e);
+    }
+  }
+
   /// Servisi temizle
   Future<void> dispose() async {
     try {

@@ -30,7 +30,7 @@ class _CreditsScreenState extends State<CreditsScreen>
     
     _scrollAnimation = Tween<Offset>(
       begin: const Offset(0, 1.0), // Aşağıdan başla
-      end: const Offset(0, -1.0),   // Yukarıya git
+      end: const Offset(0, -1.2),   // Daha fazla yukarıya git
     ).animate(CurvedAnimation(
       parent: _scrollController,
       curve: Curves.linear,
@@ -51,12 +51,14 @@ class _CreditsScreenState extends State<CreditsScreen>
 
   @override
   Widget build(BuildContext context) {
+    final appBarTitleStyle = GoogleFonts.merriweather(fontSize: 20);
+    final double topPadding = MediaQuery.of(context).padding.top;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         title: Text(
           _languageService.getLocalizedText('Jenerik', 'Credits'),
-          style: GoogleFonts.merriweather(fontSize: 20),
+          style: appBarTitleStyle,
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -87,8 +89,31 @@ class _CreditsScreenState extends State<CreditsScreen>
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 100), // Başlangıç boşluğu
+                    SizedBox(height: kToolbarHeight + topPadding), // AppBar ve status bar yüksekliği kadar boşluk
+                    // AppBar başlığı ile aynı hizada başlık
+                    Align(
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Sezyon',
+                        style: appBarTitleStyle.copyWith(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              offset: const Offset(0, 2),
+                              blurRadius: 10,
+                              color: Colors.purple.withOpacity(0.5),
+                            ),
+                          ],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 50),
                     
                     // Oyun başlığı
                     _buildTitle('Sezyon'),

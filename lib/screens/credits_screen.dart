@@ -16,15 +16,21 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
   final AudioService _audioService = AudioService();
   
   late AnimationController _animationController;
+  late AnimationController _finalAnimationController;
   late Animation<double> _scrollAnimation;
-  late Animation<double> _finalAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     
     _animationController = AnimationController(
-      duration: const Duration(seconds: 30),
+      duration: const Duration(seconds: 25), // Credits için 25 saniye
+      vsync: this,
+    );
+    
+    _finalAnimationController = AnimationController(
+      duration: const Duration(seconds: 4), // 2 saniyeden 4 saniyeye çıkardım
       vsync: this,
     );
     
@@ -36,24 +42,31 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
       curve: Curves.linear,
     ));
     
-    // Son kısım için ayrı animasyon - ekranın ortasında durması için
-    _finalAnimation = Tween<double>(
+    _scaleAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.7, 1.0, curve: Curves.easeOut), // Son %30'da yavaşla
+      parent: _finalAnimationController,
+      curve: Curves.elasticOut, // Splash'teki gibi elastic efekt
     ));
     
-    // Animasyonu hemen başlat
+    // Credits animasyonunu başlat
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
+    });
+    
+    // Credits bittikten sonra son animasyonu başlat
+    _animationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _finalAnimationController.forward();
+      }
     });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _finalAnimationController.dispose();
     super.dispose();
   }
 
@@ -168,7 +181,7 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
                         'Kıyamet Senaryosu',
                       ),
                       
-                      SizedBox(height: screenHeight * 2.0), // Daha fazla boşluk
+                      SizedBox(height: screenHeight * 2.0),
                     ],
                   ),
                 ),
@@ -176,53 +189,49 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
             },
           ),
           
-          // Son kısım (ayrı animasyonla - ekranın ortasında sabit kalacak)
+          // Son kısım (splash'teki gibi büyüyerek gelir)
           AnimatedBuilder(
-            animation: _finalAnimation,
+            animation: _scaleAnimation,
             builder: (context, child) {
-              // Başlangıçta ekranın altında, sonunda ekranın ortasında
-              final offset = screenHeight * (1.0 - _finalAnimation.value * 0.5);
-              return Transform.translate(
-                offset: Offset(0, offset),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(height: screenHeight * 0.4),
-                      
-                      // Son Sezyon yazısı
-                      _buildFinalTitle('Sezyon'),
-                      
-                      const SizedBox(height: 20),
-                      
-                      // Copyright yazısı
-                      Text(
-                        '© 2025 Ali Talip Gençtürk',
-                        style: GoogleFonts.sourceSans3(
-                          fontSize: 14,
-                          color: Colors.grey.shade500,
+              return Center(
+                child: Transform.scale(
+                  scale: _scaleAnimation.value,
+                  child: Opacity(
+                    opacity: _scaleAnimation.value.clamp(0.0, 1.0), // Değeri 0.0-1.0 arasında sınırla
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Son Sezyon yazısı
+                        _buildFinalTitle('Sezyon'),
+                        
+                        const SizedBox(height: 20),
+                        
+                        // Copyright yazısı
+                        Text(
+                          '© 2025 Ali Talip Gençtürk',
+                          style: GoogleFonts.sourceSans3(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      
-                      const SizedBox(height: 8),
-                      
-                      // Tüm hakları saklıdır yazısı
-                      Text(
-                        _languageService.getLocalizedText(
-                          'Tüm hakları saklıdır',
-                          'All rights reserved',
+                        
+                        const SizedBox(height: 8),
+                        
+                        // Tüm hakları saklıdır yazısı
+                        Text(
+                          _languageService.getLocalizedText(
+                            'Tüm hakları saklıdır',
+                            'All rights reserved',
+                          ),
+                          style: GoogleFonts.sourceSans3(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        style: GoogleFonts.sourceSans3(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );

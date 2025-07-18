@@ -162,25 +162,39 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
                         'Kıyamet Senaryosu',
                       ),
                       
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 80),
                       
-                      // Teşekkürler
-                      _buildSection(
-                        _languageService.getLocalizedText('Teşekkürler', 'Thanks'),
-                        '',
-                      ),
+                      // Son Sezyon yazısı (splash ekranındaki gibi)
+                      _buildFinalTitle('Sezyon'),
+                      
                       const SizedBox(height: 20),
                       
-                      _buildCredit('Flutter Community', ''),
-                      _buildCredit('Google Fonts', ''),
-                      _buildCredit('Open Source Contributors', ''),
+                      // Copyright yazısı (Sezyon yazısının altında)
+                      Text(
+                        '© 2025 Ali Talip Gençtürk',
+                        style: GoogleFonts.sourceSans3(
+                          fontSize: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                       
-                      const SizedBox(height: 60),
+                      const SizedBox(height: 8),
                       
-                      // Telif hakkı
-                      _buildCopyright(),
+                      // Tüm hakları saklıdır yazısı (Copyright yazısının altında)
+                      Text(
+                        _languageService.getLocalizedText(
+                          'Tüm hakları saklıdır',
+                          'All rights reserved',
+                        ),
+                        style: GoogleFonts.sourceSans3(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                       
-                      SizedBox(height: screenHeight * 1.5), // Alt boşluk artırıldı
+                      SizedBox(height: screenHeight * 1.5),
                     ],
                   ),
                 ),
@@ -311,7 +325,7 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
     return Column(
       children: [
         Text(
-          '© 2024 Ali Genç Türk',
+          '© 2025 Ali Talip Gençtürk',
           style: GoogleFonts.sourceSans3(
             fontSize: 14,
             color: Colors.grey.shade500,
@@ -331,6 +345,30 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
           textAlign: TextAlign.center,
         ),
       ],
+    );
+  }
+
+  Widget _buildFinalTitle(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.merriweather(
+        fontSize: 64,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+        shadows: [
+          Shadow(
+            offset: const Offset(0, 4),
+            blurRadius: 15,
+            color: Colors.purple.withOpacity(0.7),
+          ),
+          Shadow(
+            offset: const Offset(0, 2),
+            blurRadius: 8,
+            color: Colors.purple.withOpacity(0.5),
+          ),
+        ],
+      ),
+      textAlign: TextAlign.center,
     );
   }
 } 

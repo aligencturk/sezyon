@@ -92,9 +92,8 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
               final offset = screenHeight * (1.0 - _scrollAnimation.value * 3.0); // 2.0 yerine 3.0 yaptım
               return Transform.translate(
                 offset: Offset(0, offset),
-                child: Container( // SingleChildScrollView yerine Container
+                child: Container(
                   width: double.infinity,
-                  height: screenHeight * 2.5, // Sabit yükseklik ver
                   padding: const EdgeInsets.symmetric(horizontal: 40),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

@@ -23,7 +23,7 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
     super.initState();
     
     _animationController = AnimationController(
-      duration: const Duration(seconds: 30), // 30 saniye süre
+      duration: const Duration(seconds: 30),
       vsync: this,
     );
     
@@ -39,9 +39,6 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
     });
-    
-    // Credits müziği çal (eğer varsa) - mevcut dosya yoksa kaldır
-    // _audioService.playSoundEffect(audio/credits.ogg');
   }
 
   @override
@@ -89,7 +86,7 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
             animation: _scrollAnimation,
             builder: (context, child) {
               // Başlangıçta ekranın altında, bitişte ekranın üstünde olacak şekilde
-              final offset = screenHeight * (1.0 - _scrollAnimation.value * 3.0); // 2.0 yerine 3.0 yaptım
+              final offset = screenHeight * (1.0 - _scrollAnimation.value * 3.0);
               return Transform.translate(
                 offset: Offset(0, offset),
                 child: Container(
@@ -99,7 +96,7 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      SizedBox(height: screenHeight * 0.3), // Üst boşluk artırıldı
+                      SizedBox(height: screenHeight * 0.3),
                       
                       // Oyun başlığı
                       _buildTitle('Sezyon'),

@@ -17,6 +17,7 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
   
   late AnimationController _animationController;
   late Animation<double> _scrollAnimation;
+  late Animation<double> _finalAnimation;
 
   @override
   void initState() {
@@ -33,6 +34,15 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
     ).animate(CurvedAnimation(
       parent: _animationController,
       curve: Curves.linear,
+    ));
+    
+    // Son kısım için ayrı animasyon - ekranın ortasında durması için
+    _finalAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.7, 1.0, curve: Curves.easeOut), // Son %30'da yavaşla
     ));
     
     // Animasyonu hemen başlat
@@ -81,11 +91,10 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
             ),
           ),
           
-          // Kayan credits içeriği
+          // Kayan credits içeriği (son kısım hariç)
           AnimatedBuilder(
             animation: _scrollAnimation,
             builder: (context, child) {
-              // Başlangıçta ekranın altında, bitişte ekranın üstünde olacak şekilde
               final offset = screenHeight * (1.0 - _scrollAnimation.value * 3.0);
               return Transform.translate(
                 offset: Offset(0, offset),
@@ -159,14 +168,37 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
                         'Kıyamet Senaryosu',
                       ),
                       
-                      const SizedBox(height: 80),
+                      SizedBox(height: screenHeight * 2.0), // Daha fazla boşluk
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          
+          // Son kısım (ayrı animasyonla - ekranın ortasında sabit kalacak)
+          AnimatedBuilder(
+            animation: _finalAnimation,
+            builder: (context, child) {
+              // Başlangıçta ekranın altında, sonunda ekranın ortasında
+              final offset = screenHeight * (1.0 - _finalAnimation.value * 0.5);
+              return Transform.translate(
+                offset: Offset(0, offset),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: screenHeight * 0.4),
                       
-                      // Son Sezyon yazısı (splash ekranındaki gibi)
+                      // Son Sezyon yazısı
                       _buildFinalTitle('Sezyon'),
                       
                       const SizedBox(height: 20),
                       
-                      // Copyright yazısı (Sezyon yazısının altında)
+                      // Copyright yazısı
                       Text(
                         '© 2025 Ali Talip Gençtürk',
                         style: GoogleFonts.sourceSans3(
@@ -178,7 +210,7 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
                       
                       const SizedBox(height: 8),
                       
-                      // Tüm hakları saklıdır yazısı (Copyright yazısının altında)
+                      // Tüm hakları saklıdır yazısı
                       Text(
                         _languageService.getLocalizedText(
                           'Tüm hakları saklıdır',
@@ -190,8 +222,6 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      
-                      SizedBox(height: screenHeight * 1.5),
                     ],
                   ),
                 ),

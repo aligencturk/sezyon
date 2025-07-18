@@ -263,25 +263,6 @@ class _CreditsScreenState extends State<CreditsScreen>
             ),
           ),
           
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 100,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.8),
-                    Colors.black,
-                  ],
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

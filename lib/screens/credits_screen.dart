@@ -11,41 +11,42 @@ class CreditsScreen extends StatefulWidget {
   State<CreditsScreen> createState() => _CreditsScreenState();
 }
 
-class _CreditsScreenState extends State<CreditsScreen>
-    with TickerProviderStateMixin {
-  late AnimationController _scrollController;
-  late Animation<Offset> _scrollAnimation;
+class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateMixin {
   final LanguageService _languageService = LanguageService();
   final AudioService _audioService = AudioService();
+  
+  late AnimationController _animationController;
+  late Animation<double> _scrollAnimation;
 
   @override
   void initState() {
     super.initState();
     
-    // Scroll animasyonu
-    _scrollController = AnimationController(
-      duration: const Duration(seconds: 30), // 30 saniye sürecek
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 30), // 30 saniye süre
       vsync: this,
     );
     
-    _scrollAnimation = Tween<Offset>(
-      begin: const Offset(0, 1.0), // Aşağıdan başla
-      end: const Offset(0, -1.2),   // Daha fazla yukarıya git
+    _scrollAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _scrollController,
+      parent: _animationController,
       curve: Curves.linear,
     ));
     
-    // Animasyonu başlat
-    _scrollController.forward();
+    // Animasyonu hemen başlat
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _animationController.forward();
+    });
     
     // Credits müziği çal (eğer varsa) - mevcut dosya yoksa kaldır
-    // _audioService.playSoundEffect('audio/credits.ogg');
+    // _audioService.playSoundEffect(audio/credits.ogg');
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -53,6 +54,8 @@ class _CreditsScreenState extends State<CreditsScreen>
   Widget build(BuildContext context) {
     final appBarTitleStyle = GoogleFonts.merriweather(fontSize: 20);
     final double topPadding = MediaQuery.of(context).padding.top;
+    final double screenHeight = MediaQuery.of(context).size.height;
+    
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -60,7 +63,7 @@ class _CreditsScreenState extends State<CreditsScreen>
           _languageService.getLocalizedText('Jenerik', 'Credits'),
           style: appBarTitleStyle,
         ),
-        backgroundColor: Colors.transparent,
+        backgroundColor: Colors.black.withOpacity(0.95),
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -82,187 +85,109 @@ class _CreditsScreenState extends State<CreditsScreen>
           ),
           
           // Kayan credits içeriği
-          SlideTransition(
-            position: _scrollAnimation,
-            child: SingleChildScrollView(
-              physics: const NeverScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: kToolbarHeight + topPadding), // AppBar ve status bar yüksekliği kadar boşluk
-                    // AppBar başlığı ile aynı hizada başlık
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text(
-                        'Sezyon',
-                        style: appBarTitleStyle.copyWith(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          shadows: [
-                            Shadow(
-                              offset: const Offset(0, 2),
-                              blurRadius: 10,
-                              color: Colors.purple.withOpacity(0.5),
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
+          AnimatedBuilder(
+            animation: _scrollAnimation,
+            builder: (context, child) {
+              // Başlangıçta ekranın altında, bitişte ekranın üstünde olacak şekilde
+              final offset = screenHeight * (1.0 - _scrollAnimation.value * 3.0); // 2.0 yerine 3.0 yaptım
+              return Transform.translate(
+                offset: Offset(0, offset),
+                child: Container( // SingleChildScrollView yerine Container
+                  width: double.infinity,
+                  height: screenHeight * 2.5, // Sabit yükseklik ver
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: screenHeight * 0.3), // Üst boşluk artırıldı
+                      
+                      // Oyun başlığı
+                      _buildTitle('Sezyon'),
+                      const SizedBox(height: 50),
+                      
+                      // Geliştirici
+                      _buildSection(
+                        _languageService.getLocalizedText('Geliştirici', 'Developer'),
+                        'Ali Talip Gençtürk',
                       ),
-                    ),
-                    const SizedBox(height: 50),
-                    
-                    // Oyun başlığı
-                    _buildTitle('Sezyon'),
-                    const SizedBox(height: 50),
-                    
-                    // Geliştirici
-                    _buildSection(
-                      _languageService.getLocalizedText('Geliştirici', 'Developer'),
-                      'Ali Genç Türk',
-                    ),
-                    const SizedBox(height: 40),
-                    
-                    // Müzikler
-                    _buildSection(
-                      _languageService.getLocalizedText('Müzikler', 'Music'),
-                      '',
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    // Ana menü müziği
-                    _buildMusicCredit(
-                      'Ana Menü Müziği',
-                      'lucafrancini - Atmospheric Glitch',
-                      'Ana Menü',
-                    ),
-                    // Gizem müziği
-                    _buildMusicCredit(
-                      'Gizem Kategorisi Müziği',
-                      'Alexandr Zhelanov - Mystery Manor',
-                      'Gizem Senaryosu',
-                    ),
-                    // Savaş müziği
-                    _buildMusicCredit(
-                      'Savaş Kategorisi Müziği',
-                      'Zefz - Orchestral Epic Fantasy Music',
-                      'Savaş Senaryosu',
-                    ),
-                    // Bilim Kurgu müziği
-                    _buildMusicCredit(
-                      'Bilim Kurgu Kategorisi Müziği',
-                      'Ted Kerr - Sci-Fi Ambient - Crashed Ship',
-                      'Bilim Kurgu',
-                    ),
-                    // Fantastik müziği
-                    _buildMusicCredit(
-                      'Fantastik Kategorisi Müziği',
-                      'HitCtrl - Misty Mountains',
-                      'Fantastik Senaryosu',
-                    ),
-                    // Tarihi müziği
-                    _buildMusicCredit(
-                      'Tarihi Kategorisi Müziği',
-                      'TAD - Anti Entity',
-                      'Tarih Senaryosu',
-                    ),
-                    // Kıyamet müziği
-                    _buildMusicCredit(
-                      'Kıyamet Sonrası Kategorisi Müziği',
-                      'Trevor Lentz - The Void',
-                      'Kıyamet Senaryosu',
-                    ),
-                    
-                    const SizedBox(height: 40),
-                    
-                    // Ses Efektleri
-                    _buildSection(
-                      _languageService.getLocalizedText('Ses Efektleri', 'Sound Effects'),
-                      '',
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    _buildMusicCredit(
-                      'Buton Tıklama Sesi',
-                      'Ses Efekti Sahibi',
-                      'Kaynak bilgisi',
-                    ),
-                    
-                    _buildMusicCredit(
-                      'Mesaj Gönderme Sesi',
-                      'Ses Efekti Sahibi',
-                      'Kaynak bilgisi',
-                    ),
-                    
-                    _buildMusicCredit(
-                      'AI Yanıt Sesi',
-                      'Ses Efekti Sahibi',
-                      'Kaynak bilgisi',
-                    ),
-                    
-                    const SizedBox(height: 40),
-                    
-                    // Teknolojiler
-                    _buildSection(
-                      _languageService.getLocalizedText('Teknolojiler', 'Technologies'),
-                      '',
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    _buildCredit('Flutter', 'Google'),
-                    _buildCredit('Dart', 'Google'),
-                    _buildCredit('Gemini AI', 'Google'),
-                    _buildCredit('AudioPlayers', 'Flutter Community'),
-                    
-                    const SizedBox(height: 40),
-                    
-                    // Teşekkürler
-                    _buildSection(
-                      _languageService.getLocalizedText('Teşekkürler', 'Thanks'),
-                      '',
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    _buildCredit('Flutter Community', ''),
-                    _buildCredit('Google Fonts', ''),
-                    _buildCredit('Open Source Contributors', ''),
-                    
-                    const SizedBox(height: 60),
-                    
-                    // Telif hakkı
-                    _buildCopyright(),
-                    
-                    const SizedBox(height: 100), // Bitiş boşluğu
-                  ],
+                      const SizedBox(height: 40),
+                      
+                      // Müzikler
+                      _buildSection(
+                        _languageService.getLocalizedText('Müzikler', 'Music'),
+                        '',
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Ana menü müziği
+                      _buildMusicCredit(
+                        'Ana Menü Müziği',
+                        'lucafrancini - Atmospheric Glitch',
+                        'Ana Menü',
+                      ),
+                      // Gizem müziği
+                      _buildMusicCredit(
+                        'Gizem Kategorisi Müziği',
+                        'Alexandr Zhelanov - Mystery Manor',
+                        'Gizem Senaryosu',
+                      ),
+                      // Savaş müziği
+                      _buildMusicCredit(
+                        'Savaş Kategorisi Müziği',
+                        'Zefz - Orchestral Epic Fantasy Music',
+                        'Savaş Senaryosu',
+                      ),
+                      // Bilim Kurgu müziği
+                      _buildMusicCredit(
+                        'Bilim Kurgu Kategorisi Müziği',
+                        'Ted Kerr - Sci-Fi Ambient - Crashed Ship',
+                        'Bilim Kurgu',
+                      ),
+                      // Fantastik müziği
+                      _buildMusicCredit(
+                        'Fantastik Kategorisi Müziği',
+                        'HitCtrl - Misty Mountains',
+                        'Fantastik Senaryo',
+                      ),
+                      // Tarihi müziği
+                      _buildMusicCredit(
+                        'Tarihi Kategorisi Müziği',
+                        'TAD - Anti Entity',
+                        'Tarihi Senaryo',
+                      ),
+                      // Kıyamet müziği
+                      _buildMusicCredit(
+                        'Kıyamet Sonrası Kategorisi Müziği',
+                        'Trevor Lentz - The Void',
+                        'Kıyamet Senaryosu',
+                      ),
+                      
+                      const SizedBox(height: 40),
+                      
+                      // Teşekkürler
+                      _buildSection(
+                        _languageService.getLocalizedText('Teşekkürler', 'Thanks'),
+                        '',
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      _buildCredit('Flutter Community', ''),
+                      _buildCredit('Google Fonts', ''),
+                      _buildCredit('Open Source Contributors', ''),
+                      
+                      const SizedBox(height: 60),
+                      
+                      // Telif hakkı
+                      _buildCopyright(),
+                      
+                      SizedBox(height: screenHeight * 1.5), // Alt boşluk artırıldı
+                    ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
-          
-          // Üst ve alt gradyan maskeleri
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 100,
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black,
-                    Colors.black.withOpacity(0.8),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          
         ],
       ),
     );

@@ -53,10 +53,10 @@ class _StoryScreenState extends State<StoryScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    
+
     // Audio servisini sıfırla (hot restart için)
     _audioService.reset();
-    
+
     super.dispose();
   }
 
@@ -72,23 +72,23 @@ class _StoryScreenState extends State<StoryScreen> {
     try {
       final initialPrompt = widget.category.getInitialPrompt();
       final initialStory = await _chatgptService.generateContent(initialPrompt);
-      
+
       // İlk hikayeden sonra seçenekler üret
       final choices = await _chatgptService.generateChoices(initialStory, []);
-      
+
       final firstMessage = Message(
-        text: initialStory, 
-        isUser: false, 
+        text: initialStory,
+        isUser: false,
         hasChoices: true,
         choices: choices,
         isAnimated: false, // Başlangıçta animasyon yapılmamış
       );
-      
+
       print('🎮 İlk mesaj oluşturuldu:');
       print('   - text: ${initialStory.substring(0, 50)}...');
       print('   - hasChoices: ${firstMessage.hasChoices}');
       print('   - choices: ${choices.length} seçenek');
-      
+
       if (mounted) {
         setState(() {
           _messages.add(firstMessage);
@@ -119,9 +119,13 @@ class _StoryScreenState extends State<StoryScreen> {
     }
 
     // Seçilen seçeneği kullanıcı mesajı olarak ekle
-    final userMessage = Message(text: choice.text, isUser: true, isAnimated: true);
+    final userMessage = Message(
+      text: choice.text,
+      isUser: true,
+      isAnimated: true,
+    );
     print('🎯 Kullanıcı mesajı oluşturuldu');
-    
+
     setState(() {
       _messages.insert(0, userMessage);
       _isWaitingForApiResponse = true;
@@ -137,7 +141,7 @@ class _StoryScreenState extends State<StoryScreen> {
 
     try {
       print('🎯 API çağrısı başlatılıyor...');
-      
+
       // Sadece animasyonu tamamlanmış mesajları history'ye ekle
       final history = _messages
           .where((m) => m.isAnimated)
@@ -147,27 +151,33 @@ class _StoryScreenState extends State<StoryScreen> {
           .toList();
 
       print('🎯 History hazırlandı - ${history.length} mesaj');
-      final continuePrompt = widget.category.getContinuePrompt(choice.text, history);
+      final continuePrompt = widget.category.getContinuePrompt(
+        choice.text,
+        history,
+      );
       print('🎯 Prompt hazırlandı');
-      
+
       print('🎯 ChatGPT API çağrılıyor...');
-      final response = await _chatgptService.generateContentWithHistory(choice.text, history);
+      final response = await _chatgptService.generateContentWithHistory(
+        choice.text,
+        history,
+      );
       print('🎯 ChatGPT yanıtı alındı: ${response.substring(0, 50)}...');
 
       // AI yanıtından sonra seçenekler üret
       print('🎯 Seçenekler üretiliyor...');
       final choices = await _chatgptService.generateChoices(response, history);
       print('🎯 ${choices.length} seçenek üretildi');
-      
+
       final aiMessage = Message(
-        text: response, 
-        isUser: false, 
+        text: response,
+        isUser: false,
         hasChoices: true,
         choices: choices,
         isAnimated: false, // Başlangıçta animasyon yapılmamış
       );
       print('🎯 AI mesajı oluşturuldu');
-      
+
       if (mounted) {
         setState(() {
           _isWaitingForApiResponse = false;
@@ -175,7 +185,7 @@ class _StoryScreenState extends State<StoryScreen> {
         });
         print('🎯 AI mesajı eklendi, state güncellendi');
       }
-      
+
       _logger.info('Yapay zeka yanıtı ve seçenekler alındı');
     } catch (e, stackTrace) {
       _logger.error('Yapay zeka yanıtı alınamadı', e, stackTrace);
@@ -367,7 +377,9 @@ class _StoryScreenState extends State<StoryScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: _messages.isNotEmpty && !_isLoading ? _showRestartDialog : null,
+            onPressed: _messages.isNotEmpty && !_isLoading
+                ? _showRestartDialog
+                : null,
             tooltip: _languageService.restart,
           ),
         ],
@@ -408,9 +420,7 @@ class _StoryScreenState extends State<StoryScreen> {
               ignoring: !_isLoading,
               child: Container(
                 color: Colors.black,
-                child: Center(
-                  child: _buildLoadingIndicator(),
-                ),
+                child: Center(child: _buildLoadingIndicator()),
               ),
             ),
           ),
@@ -441,7 +451,12 @@ class _StoryScreenState extends State<StoryScreen> {
   Widget _buildMessageList() {
     return ListView.builder(
       reverse: true,
-      padding: EdgeInsets.fromLTRB(10, MediaQuery.of(context).padding.top + 60, 10, 10),
+      padding: EdgeInsets.fromLTRB(
+        10,
+        MediaQuery.of(context).padding.top + 60,
+        10,
+        10,
+      ),
       controller: _scrollController,
       itemCount: _messages.length,
       itemBuilder: (context, index) {
@@ -458,19 +473,47 @@ class _StoryScreenState extends State<StoryScreen> {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withOpacity(0.7),
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.purple.withOpacity(0.3),
+                width: 1,
+              ),
             ),
-            child: AnimatedTextKit(
-              animatedTexts: [
-                WavyAnimatedText(
-                  _languageService.storyContinuing,
-                  textStyle: GoogleFonts.sourceSans3(color: Colors.white70),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Bilgisayar ikonu
+                Icon(
+                  Icons.computer,
+                  color: Colors.purple.withOpacity(0.8),
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                // Typewriter animasyonu
+                AnimatedTextKit(
+                  animatedTexts: [
+                    TyperAnimatedText(
+                      _languageService.storyContinuing,
+                      textStyle: GoogleFonts.sourceSans3(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      speed: const Duration(
+                        milliseconds: 80,
+                      ), // Typewriter hızı
+                    ),
+                  ],
+                  isRepeatingAnimation: true,
+                  repeatForever: true,
+                  pause: const Duration(
+                    milliseconds: 1000,
+                  ), // Her tekrar arasında bekleme
                 ),
               ],
-              isRepeatingAnimation: true,
             ),
           ),
         ],
@@ -480,8 +523,9 @@ class _StoryScreenState extends State<StoryScreen> {
 
   Widget _buildMessageBubble(Message message) {
     final isUserMessage = message.isUser;
-    final alignment =
-        isUserMessage ? Alignment.centerRight : Alignment.centerLeft;
+    final alignment = isUserMessage
+        ? Alignment.centerRight
+        : Alignment.centerLeft;
     final color = isUserMessage
         ? Theme.of(context).colorScheme.primary
         : Theme.of(context).colorScheme.secondary.withOpacity(0.6);
@@ -489,7 +533,9 @@ class _StoryScreenState extends State<StoryScreen> {
     // AI mesajları için animasyonlu metin
     if (!isUserMessage && !message.isAnimated) {
       message.isAnimated = true;
-      print('🎬 AI mesajı animasyonu başlatılıyor: ${message.text.substring(0, 30)}...');
+      print(
+        '🎬 AI mesajı animasyonu başlatılıyor: ${message.text.substring(0, 30)}...',
+      );
       return Container(
         padding: const EdgeInsets.all(8.0),
         margin: const EdgeInsets.symmetric(vertical: 4.0),
@@ -499,7 +545,10 @@ class _StoryScreenState extends State<StoryScreen> {
             constraints: BoxConstraints(
               maxWidth: MediaQuery.of(context).size.width * 0.8,
             ),
-            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 18.0),
+            padding: const EdgeInsets.symmetric(
+              vertical: 12.0,
+              horizontal: 18.0,
+            ),
             decoration: BoxDecoration(
               color: color,
               borderRadius: BorderRadius.circular(20),
@@ -557,15 +606,21 @@ class _StoryScreenState extends State<StoryScreen> {
 
   Widget _buildChoiceButtons() {
     // Son AI mesajını bul (en üstteki AI mesajı)
-    final lastAiMessage = _messages.where((m) => !m.isUser && m.hasChoices).firstOrNull;
-    
+    final lastAiMessage = _messages
+        .where((m) => !m.isUser && m.hasChoices)
+        .firstOrNull;
+
     print('🎯 _buildChoiceButtons çağrıldı');
     print('🎯 Toplam mesaj sayısı: ${_messages.length}');
     print('🎯 AI mesajı bulundu mu: ${lastAiMessage != null}');
     print('🎯 API yanıtı bekleniyor mu: $_isWaitingForApiResponse');
-    
-    if (lastAiMessage == null || lastAiMessage.choices == null || _isWaitingForApiResponse) {
-      print('🎯 Seçenekler gösterilmiyor - AI mesajı yok veya API yanıtı bekleniyor');
+
+    if (lastAiMessage == null ||
+        lastAiMessage.choices == null ||
+        _isWaitingForApiResponse) {
+      print(
+        '🎯 Seçenekler gösterilmiyor - AI mesajı yok veya API yanıtı bekleniyor',
+      );
       return const SizedBox.shrink();
     }
 
@@ -575,8 +630,10 @@ class _StoryScreenState extends State<StoryScreen> {
       return const SizedBox.shrink();
     }
     print('🎯 AI mesajı animasyon durumu: ${lastAiMessage.isAnimated}');
-    
-    print('🎯 Seçenekler gösteriliyor - ${lastAiMessage.choices!.length} seçenek');
+
+    print(
+      '🎯 Seçenekler gösteriliyor - ${lastAiMessage.choices!.length} seçenek',
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
@@ -587,10 +644,7 @@ class _StoryScreenState extends State<StoryScreen> {
           topRight: Radius.circular(12.0),
         ),
         border: Border(
-          top: BorderSide(
-            color: Colors.white.withOpacity(0.1),
-            width: 1,
-          ),
+          top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
         ),
       ),
       child: Column(
@@ -609,7 +663,11 @@ class _StoryScreenState extends State<StoryScreen> {
                 child: Opacity(
                   opacity: value,
                   child: Container(
-                    margin: EdgeInsets.only(bottom: index == lastAiMessage.choices!.length - 1 ? 0 : 6),
+                    margin: EdgeInsets.only(
+                      bottom: index == lastAiMessage.choices!.length - 1
+                          ? 0
+                          : 6,
+                    ),
                     child: _buildChoiceButton(choice),
                   ),
                 ),
@@ -636,10 +694,7 @@ class _StoryScreenState extends State<StoryScreen> {
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.15),
             borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 1,
-            ),
+            border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.1),
@@ -661,4 +716,4 @@ class _StoryScreenState extends State<StoryScreen> {
       ),
     );
   }
-} 
+}

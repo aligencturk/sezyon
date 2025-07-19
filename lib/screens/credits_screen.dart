@@ -11,12 +11,13 @@ class CreditsScreen extends StatefulWidget {
   State<CreditsScreen> createState() => _CreditsScreenState();
 }
 
-class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateMixin {
+class _CreditsScreenState extends State<CreditsScreen>
+    with TickerProviderStateMixin {
   final LanguageService _languageService = LanguageService();
   final AudioService _audioService = AudioService();
 
   final GlobalKey _creditsColumnKey = GlobalKey();
-  
+
   late AnimationController _animationController;
   late AnimationController _finalAnimationController;
   late AnimationController _glowAnimationController;
@@ -29,61 +30,54 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-    
-    _animationController = AnimationController(
-      vsync: this,
-    );
-    
+
+    _animationController = AnimationController(vsync: this);
+
     _finalAnimationController = AnimationController(
-      duration: const Duration(seconds: 4), 
+      duration: const Duration(seconds: 6), // Daha yavaş ve etkileyici
       vsync: this,
     );
-    
+
     _glowAnimationController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     );
-    
-    _scrollAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.linear,
-    ));
-    
-    _scaleAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _finalAnimationController,
-      curve: Curves.easeInOut,
-    ));
-    
-    _glowAnimation = Tween<double>(
-      begin: 0.3, 
-      end: 1.0,   
-    ).animate(CurvedAnimation(
-      parent: _glowAnimationController,
-      curve: Curves.easeInOut,
-    ));
-    
+
+    _scrollAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.linear),
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.1, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _finalAnimationController,
+        curve: Curves.easeOutBack, // Daha dramatik bir giriş efekti
+      ),
+    );
+
+    _glowAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _glowAnimationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _calculateAndStartAnimation();
     });
-    
+
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Future.delayed(const Duration(milliseconds: 100), () {
+        Future.delayed(const Duration(milliseconds: 500), () {
+          // Biraz daha bekletiyoruz
           _finalAnimationController.forward();
         });
       }
     });
-    
+
     _finalAnimationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Future.delayed(const Duration(milliseconds: 500), () {
-          _glowAnimationController.repeat(reverse: true); 
+          _glowAnimationController.repeat(reverse: true);
         });
       }
     });
@@ -93,19 +87,22 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
     if (!mounted) return;
 
     final screenHeight = MediaQuery.of(context).size.height;
-    final RenderBox? creditsRenderBox = _creditsColumnKey.currentContext?.findRenderObject() as RenderBox?;
-    final creditsHeight = creditsRenderBox?.size.height ?? screenHeight * 2; 
+    final RenderBox? creditsRenderBox =
+        _creditsColumnKey.currentContext?.findRenderObject() as RenderBox?;
+    final creditsHeight = creditsRenderBox?.size.height ?? screenHeight * 2;
 
     if (creditsHeight > 0) {
       setState(() {
         _creditsHeight = creditsHeight;
       });
 
-      const scrollSpeed = 90.0; 
+      const scrollSpeed = 150.0; // Hızı artırdık (90'dan 150'ye)
       final totalDistance = screenHeight + _creditsHeight;
       final durationInSeconds = totalDistance / scrollSpeed;
 
-      _animationController.duration = Duration(seconds: durationInSeconds.round());
+      _animationController.duration = Duration(
+        seconds: durationInSeconds.round(),
+      );
       _animationController.forward();
     }
   }
@@ -122,7 +119,7 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
   Widget build(BuildContext context) {
     final appBarTitleStyle = GoogleFonts.merriweather(fontSize: 20);
     final double screenHeight = MediaQuery.of(context).size.height;
-    
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -141,31 +138,38 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF1a1a1a),
-                  Colors.black,
-                  Color(0xFF1a1a1a),
-                ],
+                colors: [Color(0xFF1a1a1a), Colors.black, Color(0xFF1a1a1a)],
               ),
             ),
           ),
-          
+
           AnimatedBuilder(
             animation: _scrollAnimation,
             builder: (context, child) {
               if (_creditsHeight == 0) {
-                return Opacity(
-                  opacity: 0,
-                  child: child,
-                );
+                return Opacity(opacity: 0, child: child);
               }
 
               final totalDistance = screenHeight + _creditsHeight;
-              final offset = screenHeight - (_scrollAnimation.value * totalDistance);
-              
-              return Transform.translate(
-                offset: Offset(0, offset),
-                child: child,
+              final offset =
+                  screenHeight - (_scrollAnimation.value * totalDistance);
+
+              // Credits yazıları scroll bitince yavaşça kaybolsun
+              double opacity = 1.0;
+              if (_scrollAnimation.value > 0.85) {
+                // %85'ten sonra kaybolmaya başlasın
+                opacity =
+                    (1.0 - _scrollAnimation.value) /
+                    0.15; // Kalan %15'te kaybolsun
+                opacity = opacity.clamp(0.0, 1.0);
+              }
+
+              return Opacity(
+                opacity: opacity,
+                child: Transform.translate(
+                  offset: Offset(0, offset),
+                  child: child,
+                ),
               );
             },
             child: Container(
@@ -176,23 +180,28 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  SizedBox(height: screenHeight * 0.3),
-                  
+                  SizedBox(
+                    height: screenHeight * 0.2,
+                  ), // Daha erken başlaması için azalttık
+
                   _buildTitle('Sezyon'),
                   const SizedBox(height: 50),
-                  
+
                   _buildSection(
-                    _languageService.getLocalizedText('Geliştirici', 'Developer'),
+                    _languageService.getLocalizedText(
+                      'Geliştirici',
+                      'Developer',
+                    ),
                     'Ali Talip Gençtürk',
                   ),
                   const SizedBox(height: 40),
-                  
+
                   _buildSection(
                     _languageService.getLocalizedText('Müzikler', 'Music'),
                     '',
                   ),
                   const SizedBox(height: 20),
-                  
+
                   _buildMusicCredit(
                     'Ana Menü Müziği',
                     'lucafrancini - Atmospheric Glitch',
@@ -228,23 +237,30 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
                     'Trevor Lentz - The Void',
                     'Kıyamet Senaryosu',
                   ),
-                  
-                  SizedBox(height: screenHeight),
+
+                  SizedBox(
+                    height: screenHeight * 1.5,
+                  ), // Yazıların tamamen kaybolması için daha fazla boşluk
                 ],
               ),
             ),
           ),
-          
+
           AnimatedBuilder(
             animation: Listenable.merge([_scaleAnimation, _glowAnimation]),
             builder: (context, child) {
-              if (_finalAnimationController.isAnimating || _finalAnimationController.isCompleted) {
+              if (_finalAnimationController.isAnimating ||
+                  _finalAnimationController.isCompleted) {
                 return Center(
                   child: Transform.scale(
                     scale: _scaleAnimation.value,
                     child: Opacity(
                       opacity: _scaleAnimation.value.clamp(0.0, 1.0),
-                      child: child,
+                      child: Transform.translate(
+                        // Uzaktan gelme efekti için Y ekseninde hareket
+                        offset: Offset(0, (1 - _scaleAnimation.value) * 100),
+                        child: child,
+                      ),
                     ),
                   ),
                 );
@@ -255,30 +271,47 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildGlowingTitle('Sezyon', _glowAnimation.value),
-                
+
                 const SizedBox(height: 20),
-                
-                Text(
-                  '© 2025 Ali Talip Gençtürk',
-                  style: GoogleFonts.sourceSans3(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
+
+                // Alt yazılar da aynı animasyonla gelsin
+                AnimatedBuilder(
+                  animation: _scaleAnimation,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: (_scaleAnimation.value - 0.3).clamp(
+                        0.0,
+                        1.0,
+                      ), // Biraz gecikmeli görünüm
+                      child: child,
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Text(
+                        '© 2025 Ali Talip Gençtürk',
+                        style: GoogleFonts.sourceSans3(
+                          fontSize: 14,
+                          color: Colors.grey.shade500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      Text(
+                        _languageService.getLocalizedText(
+                          'Tüm hakları saklıdır',
+                          'All rights reserved',
+                        ),
+                        style: GoogleFonts.sourceSans3(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                
-                const SizedBox(height: 8),
-                
-                Text(
-                  _languageService.getLocalizedText(
-                    'Tüm hakları saklıdır',
-                    'All rights reserved',
-                  ),
-                  style: GoogleFonts.sourceSans3(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -483,4 +516,4 @@ class _CreditsScreenState extends State<CreditsScreen> with TickerProviderStateM
       textAlign: TextAlign.center,
     );
   }
-} 
+}

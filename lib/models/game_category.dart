@@ -32,7 +32,17 @@ enum GameCategory {
   /// Türkçe başlangıç prompt'u
   String _getTurkishInitialPrompt() {
     final basePrompt =
-        'Sen bir RPG oyunu yöneticisisin. Oyuncu için kısa, etkileyici ve merak uyandıran bir başlangıç hikayesi yaz. Hikaye tek bir kısa paragraftan oluşmalı ve oyuncuya ne yapabileceğine dair bir soruyla bitmeli. Dil Türkçe olmalı.';
+        '''Sen profesyonel bir RPG oyunu yöneticisisin. Oyuncu için etkileyici bir başlangıç hikayesi yaz.
+
+KURALLAR:
+- Kısa ama atmosferik bir paragraf yaz (3-4 cümle)
+- Oyuncuyu hemen aksiyonun içine at
+- Gerilim ve merak uyandır
+- Hikayeyi açık uçlu bitir ama soru sorma
+- "Hazır mısın?", "Ne yapacaksın?" gibi sorular kullanma
+- Sadece durumu betimle ve bekle
+
+Dil: Türkçe''';
     String categoryPrompt = '';
 
     switch (this) {
@@ -67,7 +77,17 @@ enum GameCategory {
   /// İngilizce başlangıç prompt'u
   String _getEnglishInitialPrompt() {
     final basePrompt =
-        'You are an RPG game master. Write a short, immersive, and intriguing starting story for the player. The story should be a single short paragraph and end with a question to the player about what they would like to do. The language must be English.';
+        '''You are a professional RPG game master. Write an immersive starting story for the player.
+
+RULES:
+- Write a short but atmospheric paragraph (3-4 sentences)
+- Throw the player directly into the action
+- Create tension and intrigue
+- End the story open-ended but don't ask questions
+- Don't use "Are you ready?", "What do you do?" type questions
+- Just describe the situation and wait
+
+Language: English''';
     String categoryPrompt = '';
 
     switch (this) {

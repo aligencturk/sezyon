@@ -39,7 +39,7 @@ class _CreditsScreenState extends State<CreditsScreen>
     );
 
     _glowAnimationController = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3), // Daha yavaş parlama
       vsync: this,
     );
 
@@ -54,10 +54,11 @@ class _CreditsScreenState extends State<CreditsScreen>
       ),
     );
 
-    _glowAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
+    _glowAnimation = Tween<double>(begin: 0.2, end: 1.5).animate(
+      // Daha güçlü parlama
       CurvedAnimation(
         parent: _glowAnimationController,
-        curve: Curves.easeInOut,
+        curve: Curves.easeInOutSine, // Daha yumuşak LED efekti
       ),
     );
 
@@ -495,21 +496,35 @@ class _CreditsScreenState extends State<CreditsScreen>
         fontWeight: FontWeight.bold,
         color: Colors.white,
         shadows: [
-          Shadow(
-            offset: const Offset(0, 4),
-            blurRadius: 15 * glowIntensity, // Parlama yoğunluğu
-            color: Colors.purple.withOpacity(0.7 * glowIntensity),
-          ),
-          Shadow(
-            offset: const Offset(0, 2),
-            blurRadius: 8 * glowIntensity, // Parlama yoğunluğu
-            color: Colors.purple.withOpacity(0.5 * glowIntensity),
-          ),
-          // Ekstra parlama efekti
+          // Ana mor glow
           Shadow(
             offset: const Offset(0, 0),
-            blurRadius: 25 * glowIntensity,
-            color: Colors.purple.withOpacity(0.3 * glowIntensity),
+            blurRadius: 30 * glowIntensity,
+            color: Colors.purple.withOpacity(0.8 * glowIntensity),
+          ),
+          // Beyaz iç ışık (LED efekti)
+          Shadow(
+            offset: const Offset(0, 0),
+            blurRadius: 15 * glowIntensity,
+            color: Colors.white.withOpacity(0.6 * glowIntensity),
+          ),
+          // Dış mor halo
+          Shadow(
+            offset: const Offset(0, 0),
+            blurRadius: 50 * glowIntensity,
+            color: Colors.purple.withOpacity(0.4 * glowIntensity),
+          ),
+          // Çok dış mor aura
+          Shadow(
+            offset: const Offset(0, 0),
+            blurRadius: 80 * glowIntensity,
+            color: Colors.purple.withOpacity(0.2 * glowIntensity),
+          ),
+          // Pembe vurgu
+          Shadow(
+            offset: const Offset(0, 0),
+            blurRadius: 20 * glowIntensity,
+            color: Colors.pinkAccent.withOpacity(0.3 * glowIntensity),
           ),
         ],
       ),

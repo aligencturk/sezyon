@@ -8,32 +8,31 @@ import '../models/message.dart';
 class ChatGPTService {
   static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
   final LoggerService _logger = LoggerService();
-  
+
   /// API anahtarını .env dosyasından alır
   String get _apiKey => dotenv.env['OPENAI_API_KEY'] ?? '';
-  
+
   /// Model adını .env dosyasından alır
   String get _model => dotenv.env['OPENAI_MODEL'] ?? 'gpt-4.1-nano';
 
   /// ChatGPT API'ye metin isteği gönderir
   Future<String> generateContent(String prompt) async {
     _logger.debug('🤖 ChatGPT API isteği başlatılıyor');
-    
+
     if (_apiKey.isEmpty) {
       _logger.error('❌ OPENAI_API_KEY bulunamadı');
-      throw Exception('OPENAI_API_KEY bulunamadı. .env dosyasını kontrol edin.');
+      throw Exception(
+        'OPENAI_API_KEY bulunamadı. .env dosyasını kontrol edin.',
+      );
     }
 
     final url = Uri.parse(_baseUrl);
     _logger.apiRequest('POST', url.toString());
-    
+
     final requestBody = {
       'model': _model,
       'messages': [
-        {
-          'role': 'user',
-          'content': prompt
-        }
+        {'role': 'user', 'content': prompt},
       ],
       'temperature': 0.7,
       'max_tokens': 1024,
@@ -44,7 +43,7 @@ class ChatGPTService {
 
     try {
       _logger.debug('📤 API isteği gönderiliyor');
-      
+
       final response = await http.post(
         url,
         headers: {
@@ -59,15 +58,17 @@ class ChatGPTService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         _logger.debug('✅ API yanıtı başarıyla alındı');
-        
-        if (responseData['choices'] != null && 
+
+        if (responseData['choices'] != null &&
             responseData['choices'].isNotEmpty &&
             responseData['choices'][0]['message'] != null &&
             responseData['choices'][0]['message']['content'] != null) {
-          
-          final generatedText = responseData['choices'][0]['message']['content'];
-          
-          _logger.debug('📝 Üretilen metin uzunluğu: ${generatedText.length} karakter');
+          final generatedText =
+              responseData['choices'][0]['message']['content'];
+
+          _logger.debug(
+            '📝 Üretilen metin uzunluğu: ${generatedText.length} karakter',
+          );
           return generatedText;
         } else {
           _logger.error('❌ API yanıtında metin bulunamadı', responseData);
@@ -76,11 +77,13 @@ class ChatGPTService {
       } else {
         final errorData = jsonDecode(response.body);
         _logger.error('❌ API Hatası: ${response.statusCode}', errorData);
-        throw Exception('API Hatası: ${response.statusCode} - ${errorData['error']['message'] ?? 'Bilinmeyen hata'}');
+        throw Exception(
+          'API Hatası: ${response.statusCode} - ${errorData['error']['message'] ?? 'Bilinmeyen hata'}',
+        );
       }
     } catch (e, stackTrace) {
       _logger.error('💥 ChatGPT API isteği başarısız', e, stackTrace);
-      
+
       if (e is Exception) {
         rethrow;
       }
@@ -89,52 +92,68 @@ class ChatGPTService {
   }
 
   /// Sohbet geçmişi ile birlikte içerik üretir
-  Future<String> generateContentWithHistory(String newPrompt, List<String> history) async {
+  Future<String> generateContentWithHistory(
+    String newPrompt,
+    List<String> history,
+  ) async {
     _logger.debug('🤖 ChatGPT API sohbet geçmişi ile istek başlatılıyor');
-    
+
     if (_apiKey.isEmpty) {
       _logger.error('❌ OPENAI_API_KEY bulunamadı');
-      throw Exception('OPENAI_API_KEY bulunamadı. .env dosyasını kontrol edin.');
+      throw Exception(
+        'OPENAI_API_KEY bulunamadı. .env dosyasını kontrol edin.',
+      );
     }
 
     final url = Uri.parse(_baseUrl);
     _logger.apiRequest('POST', url.toString());
-    
+
     // Mesajları hazırla
     List<Map<String, String>> messages = [];
-    
-    // Sistem mesajı ekle
+
+    // Sistem mesajı ekle - Sadece hikaye yazması için özel talimat
     messages.add({
       'role': 'system',
-      'content': 'Sen bir interaktif hikaye anlatıcısısın. Kullanıcının seçtiği kategoriye uygun, sürükleyici ve detaylı hikayeler anlatıyorsun. Kullanıcının girdilerine göre hikayeyi devam ettiriyorsun.'
+      'content':
+          '''Sen profesyonel bir interaktif hikaye anlatıcısısın. Görevin:
+
+SADECE hikayeyi devam ettirmek. Kullanıcının seçtiği eylemi gerçekleştirdiğini varsayarak hikayenin sonucunu anlat.
+
+YAPMAN GEREKENLER:
+- Kullanıcının seçiminin sonucunu detaylı anlat
+- Hikayeyi 2-3 cümle ile devam ettir
+- Atmosferi ve duyguları güçlü şekilde betimle
+- Hikayenin akışını sürdür
+
+YAPMAMANLAR:
+- Kullanıcıya seçenek sunma
+- "Ne yapmak istersin?" gibi sorular sorma
+- Seçenekler listesi verme
+- Tavsiye verme
+
+Sadece hikayeyi yaz, başka hiçbir şey ekleme.''',
     });
-    
+
     // Geçmiş mesajları ekle
     for (String message in history) {
       if (message.startsWith('Player:')) {
-        messages.add({
-          'role': 'user',
-          'content': message.substring(7).trim()
-        });
+        messages.add({'role': 'user', 'content': message.substring(7).trim()});
       } else if (message.startsWith('AI:')) {
         messages.add({
           'role': 'assistant',
-          'content': message.substring(3).trim()
+          'content': message.substring(3).trim(),
         });
       }
     }
-    
+
     // Yeni kullanıcı mesajını ekle
-    messages.add({
-      'role': 'user',
-      'content': newPrompt
-    });
-    
+    messages.add({'role': 'user', 'content': newPrompt});
+
     final requestBody = {
       'model': _model,
       'messages': messages,
-      'temperature': 0.7,
-      'max_tokens': 300,
+      'temperature': 0.8, // Daha yaratıcı hikaye devamı
+      'max_tokens': 250, // Daha kısa ve odaklı yanıtlar
       'top_p': 0.95,
       'frequency_penalty': 0.0,
       'presence_penalty': 0.0,
@@ -142,7 +161,7 @@ class ChatGPTService {
 
     try {
       _logger.debug('📤 API isteği gönderiliyor (${messages.length} mesaj)');
-      
+
       final response = await http.post(
         url,
         headers: {
@@ -157,15 +176,17 @@ class ChatGPTService {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         _logger.debug('✅ API yanıtı başarıyla alındı');
-        
-        if (responseData['choices'] != null && 
+
+        if (responseData['choices'] != null &&
             responseData['choices'].isNotEmpty &&
             responseData['choices'][0]['message'] != null &&
             responseData['choices'][0]['message']['content'] != null) {
-          
-          final generatedText = responseData['choices'][0]['message']['content'];
-          
-          _logger.debug('📝 Üretilen metin uzunluğu: ${generatedText.length} karakter');
+          final generatedText =
+              responseData['choices'][0]['message']['content'];
+
+          _logger.debug(
+            '📝 Üretilen metin uzunluğu: ${generatedText.length} karakter',
+          );
           return generatedText;
         } else {
           _logger.error('❌ API yanıtında metin bulunamadı', responseData);
@@ -174,11 +195,13 @@ class ChatGPTService {
       } else {
         final errorData = jsonDecode(response.body);
         _logger.error('❌ API Hatası: ${response.statusCode}', errorData);
-        throw Exception('API Hatası: ${response.statusCode} - ${errorData['error']['message'] ?? 'Bilinmeyen hata'}');
+        throw Exception(
+          'API Hatası: ${response.statusCode} - ${errorData['error']['message'] ?? 'Bilinmeyen hata'}',
+        );
       }
     } catch (e, stackTrace) {
       _logger.error('💥 ChatGPT API isteği başarısız', e, stackTrace);
-      
+
       if (e is Exception) {
         rethrow;
       }
@@ -187,53 +210,78 @@ class ChatGPTService {
   }
 
   /// Hikaye seçenekleri üretir
-  Future<List<Choice>> generateChoices(String storyContext, List<String> history) async {
+  Future<List<Choice>> generateChoices(
+    String storyContext,
+    List<String> history,
+  ) async {
     _logger.debug('🤖 Hikaye seçenekleri üretiliyor');
-    
+
     if (_apiKey.isEmpty) {
       _logger.error('❌ OPENAI_API_KEY bulunamadı');
-      throw Exception('OPENAI_API_KEY bulunamadı. .env dosyasını kontrol edin.');
+      throw Exception(
+        'OPENAI_API_KEY bulunamadı. .env dosyasını kontrol edin.',
+      );
     }
 
     final url = Uri.parse(_baseUrl);
     _logger.apiRequest('POST', url.toString());
-    
-    // Seçenek üretme prompt'u
-    final choicePrompt = '''
-Hikaye bağlamı: $storyContext
 
-Bu hikaye için 4 farklı seçenek üret. Her seçenek:
-- Hikayenin mevcut durumuyla bağlantılı olmalı
-- Farklı yönlere gidebilmeli
-- İlgi çekici ve sürükleyici olmalı
-- Kısa ve öz olmalı (maksimum 2 cümle)
-- **1. şahıs (ben) olarak yazılmalı** (ör: "Kapıyı açıyorum.", "Kitabı alıp okuyorum.")
+    // Gelişmiş seçenek üretme prompt'u
+    final choicePrompt =
+        '''
+Mevcut hikaye durumu: $storyContext
 
-Seçenekleri JSON formatında döndür:
+Bu hikaye için 4 farklı, kaliteli seçenek üret. Her seçenek:
+
+ZORUNLU KURALLAR:
+- Hikayenin mevcut durumu ile DOĞRUDAN bağlantılı olmalı
+- Her seçenek hikayeyi FARKLI bir yöne götürmeli
+- Mantıklı ve gerçekçi olmalı
+- 1. şahıs olarak yazılmalı ("Kapıyı açıyorum", "Silahımı çekerim")
+- Kısa ve net olmalı (maksimum 1-2 cümle)
+
+SEÇENEK TİPLERİ (her birinden 1 tane):
+1. AKSIYON seçeneği (saldırgan/cesur hareket)
+2. DİPLOMATİK seçeneği (konuşma/ikna etme)
+3. GÖZLEM seçeneği (araştırma/bekleme)
+4. KAÇIŞ/SAVUNMA seçeneği (güvenli/temkinli hareket)
+
+Hikayenin atmosferine ve karakterin durumuna uygun seçenekler üret.
+
+JSON formatında döndür:
 {
   "choices": [
-    {"id": "1", "text": "Seçenek 1 metni"},
-    {"id": "2", "text": "Seçenek 2 metni"},
-    {"id": "3", "text": "Seçenek 3 metni"},
-    {"id": "4", "text": "Seçenek 4 metni"}
+    {"id": "1", "text": "Aksiyon seçeneği"},
+    {"id": "2", "text": "Diplomatik seçeneği"},
+    {"id": "3", "text": "Gözlem seçeneği"},
+    {"id": "4", "text": "Kaçış/Savunma seçeneği"}
   ]
 }
 ''';
-    
+
     final requestBody = {
       'model': _model,
       'messages': [
         {
           'role': 'system',
-          'content': 'Sen bir interaktif hikaye seçenekleri üreticisisin. Verilen hikaye bağlamına uygun, çeşitli ve ilgi çekici seçenekler üretiyorsun.'
+          'content':
+              '''Sen uzman bir interaktif hikaye seçenekleri üreticisisin. 
+
+Görevin: Verilen hikaye durumuna uygun, mantıklı ve çeşitli 4 seçenek üretmek.
+
+KURALLARIN:
+- Her seçenek hikayenin mevcut durumu ile bağlantılı olmalı
+- 4 seçenek 4 farklı yaklaşım sunmalı (aksiyon, diplomasi, gözlem, savunma)
+- Seçenekler kısa ve net olmalı
+- 1. şahıs olarak yazılmalı
+- JSON formatında döndürmelisin
+
+Kaliteli, mantıklı ve hikayeye uygun seçenekler üret.''',
         },
-        {
-          'role': 'user',
-          'content': choicePrompt
-        }
+        {'role': 'user', 'content': choicePrompt},
       ],
-      'temperature': 0.8,
-      'max_tokens': 512,
+      'temperature': 0.9, // Seçenekler için daha yaratıcı
+      'max_tokens': 400, // Seçenekler için yeterli alan
       'top_p': 0.95,
       'frequency_penalty': 0.0,
       'presence_penalty': 0.0,
@@ -241,7 +289,7 @@ Seçenekleri JSON formatında döndür:
 
     try {
       _logger.debug('📤 Seçenek üretme API isteği gönderiliyor');
-      
+
       final response = await http.post(
         url,
         headers: {
@@ -256,42 +304,49 @@ Seçenekleri JSON formatında döndür:
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         _logger.debug('✅ Seçenek API yanıtı başarıyla alındı');
-        
-        if (responseData['choices'] != null && 
+
+        if (responseData['choices'] != null &&
             responseData['choices'].isNotEmpty &&
             responseData['choices'][0]['message'] != null &&
             responseData['choices'][0]['message']['content'] != null) {
-          
           final content = responseData['choices'][0]['message']['content'];
-          
+
           // JSON'u parse et
           try {
             final jsonData = jsonDecode(content);
             if (jsonData['choices'] != null && jsonData['choices'] is List) {
               final choices = <Choice>[];
               for (var choiceData in jsonData['choices']) {
-                choices.add(Choice(
-                  id: choiceData['id'] ?? 'unknown',
-                  text: choiceData['text'] ?? 'Bilinmeyen seçenek',
-                ));
+                choices.add(
+                  Choice(
+                    id: choiceData['id'] ?? 'unknown',
+                    text: choiceData['text'] ?? 'Bilinmeyen seçenek',
+                  ),
+                );
               }
-              
+
               _logger.debug('✅ ${choices.length} seçenek başarıyla üretildi');
               return choices;
             }
           } catch (e) {
             _logger.error('❌ Seçenek JSON parse hatası', e);
           }
-          
+
           // JSON parse başarısızsa, manuel olarak seçenekler oluştur
           return _createFallbackChoices();
         } else {
-          _logger.error('❌ Seçenek API yanıtında metin bulunamadı', responseData);
+          _logger.error(
+            '❌ Seçenek API yanıtında metin bulunamadı',
+            responseData,
+          );
           return _createFallbackChoices();
         }
       } else {
         final errorData = jsonDecode(response.body);
-        _logger.error('❌ Seçenek API Hatası: ${response.statusCode}', errorData);
+        _logger.error(
+          '❌ Seçenek API Hatası: ${response.statusCode}',
+          errorData,
+        );
         return _createFallbackChoices();
       }
     } catch (e, stackTrace) {
@@ -310,4 +365,4 @@ Seçenekleri JSON formatında döndür:
       Choice(id: '4', text: 'Yeni bir maceraya atıl'),
     ];
   }
-} 
+}

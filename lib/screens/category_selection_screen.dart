@@ -29,20 +29,21 @@ enum _IntroStep {
   subtitleTyping,
   animatingUp,
   categories,
-  finished
+  finished,
 }
 
 class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   late final LoggerService _logger;
   late final LanguageService _languageService;
   final AudioService _audioService = AudioService();
-  
+
   _IntroStep _introStep = _IntroStep.blackScreen;
   int _visibleCategoryIndex = -1;
   bool _isSkipped = false;
   bool _showWelcome = false;
   bool _showSubtitle = false;
   bool _isTransitioning = false;
+  bool _showMainScreen = false;
 
   @override
   void initState() {
@@ -50,6 +51,13 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     _logger = LoggerService();
     _languageService = LanguageService();
     _startIntroAnimation();
+
+    // Eğer intro atlandıysa veya tamamlandıysa ana ekranı göster
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_introStep == _IntroStep.finished || _isSkipped) {
+        setState(() => _showMainScreen = true);
+      }
+    });
   }
 
   void _startIntroAnimation() {
@@ -74,7 +82,8 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
 
   void _onSubtitleFinished() {
     setState(() => _introStep = _IntroStep.animatingUp);
-    Timer(const Duration(milliseconds: 800), () { // Animasyon süresi
+    Timer(const Duration(milliseconds: 800), () {
+      // Animasyon süresi
       if (!mounted) return;
       setState(() {
         _introStep = _IntroStep.categories;
@@ -87,16 +96,37 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     if (_visibleCategoryIndex < GameCategory.values.length - 1) {
       setState(() => _visibleCategoryIndex++);
     } else {
-      setState(() => _introStep = _IntroStep.finished);
+      _finishIntroWithAnimation();
     }
   }
 
   void _skipIntro() {
-    setState(() {
-      _isSkipped = true;
-      _showWelcome = true;
-      _showSubtitle = true;
-      _introStep = _IntroStep.finished;
+    _finishIntroWithAnimation();
+  }
+
+  void _finishIntroWithAnimation() {
+    // Geçiş animasyonu başlat
+    setState(() => _isTransitioning = true);
+
+    // Kararma animasyonunun bitmesini bekle
+    Timer(const Duration(milliseconds: 600), () {
+      if (!mounted) return;
+
+      setState(() {
+        _isSkipped = true;
+        _showWelcome = true;
+        _showSubtitle = true;
+        _introStep = _IntroStep.finished;
+      });
+
+      // Kararma bittikten sonra ana ekran öğelerini animasyonlu göster
+      Timer(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
+        setState(() {
+          _isTransitioning = false; // Kararma bitiyor
+          _showMainScreen = true; // Ana ekran öğeleri animasyonlu geliyor
+        });
+      });
     });
   }
 
@@ -106,17 +136,32 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       backgroundColor: Colors.black,
       appBar: _introStep.index >= _IntroStep.finished.index
           ? AppBar(
-              title: Text(_languageService.categorySelectionTitle),
+              title: AnimatedOpacity(
+                opacity: _showMainScreen ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 600),
+                child: Text(_languageService.categorySelectionTitle),
+              ),
               actions: [
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () => _openCredits(context),
-                  tooltip: _languageService.getLocalizedText('Jenerik', 'Credits'),
+                AnimatedOpacity(
+                  opacity: _showMainScreen ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 800),
+                  child: IconButton(
+                    icon: const Icon(Icons.info_outline),
+                    onPressed: () => _openCredits(context),
+                    tooltip: _languageService.getLocalizedText(
+                      'Jenerik',
+                      'Credits',
+                    ),
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => _openSettings(context),
-                  tooltip: _languageService.settings,
+                AnimatedOpacity(
+                  opacity: _showMainScreen ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 1000),
+                  child: IconButton(
+                    icon: const Icon(Icons.settings_outlined),
+                    onPressed: () => _openSettings(context),
+                    tooltip: _languageService.settings,
+                  ),
                 ),
               ],
             )
@@ -128,7 +173,9 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
             children: [
               _buildAnimatedTexts(),
               AnimatedOpacity(
-                opacity: _introStep.index >= _IntroStep.categories.index ? 1.0 : 0.0,
+                opacity: _introStep.index >= _IntroStep.categories.index
+                    ? 1.0
+                    : 0.0,
                 duration: const Duration(milliseconds: 500),
                 child: Column(
                   children: [
@@ -163,9 +210,11 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           16.0, // sol
-          _introStep.index >= _IntroStep.animatingUp.index ? 60.0 : 0.0, // üst (koşullu)
+          _introStep.index >= _IntroStep.animatingUp.index
+              ? 60.0
+              : 0.0, // üst (koşullu)
           16.0, // sağ
-          0.0,  // alt
+          0.0, // alt
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -177,9 +226,15 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                 onFinished: _onWelcomeFinished,
                 animatedTexts: [
                   TypewriterAnimatedText(
-                    _languageService.getLocalizedText('Hoş geldin Maceracı', 'Welcome Adventurer'),
+                    _languageService.getLocalizedText(
+                      'Hoş geldin Maceracı',
+                      'Welcome Adventurer',
+                    ),
                     speed: const Duration(milliseconds: 100),
-                    textStyle: GoogleFonts.merriweather(fontSize: 32, fontWeight: FontWeight.bold),
+                    textStyle: GoogleFonts.merriweather(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -195,7 +250,10 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                     _languageService.categorySelectionSubtitle,
                     textAlign: TextAlign.center,
                     speed: const Duration(milliseconds: 50),
-                    textStyle: GoogleFonts.sourceSans3(fontSize: 18, color: Colors.white70),
+                    textStyle: GoogleFonts.sourceSans3(
+                      fontSize: 18,
+                      color: Colors.white70,
+                    ),
                   ),
                 ],
               ),
@@ -215,11 +273,14 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 600),
       transitionBuilder: (child, animation) {
-        final offsetAnimation = Tween<Offset>(
-          begin: const Offset(1.5, 0.0),
-          end: Offset.zero,
-        ).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic));
-        
+        final offsetAnimation =
+            Tween<Offset>(
+              begin: const Offset(1.5, 0.0),
+              end: Offset.zero,
+            ).animate(
+              CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic),
+            );
+
         return ClipRect(
           child: SlideTransition(
             position: offsetAnimation,
@@ -227,14 +288,21 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
           ),
         );
       },
-      child: _introStep.index >= _IntroStep.categories.index && _visibleCategoryIndex != -1
+      child:
+          _introStep.index >= _IntroStep.categories.index &&
+              _visibleCategoryIndex != -1
           ? CategoryCard(
-              key: ValueKey<int>(_visibleCategoryIndex), // Animasyonun tetiklenmesi için anahtar
+              key: ValueKey<int>(
+                _visibleCategoryIndex,
+              ), // Animasyonun tetiklenmesi için anahtar
               category: GameCategory.values[_visibleCategoryIndex],
               onTap: () {
                 // Intro sırasında tıklamayı engelle, sadece bitince aktif olsun
                 if (_introStep == _IntroStep.finished || _isSkipped) {
-                  _onCategorySelected(context, GameCategory.values[_visibleCategoryIndex]);
+                  _onCategorySelected(
+                    context,
+                    GameCategory.values[_visibleCategoryIndex],
+                  );
                 }
               },
             )
@@ -243,40 +311,47 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   }
 
   Widget _buildFullCategoryGrid() {
-    return AnimationLimiter(
-      child: GridView.builder(
-        physics: const BouncingScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-          maxCrossAxisExtent: 160,
-          childAspectRatio: 0.9,
-          crossAxisSpacing: 10,
-          mainAxisSpacing: 10,
-        ),
-        padding: const EdgeInsets.all(16),
-        itemCount: GameCategory.values.length,
-        itemBuilder: (context, index) {
-          final category = GameCategory.values[index];
-          return AnimationConfiguration.staggeredGrid(
-            position: index,
-            duration: const Duration(milliseconds: 400),
-            columnCount: (MediaQuery.of(context).size.width / 160).floor(),
-            child: ScaleAnimation(
-              child: FadeInAnimation(
-                child: CategoryCard(
-                  category: category,
-                  onTap: () => _onCategorySelected(context, category),
+    return AnimatedOpacity(
+      opacity: _showMainScreen ? 1.0 : 0.0,
+      duration: const Duration(milliseconds: 800), // Yumuşak fade-in
+      curve: Curves.easeInOut,
+      child: AnimationLimiter(
+        child: GridView.builder(
+          physics: const BouncingScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            maxCrossAxisExtent: 160,
+            childAspectRatio: 0.9,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+          ),
+          padding: const EdgeInsets.all(16),
+          itemCount: GameCategory.values.length,
+          itemBuilder: (context, index) {
+            final category = GameCategory.values[index];
+            return AnimationConfiguration.staggeredGrid(
+              position: index,
+              duration: const Duration(milliseconds: 600), // Biraz daha hızlı
+              columnCount: (MediaQuery.of(context).size.width / 160).floor(),
+              child: SlideAnimation(
+                verticalOffset: 50.0, // Yukarıdan aşağıya kayma
+                child: FadeInAnimation(
+                  child: CategoryCard(
+                    category: category,
+                    onTap: () => _onCategorySelected(context, category),
+                  ),
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildIntroControls() {
     final showControls = _introStep == _IntroStep.categories && !_isSkipped;
-    final isLastCategory = _visibleCategoryIndex == GameCategory.values.length - 1;
+    final isLastCategory =
+        _visibleCategoryIndex == GameCategory.values.length - 1;
     final isIndexValid = _visibleCategoryIndex >= 0;
 
     return AnimatedOpacity(
@@ -299,11 +374,16 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                   child: Text(
                     isIndexValid
                         ? GameCategory.values[_visibleCategoryIndex]
-                            .getDescription(_languageService.currentLanguageCode)
+                              .getDescription(
+                                _languageService.currentLanguageCode,
+                              )
                         : '',
                     key: ValueKey<int>(_visibleCategoryIndex),
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.sourceSans3(fontSize: 16, color: Colors.white.withOpacity(0.8)),
+                    style: GoogleFonts.sourceSans3(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.8),
+                    ),
                   ),
                 ),
               ),
@@ -313,17 +393,24 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                 children: [
                   ElevatedButton(
                     onPressed: _skipIntro,
-                    child: Text(_languageService.getLocalizedText('Atla', 'Skip')),
+                    child: Text(
+                      _languageService.getLocalizedText('Atla', 'Skip'),
+                    ),
                   ),
                   const SizedBox(width: 20),
                   ElevatedButton(
                     onPressed: _proceedIntro,
-                    child: Text(isLastCategory
-                        ? _languageService.getLocalizedText('Bitir', 'Finish')
-                        : _languageService.getLocalizedText('Devam Et', 'Continue')),
+                    child: Text(
+                      isLastCategory
+                          ? _languageService.getLocalizedText('Bitir', 'Finish')
+                          : _languageService.getLocalizedText(
+                              'Devam Et',
+                              'Continue',
+                            ),
+                    ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),
@@ -334,12 +421,13 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   void _onCategorySelected(BuildContext context, GameCategory category) {
     if (_isTransitioning) return; // Zaten bir geçiş başladıysa tekrar tetikleme
 
-    _logger.gameEvent('Kategori seçildi ve hikaye ekranına yönlendiriliyor',
-        {'category': category.name});
-    
+    _logger.gameEvent('Kategori seçildi ve hikaye ekranına yönlendiriliyor', {
+      'category': category.name,
+    });
+
     // Kategori seçim sesi - mevcut dosya yoksa kaldır
     // _audioService.playSoundEffect('audio/button_click.wav');
-    
+
     setState(() => _isTransitioning = true);
 
     // Kararma animasyonunun bitmesini bekle
@@ -350,7 +438,9 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
         context,
         FadePageRoute(
           child: StoryScreen(category: category),
-          transitionDuration: const Duration(milliseconds: 800), // Yeni ekran daha yavaş açılsın
+          transitionDuration: const Duration(
+            milliseconds: 800,
+          ), // Yeni ekran daha yavaş açılsın
         ),
       ).then((_) {
         // Kullanıcı sohbet ekranından geri geldiğinde kararmayı kaldır
@@ -367,12 +457,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
     _logger.gameEvent('Credits ekranı açılıyor');
     // Credits buton tıklama sesi - mevcut dosya yoksa kaldır
     // _audioService.playSoundEffect('audio/button_click.wav');
-    await Navigator.push(
-      context,
-      FadePageRoute(
-        child: const CreditsScreen(),
-      ),
-    );
+    await Navigator.push(context, FadePageRoute(child: const CreditsScreen()));
   }
 
   void _openSettings(BuildContext context) async {
@@ -397,11 +482,7 @@ class CategoryCard extends StatefulWidget {
   final GameCategory category;
   final VoidCallback onTap;
 
-  const CategoryCard({
-    super.key,
-    required this.category,
-    required this.onTap,
-  });
+  const CategoryCard({super.key, required this.category, required this.onTap});
 
   @override
   State<CategoryCard> createState() => _CategoryCardState();
@@ -419,9 +500,10 @@ class _CategoryCardState extends State<CategoryCard>
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.96,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
   }
 
   @override
@@ -435,10 +517,7 @@ class _CategoryCardState extends State<CategoryCard>
     final lottiePath = _getLottiePath(widget.category);
 
     // Tarihi kategorisi için animasyonu büyütmek adına bir widget oluştur
-    Widget lottieWidget = Lottie.asset(
-      lottiePath,
-      fit: BoxFit.contain,
-    );
+    Widget lottieWidget = Lottie.asset(lottiePath, fit: BoxFit.contain);
 
     if (widget.category == GameCategory.historical) {
       lottieWidget = Transform.scale(
@@ -538,4 +617,4 @@ class _CategoryCardState extends State<CategoryCard>
         return 'assets/images/apocalypse.json';
     }
   }
-} 
+}

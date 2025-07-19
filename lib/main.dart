@@ -12,11 +12,11 @@ import 'services/audio_service.dart';
 Future<void> main() async {
   // Flutter'ın başlatılmasını bekle
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Logger'ı başlat
   LoggerService().initialize();
   final logger = LoggerService();
-  
+
   try {
     // .env dosyasını yükle
     await dotenv.load(fileName: ".env");
@@ -25,7 +25,7 @@ Future<void> main() async {
     logger.warning('⚠️ .env dosyası yüklenemedi', e);
     print('Lütfen proje kökünde .env dosyasının bulunduğundan emin olun.');
   }
-  
+
   // Dil servisini başlat
   try {
     await LanguageService().loadLanguagePreference();
@@ -33,14 +33,14 @@ Future<void> main() async {
   } catch (e) {
     logger.error('Dil servisi başlatılırken hata', e);
   }
-  
+
   // Audio servisini başlat
   try {
     logger.info('🎵 Audio servisi başlatıldı');
   } catch (e) {
     logger.error('Audio servisi başlatılırken hata', e);
   }
-  
+
   runApp(const SezyonApp());
 }
 
@@ -59,7 +59,7 @@ class _SezyonAppState extends State<SezyonApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Hot restart sırasında audio servisini sıfırla
     _audioService.reset();
   }
@@ -110,14 +110,28 @@ class _SezyonAppState extends State<SezyonApp> with WidgetsBindingObserver {
         ),
         textTheme: GoogleFonts.sourceSans3TextTheme(darkTheme.textTheme)
             .copyWith(
-          displayLarge: GoogleFonts.merriweather(textStyle: textTheme.displayLarge),
-          displayMedium: GoogleFonts.merriweather(textStyle: textTheme.displayMedium),
-          displaySmall: GoogleFonts.merriweather(textStyle: textTheme.displaySmall),
-          headlineLarge: GoogleFonts.merriweather(textStyle: textTheme.headlineLarge),
-          headlineMedium: GoogleFonts.merriweather(textStyle: textTheme.headlineMedium),
-          headlineSmall: GoogleFonts.merriweather(textStyle: textTheme.headlineSmall),
-          titleLarge: GoogleFonts.merriweather(textStyle: textTheme.titleLarge),
-        ),
+              displayLarge: GoogleFonts.merriweather(
+                textStyle: textTheme.displayLarge,
+              ),
+              displayMedium: GoogleFonts.merriweather(
+                textStyle: textTheme.displayMedium,
+              ),
+              displaySmall: GoogleFonts.merriweather(
+                textStyle: textTheme.displaySmall,
+              ),
+              headlineLarge: GoogleFonts.merriweather(
+                textStyle: textTheme.headlineLarge,
+              ),
+              headlineMedium: GoogleFonts.merriweather(
+                textStyle: textTheme.headlineMedium,
+              ),
+              headlineSmall: GoogleFonts.merriweather(
+                textStyle: textTheme.headlineSmall,
+              ),
+              titleLarge: GoogleFonts.merriweather(
+                textStyle: textTheme.titleLarge,
+              ),
+            ),
         appBarTheme: AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,

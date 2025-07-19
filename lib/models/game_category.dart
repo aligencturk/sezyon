@@ -21,7 +21,7 @@ enum GameCategory {
   /// Kategori için başlangıç prompt'u oluşturur
   String getInitialPrompt() {
     final languageService = LanguageService();
-    
+
     if (languageService.isTurkish) {
       return _getTurkishInitialPrompt();
     } else {
@@ -134,26 +134,49 @@ enum GameCategory {
   String getContinuePrompt(String userInput, List<String> conversationHistory) {
     final languageService = LanguageService();
     String history = conversationHistory.join('\n\n');
-    
+
     if (languageService.isTurkish) {
       return '''Önceki konuşma geçmişi:
 $history
 
-Oyuncunun son yanıtı: "$userInput"
-Oyuncunun seçtiği eylemi gerçekleştirdiğini varsayarak hikayeyi devam ettir. Oyuncu ne yapmak istediğini söyledi, sen de o eylemin sonucunu anlat. Maksimum 2-3cümle yaz. Sonu açık uçlu olsun ve oyuncuya ne yapacağını sor. Dil Türkçe olmalı. 
+Oyuncunun seçtiği eylem: "$userInput"
 
-ÖNEMLİ: Oyuncuya seçenek sunma, seçenek listesi verme, şunları yapabilirsin" gibi ifadeler kullanma. Oyuncunun eylemini gerçekleştirdiğini kabul et ve sonucunu anlat. Çok kısa tut.
-''';
+GÖREV: Oyuncunun seçtiği eylemi gerçekleştirdiğini varsayarak hikayenin sonucunu anlat.
+
+KURALLAR:
+- Sadece hikayeyi devam ettir (2-3 cümle)
+- Oyuncunun eyleminin sonucunu detaylı betimle
+- Atmosferi ve duyguları güçlü şekilde anlat
+- Hikayenin akışını sürdür
+
+YAPMA:
+- Seçenek sunma
+- "Ne yapmak istersin?" sorma
+- Liste verme
+- Tavsiye verme
+
+Sadece hikayeyi yaz, başka hiçbir şey ekleme.''';
     } else {
       return '''Previous conversation history:
 $history
 
-Player's last response: "$userInput"
+Player's chosen action: "$userInput"
 
-Assume the player has performed the action they chose and continue the story accordingly. The player told you what they want to do, now describe the result of that action. Write maximum 2-3entences. Keep the end open-ended and ask the player what they do next. The language must be English. 
+TASK: Assume the player performed their chosen action and describe the story's outcome.
 
-IMPORTANT: Do not offer choices to the player, do not list options, do not say "you can do this or that". Assume the player's action was completed and describe the result. Keep it very short.
-''';
+RULES:
+- Only continue the story (2-3 sentences)
+- Describe the result of the player's action in detail
+- Strongly portray atmosphere and emotions
+- Maintain the story flow
+
+DON'T:
+- Offer choices
+- Ask "What do you want to do?"
+- Give lists
+- Give advice
+
+Only write the story, add nothing else.''';
     }
   }
-} 
+}

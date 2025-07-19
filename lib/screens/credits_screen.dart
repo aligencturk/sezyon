@@ -157,11 +157,11 @@ class _CreditsScreenState extends State<CreditsScreen>
 
               // Credits yazıları scroll bitince yavaşça kaybolsun
               double opacity = 1.0;
-              if (_scrollAnimation.value > 0.85) {
-                // %85'ten sonra kaybolmaya başlasın
+              if (_scrollAnimation.value > 0.75) {
+                // Daha erken kaybolmaya başlasın
                 opacity =
                     (1.0 - _scrollAnimation.value) /
-                    0.15; // Kalan %15'te kaybolsun
+                    0.25; // Kalan %25'te kaybolsun
                 opacity = opacity.clamp(0.0, 1.0);
               }
 
@@ -240,8 +240,10 @@ class _CreditsScreenState extends State<CreditsScreen>
                   ),
 
                   SizedBox(
-                    height: screenHeight * 1.5,
-                  ), // Yazıların tamamen kaybolması için daha fazla boşluk
+                    height:
+                        screenHeight *
+                        2.0, // Daha fazla boşluk - yazılar tamamen kaybolsun
+                  ),
                 ],
               ),
             ),
@@ -489,6 +491,9 @@ class _CreditsScreenState extends State<CreditsScreen>
   }
 
   Widget _buildGlowingTitle(String title, double glowIntensity) {
+    // Güvenli glow yoğunluğu
+    final intensity = glowIntensity.clamp(0.3, 1.0);
+
     return Text(
       title,
       style: GoogleFonts.merriweather(
@@ -496,35 +501,35 @@ class _CreditsScreenState extends State<CreditsScreen>
         fontWeight: FontWeight.bold,
         color: Colors.white,
         shadows: [
+          // Beyaz iç ışık (LED çekirdeği)
+          Shadow(
+            offset: const Offset(0, 0),
+            blurRadius: (8 * intensity).clamp(1.0, 12.0),
+            color: Colors.white.withOpacity(0.8 * intensity),
+          ),
           // Ana mor glow
           Shadow(
             offset: const Offset(0, 0),
-            blurRadius: 30 * glowIntensity,
-            color: Colors.purple.withOpacity(0.8 * glowIntensity),
+            blurRadius: (15 * intensity).clamp(1.0, 20.0),
+            color: Colors.purple.withOpacity(0.7 * intensity),
           ),
-          // Beyaz iç ışık (LED efekti)
+          // Orta mor halo
           Shadow(
             offset: const Offset(0, 0),
-            blurRadius: 15 * glowIntensity,
-            color: Colors.white.withOpacity(0.6 * glowIntensity),
+            blurRadius: (25 * intensity).clamp(1.0, 30.0),
+            color: Colors.purple.withOpacity(0.5 * intensity),
           ),
-          // Dış mor halo
+          // Dış mor aura
           Shadow(
             offset: const Offset(0, 0),
-            blurRadius: 50 * glowIntensity,
-            color: Colors.purple.withOpacity(0.4 * glowIntensity),
-          ),
-          // Çok dış mor aura
-          Shadow(
-            offset: const Offset(0, 0),
-            blurRadius: 80 * glowIntensity,
-            color: Colors.purple.withOpacity(0.2 * glowIntensity),
+            blurRadius: (35 * intensity).clamp(1.0, 40.0),
+            color: Colors.purple.withOpacity(0.3 * intensity),
           ),
           // Pembe vurgu
           Shadow(
             offset: const Offset(0, 0),
-            blurRadius: 20 * glowIntensity,
-            color: Colors.pinkAccent.withOpacity(0.3 * glowIntensity),
+            blurRadius: (20 * intensity).clamp(1.0, 25.0),
+            color: Colors.pinkAccent.withOpacity(0.4 * intensity),
           ),
         ],
       ),

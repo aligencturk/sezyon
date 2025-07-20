@@ -1,3 +1,11 @@
+/// Hikaye aşamalarını temsil eden enum
+enum StoryPhase {
+  introduction, // Giriş - Durumun tanıtılması
+  development, // Gelişme - Olayların gelişmesi
+  climax, // Doruk - Ana çatışma/karar anı
+  conclusion, // Sonuç - Hikayenin sonu
+}
+
 /// Bir sohbet mesajını temsil eden model
 class Message {
   /// Mesajın metni
@@ -15,12 +23,20 @@ class Message {
   /// Mesajın seçenekleri (eğer varsa)
   final List<Choice>? choices;
 
+  /// Hikayenin mevcut aşaması
+  final StoryPhase? storyPhase;
+
+  /// Hikayenin sonlanıp sonlanmadığı
+  final bool isStoryEnd;
+
   Message({
     required this.text,
     required this.isUser,
     this.isAnimated = false,
     this.hasChoices = false,
     this.choices,
+    this.storyPhase,
+    this.isStoryEnd = false,
   });
 }
 
@@ -35,9 +51,5 @@ class Choice {
   /// Seçeneğin seçilip seçilmediği
   bool isSelected;
 
-  Choice({
-    required this.text,
-    required this.id,
-    this.isSelected = false,
-  });
-} 
+  Choice({required this.text, required this.id, this.isSelected = false});
+}

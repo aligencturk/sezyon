@@ -29,6 +29,7 @@ class _StoryScreenState extends State<StoryScreen> {
 
   bool _isLoading = true;
   bool _isWaitingForApiResponse = false;
+  bool _isStoryEnded = false;
   double _musicVolume = 0.5;
   double _soundVolume = 0.7;
   bool _isMusicEnabled = true;
@@ -81,6 +82,8 @@ class _StoryScreenState extends State<StoryScreen> {
         isUser: false,
         hasChoices: true,
         choices: choices,
+        storyPhase: StoryPhase.introduction,
+        isStoryEnd: false,
         isAnimated: false, // Başlangıçta animasyon yapılmamış
       );
 
@@ -164,16 +167,35 @@ class _StoryScreenState extends State<StoryScreen> {
       );
       print('🎯 ChatGPT yanıtı alındı: ${response.substring(0, 50)}...');
 
-      // AI yanıtından sonra seçenekler üret
-      print('🎯 Seçenekler üretiliyor...');
-      final choices = await _chatgptService.generateChoices(response, history);
-      print('🎯 ${choices.length} seçenek üretildi');
+      // Hikayenin sonlanıp sonlanmadığını kontrol et
+      final shouldEnd = widget.category.shouldEndStory(history, response);
+      final currentPhase = widget.category.determineStoryPhase(history);
+
+      print('🎯 Hikaye aşaması: $currentPhase');
+      print('🎯 Hikaye sonlanmalı mı: $shouldEnd');
+
+      List<Choice> choices = [];
+      bool hasChoices = true;
+
+      if (shouldEnd) {
+        // Hikaye sonlandı - seçenek sunma
+        hasChoices = false;
+        _isStoryEnded = true;
+        print('🎯 Hikaye sonlandı - seçenek üretilmiyor');
+      } else {
+        // Hikaye devam ediyor - seçenekler üret
+        print('🎯 Seçenekler üretiliyor...');
+        choices = await _chatgptService.generateChoices(response, history);
+        print('🎯 ${choices.length} seçenek üretildi');
+      }
 
       final aiMessage = Message(
         text: response,
         isUser: false,
-        hasChoices: true,
-        choices: choices,
+        hasChoices: hasChoices,
+        choices: hasChoices ? choices : null,
+        storyPhase: currentPhase,
+        isStoryEnd: shouldEnd,
         isAnimated: false, // Başlangıçta animasyon yapılmamış
       );
       print('🎯 AI mesajı oluşturuldu');
@@ -606,18 +628,15 @@ class _StoryScreenState extends State<StoryScreen> {
 
   Widget _buildChoiceButtons() {
     // Son AI mesajını bul (en üstteki AI mesajı)
-    final lastAiMessage = _messages
-        .where((m) => !m.isUser && m.hasChoices)
-        .firstOrNull;
+    final lastAiMessage = _messages.where((m) => !m.isUser).firstOrNull;
 
     print('🎯 _buildChoiceButtons çağrıldı');
     print('🎯 Toplam mesaj sayısı: ${_messages.length}');
     print('🎯 AI mesajı bulundu mu: ${lastAiMessage != null}');
     print('🎯 API yanıtı bekleniyor mu: $_isWaitingForApiResponse');
+    print('🎯 Hikaye sonlandı mı: $_isStoryEnded');
 
-    if (lastAiMessage == null ||
-        lastAiMessage.choices == null ||
-        _isWaitingForApiResponse) {
+    if (lastAiMessage == null || _isWaitingForApiResponse) {
       print(
         '🎯 Seçenekler gösterilmiyor - AI mesajı yok veya API yanıtı bekleniyor',
       );
@@ -629,52 +648,172 @@ class _StoryScreenState extends State<StoryScreen> {
       print('🎯 AI mesajının animasyonu henüz tamamlanmamış');
       return const SizedBox.shrink();
     }
-    print('🎯 AI mesajı animasyon durumu: ${lastAiMessage.isAnimated}');
 
-    print(
-      '🎯 Seçenekler gösteriliyor - ${lastAiMessage.choices!.length} seçenek',
-    );
+    // Hikaye sonlandıysa özel UI göster
+    if (lastAiMessage.isStoryEnd == true) {
+      return _buildStoryEndButtons();
+    }
 
+    // Normal seçenekler
+    if (lastAiMessage.hasChoices && lastAiMessage.choices != null) {
+      print(
+        '🎯 Seçenekler gösteriliyor - ${lastAiMessage.choices!.length} seçenek',
+      );
+
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.3),
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(12.0),
+            topRight: Radius.circular(12.0),
+          ),
+          border: Border(
+            top: BorderSide(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 1,
+            ),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: lastAiMessage.choices!.asMap().entries.map((entry) {
+            final index = entry.key;
+            final choice = entry.value;
+            return TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 600 + (index * 150)),
+              tween: Tween(begin: 0.0, end: 1.0),
+              curve: Curves.easeOutQuart,
+              builder: (context, value, child) {
+                return Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: Opacity(
+                    opacity: value,
+                    child: Container(
+                      margin: EdgeInsets.only(
+                        bottom: index == lastAiMessage.choices!.length - 1
+                            ? 0
+                            : 6,
+                      ),
+                      child: _buildChoiceButton(choice),
+                    ),
+                  ),
+                );
+              },
+            );
+          }).toList(),
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
+  }
+
+  Widget _buildStoryEndButtons() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
+        color: Colors.black.withValues(alpha: 0.4),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(12.0),
           topRight: Radius.circular(12.0),
         ),
         border: Border(
-          top: BorderSide(color: Colors.white.withOpacity(0.1), width: 1),
+          top: BorderSide(color: Colors.amber.withValues(alpha: 0.3), width: 2),
         ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: lastAiMessage.choices!.asMap().entries.map((entry) {
-          final index = entry.key;
-          final choice = entry.value;
-          return TweenAnimationBuilder<double>(
-            duration: Duration(milliseconds: 600 + (index * 150)),
+        children: [
+          // Hikaye sonu ikonu ve mesajı
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 800),
             tween: Tween(begin: 0.0, end: 1.0),
-            curve: Curves.easeOutQuart,
+            curve: Curves.easeOutBack,
             builder: (context, value, child) {
-              return Transform.translate(
-                offset: Offset(0, 20 * (1 - value)),
-                child: Opacity(
-                  opacity: value,
-                  child: Container(
-                    margin: EdgeInsets.only(
-                      bottom: index == lastAiMessage.choices!.length - 1
-                          ? 0
-                          : 6,
+              return Transform.scale(
+                scale: value,
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.auto_stories,
+                      size: 48,
+                      color: Colors.amber.withValues(alpha: 0.8),
                     ),
-                    child: _buildChoiceButton(choice),
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      _languageService.storyCompleted,
+                      style: GoogleFonts.merriweather(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.amber,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _languageService.storyEndMessage,
+                      style: GoogleFonts.sourceSans3(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               );
             },
-          );
-        }).toList(),
+          ),
+          const SizedBox(height: 20),
+          // Aksiyon butonları
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 1000),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOut,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.arrow_back, size: 18),
+                        label: Text(_languageService.mainMenu),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[700],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _isStoryEnded = false;
+                          });
+                          _restartGame();
+                        },
+                        icon: const Icon(Icons.refresh, size: 18),
+                        label: Text(_languageService.newStory),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }

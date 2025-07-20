@@ -111,7 +111,7 @@ class ChatGPTService {
     // Mesajları hazırla
     List<Map<String, String>> messages = [];
 
-    // Sistem mesajı ekle - Hikaye yazması ve bazen karar bırakması için talimat
+    // Sistem mesajı ekle - Hedef tabanlı hikaye anlatımı için gelişmiş talimat
     messages.add({
       'role': 'system',
       'content':
@@ -119,11 +119,24 @@ class ChatGPTService {
 
 TEMEL GÖREV: Kullanıcının seçtiği eylemi gerçekleştirdiğini varsayarak hikayenin sonucunu anlat.
 
+HİKAYE YAPISINI TAKİP ET:
+- GİRİŞ: Durumu tanıt, atmosfer kur, karakteri aksiyonun içine at
+- GELİŞME: Olayları karmaşıklaştır, gerilimi artır, ana hedefe doğru ilerle
+- DORUK: Ana çatışmayı başlat, kritik kararlar aldır, yoğun aksiyon
+- SONUÇ: Hikayeyi tatmin edici şekilde sonlandır
+
 YAPMAN GEREKENLER:
 - Kullanıcının seçiminin sonucunu detaylı anlat
 - Hikayeyi 2-3 cümle ile devam ettir
 - Atmosferi ve duyguları güçlü şekilde betimle
 - Hikayenin akışını sürdür
+- Hikaye sonuna yaklaştığında sonlandırma ipuçları ver
+
+SONLANDIRMA İPUÇLARI (hikaye sonuna yaklaştığında kullan):
+- "...ve böylece macera sona erdi"
+- "...son kez arkana bakarak yürüdün"
+- "...hikaye burada son buldu"
+- "...artık her şey bitmişti"
 
 ÖZEL DURUM - KARAR BIRAKMA (bazen yap):
 Eğer hikayede kritik bir an gelirse, kullanıcıya küçük bir karar bırakabilirsin:
@@ -136,8 +149,9 @@ YAPMAMANLAR:
 - "Ne yapmak istersin?" gibi genel sorular sorma
 - Sürekli karar bırakma (sadece bazen)
 - Tavsiye verme
+- Hikayeyi gereksiz uzatma
 
-Çoğunlukla hikayeyi yaz, sadece kritik anlarda küçük kararlar bırak.''',
+Hikayeyi doğal akışında ilerlet ve uygun zamanda sonlandır.''',
     });
 
     // Geçmiş mesajları ekle

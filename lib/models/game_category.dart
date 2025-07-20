@@ -1,4 +1,5 @@
 import '../services/language_service.dart';
+import 'message.dart';
 
 /// Oyun kategorileri enum'u
 enum GameCategory {
@@ -150,9 +151,161 @@ Language: English''';
     }
   }
 
+  /// Hikaye aşamasını belirler
+  StoryPhase determineStoryPhase(List<String> conversationHistory) {
+    final messageCount = conversationHistory.length;
+
+    // Her kategori için farklı aşama geçiş noktaları - daha uzun hikayeler
+    switch (this) {
+      case GameCategory.war:
+        if (messageCount <= 8)
+          return StoryPhase.introduction; // Savaş öncesi durum, hazırlık
+        if (messageCount <= 16)
+          return StoryPhase.development; // Savaşa sürüklenme süreci
+        if (messageCount <= 24)
+          return StoryPhase.climax; // Savaş anı, kritik çatışmalar
+        return StoryPhase.conclusion; // Savaş sonrası, sonuçlar
+
+      case GameCategory.mystery:
+        if (messageCount <= 10)
+          return StoryPhase.introduction; // Gizem ortaya çıkıyor
+        if (messageCount <= 20)
+          return StoryPhase.development; // İpuçları toplama, araştırma
+        if (messageCount <= 28)
+          return StoryPhase.climax; // Ana ipucu bulma, çözüme yaklaşma
+        return StoryPhase.conclusion; // Gizemi çözme
+
+      case GameCategory.fantasy:
+        if (messageCount <= 8)
+          return StoryPhase.introduction; // Büyülü dünyaya giriş
+        if (messageCount <= 18)
+          return StoryPhase
+              .development; // Macera gelişiyor, zorluklarla karşılaşma
+        if (messageCount <= 26)
+          return StoryPhase.climax; // Ana boss/büyük tehlike
+        return StoryPhase.conclusion; // Görevi tamamlama
+
+      case GameCategory.sciFi:
+        if (messageCount <= 8)
+          return StoryPhase.introduction; // Uzay/gelecek dünyasına giriş
+        if (messageCount <= 18)
+          return StoryPhase.development; // Görev gelişiyor, teknolojik sorunlar
+        if (messageCount <= 26)
+          return StoryPhase.climax; // Ana görev, kritik kararlar
+        return StoryPhase.conclusion; // Görevi bitirme
+
+      case GameCategory.historical:
+        if (messageCount <= 10)
+          return StoryPhase.introduction; // Tarihi döneme giriş
+        if (messageCount <= 20)
+          return StoryPhase.development; // Tarihi olayların gelişimi
+        if (messageCount <= 28)
+          return StoryPhase.climax; // Tarihi anın yaşanması
+        return StoryPhase.conclusion; // Tarihi sonuçlar
+
+      case GameCategory.apocalypse:
+        if (messageCount <= 8)
+          return StoryPhase.introduction; // Kıyamet sonrası dünyaya giriş
+        if (messageCount <= 18)
+          return StoryPhase.development; // Hayatta kalma mücadelesi
+        if (messageCount <= 26) return StoryPhase.climax; // En büyük tehlike
+        return StoryPhase.conclusion; // Güvenli bölgeye ulaşma
+    }
+  }
+
+  /// Hikayenin sonlanması gerekip gerekmediğini kontrol eder
+  bool shouldEndStory(List<String> conversationHistory, String lastResponse) {
+    final phase = determineStoryPhase(conversationHistory);
+
+    // Sadece climax aşamasından sonra sonlanabilir
+    if (phase != StoryPhase.conclusion) return false;
+
+    // Son yanıtta sonlandırma ipuçları var mı kontrol et
+    final lowerResponse = lastResponse.toLowerCase();
+
+    // Genel sonlandırma kelimeleri
+    final endKeywords = [
+      'son',
+      'bitti',
+      'tamamlandı',
+      'sona erdi',
+      'bitirdi',
+      'end',
+      'finished',
+      'completed',
+      'concluded',
+      'over',
+    ];
+
+    // Kategori özel sonlandırma kelimeleri
+    final categoryEndKeywords = _getCategoryEndKeywords();
+
+    return endKeywords.any((keyword) => lowerResponse.contains(keyword)) ||
+        categoryEndKeywords.any((keyword) => lowerResponse.contains(keyword));
+  }
+
+  /// Kategori özel sonlandırma anahtar kelimeleri
+  List<String> _getCategoryEndKeywords() {
+    switch (this) {
+      case GameCategory.war:
+        return [
+          'savaş bitti',
+          'zafer',
+          'yenilgi',
+          'barış',
+          'war ended',
+          'victory',
+          'defeat',
+          'peace',
+        ];
+      case GameCategory.mystery:
+        return [
+          'gizem çözüldü',
+          'suçlu bulundu',
+          'mystery solved',
+          'culprit found',
+          'case closed',
+        ];
+      case GameCategory.fantasy:
+        return [
+          'ejder yenildi',
+          'büyü bozuldu',
+          'krallık kurtuldu',
+          'dragon defeated',
+          'spell broken',
+          'kingdom saved',
+        ];
+      case GameCategory.sciFi:
+        return [
+          'görev tamamlandı',
+          'gezegen kurtuldu',
+          'mission completed',
+          'planet saved',
+          'ship arrived',
+        ];
+      case GameCategory.historical:
+        return [
+          'tarih yazıldı',
+          'kader belirlendi',
+          'history written',
+          'fate decided',
+          'legacy established',
+        ];
+      case GameCategory.apocalypse:
+        return [
+          'hayatta kaldı',
+          'güvenli bölge',
+          'survived',
+          'safe zone',
+          'sanctuary found',
+        ];
+    }
+  }
+
   /// Devam prompt'u oluşturur
   String getContinuePrompt(String userInput, List<String> conversationHistory) {
     final languageService = LanguageService();
+    final phase = determineStoryPhase(conversationHistory);
     String history = conversationHistory.join('\n\n');
 
     if (languageService.isTurkish) {
@@ -161,13 +314,11 @@ $history
 
 Oyuncunun seçtiği eylem: "$userInput"
 
+HİKAYE AŞAMASI: ${_getPhaseDescription(phase, true)}
+
 GÖREV: Oyuncunun seçtiği eylemi gerçekleştirdiğini varsayarak hikayenin sonucunu anlat.
 
-KURALLAR:
-- Sadece hikayeyi devam ettir (2-3 cümle)
-- Oyuncunun eyleminin sonucunu detaylı betimle
-- Atmosferi ve duyguları güçlü şekilde anlat
-- Hikayenin akışını sürdür
+${_getPhaseSpecificRules(phase, true)}
 
 YAPMA:
 - Seçenek sunma
@@ -182,13 +333,11 @@ $history
 
 Player's chosen action: "$userInput"
 
+STORY PHASE: ${_getPhaseDescription(phase, false)}
+
 TASK: Assume the player performed their chosen action and describe the story's outcome.
 
-RULES:
-- Only continue the story (2-3 sentences)
-- Describe the result of the player's action in detail
-- Strongly portray atmosphere and emotions
-- Maintain the story flow
+${_getPhaseSpecificRules(phase, false)}
 
 DON'T:
 - Offer choices
@@ -197,6 +346,111 @@ DON'T:
 - Give advice
 
 Only write the story, add nothing else.''';
+    }
+  }
+
+  /// Aşama açıklaması
+  String _getPhaseDescription(StoryPhase phase, bool isTurkish) {
+    switch (phase) {
+      case StoryPhase.introduction:
+        return isTurkish
+            ? 'GİRİŞ - Durumu tanıt ve atmosfer kur'
+            : 'INTRODUCTION - Introduce situation and set atmosphere';
+      case StoryPhase.development:
+        return isTurkish
+            ? 'GELİŞME - Olayları geliştir ve gerilimi artır'
+            : 'DEVELOPMENT - Develop events and increase tension';
+      case StoryPhase.climax:
+        return isTurkish
+            ? 'DORUK - Ana çatışma ve kritik kararlar'
+            : 'CLIMAX - Main conflict and critical decisions';
+      case StoryPhase.conclusion:
+        return isTurkish
+            ? 'SONUÇ - Hikayeyi sonlandırmaya hazırlan'
+            : 'CONCLUSION - Prepare to conclude the story';
+    }
+  }
+
+  /// Aşamaya özel kurallar
+  String _getPhaseSpecificRules(StoryPhase phase, bool isTurkish) {
+    switch (phase) {
+      case StoryPhase.introduction:
+        return isTurkish
+            ? '''KURALLAR:
+- Dünyayı ve durumu tanıt
+- Karakteri aksiyonun içine at
+- Merak uyandıracak detaylar ver
+- Hikayeyi yavaş yavaş geliştir'''
+            : '''RULES:
+- Introduce the world and situation
+- Throw character into action
+- Give intriguing details
+- Gradually develop the story''';
+
+      case StoryPhase.development:
+        return isTurkish
+            ? '''KURALLAR:
+- Olayları karmaşıklaştır
+- Yeni karakterler/tehlikeler tanıt
+- Gerilimi sürekli artır
+- Ana hedefe doğru ilerle'''
+            : '''RULES:
+- Complicate events
+- Introduce new characters/dangers
+- Continuously increase tension
+- Progress toward main goal''';
+
+      case StoryPhase.climax:
+        return isTurkish
+            ? '''KURALLAR:
+- Ana çatışmayı başlat
+- Kritik kararlar aldır
+- Yoğun aksiyon ve drama
+- Sonuca doğru hızlan'''
+            : '''RULES:
+- Start main conflict
+- Force critical decisions
+- Intense action and drama
+- Accelerate toward conclusion''';
+
+      case StoryPhase.conclusion:
+        return isTurkish
+            ? '''KURALLAR:
+- Hikayeyi sonlandırmaya hazırlan
+- Ana hedefi gerçekleştir (${_getCategoryGoal(true)})
+- Tatmin edici bir sonuç ver
+- Eğer uygunsa hikayeyi bitir'''
+            : '''RULES:
+- Prepare to conclude story
+- Achieve main goal (${_getCategoryGoal(false)})
+- Provide satisfying conclusion
+- End story if appropriate''';
+    }
+  }
+
+  /// Kategori hedefini döndürür
+  String _getCategoryGoal(bool isTurkish) {
+    switch (this) {
+      case GameCategory.war:
+        return isTurkish
+            ? 'savaşa katılım ve sonuç'
+            : 'war participation and outcome';
+      case GameCategory.mystery:
+        return isTurkish ? 'gizemi çözme' : 'solving the mystery';
+      case GameCategory.fantasy:
+        return isTurkish
+            ? 'büyülü görevi tamamlama'
+            : 'completing magical quest';
+      case GameCategory.sciFi:
+        return isTurkish
+            ? 'bilimkurgu görevini bitirme'
+            : 'finishing sci-fi mission';
+      case GameCategory.historical:
+        return isTurkish
+            ? 'tarihi olayı yaşama'
+            : 'experiencing historical event';
+      case GameCategory.apocalypse:
+        return isTurkish ? 'hayatta kalma' : 'survival';
     }
   }
 }

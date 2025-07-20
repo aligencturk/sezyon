@@ -7,7 +7,7 @@ enum AppLanguage {
   english('en', 'English', '🇺🇸');
 
   const AppLanguage(this.code, this.displayName, this.flag);
-  
+
   final String code;
   final String displayName;
   final String flag;
@@ -21,7 +21,7 @@ class LanguageService {
 
   static const String _languageKey = 'selected_language';
   final LoggerService _logger = LoggerService();
-  
+
   AppLanguage _currentLanguage = AppLanguage.turkish;
 
   /// Mevcut dili döndürür
@@ -41,14 +41,14 @@ class LanguageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final languageCode = prefs.getString(_languageKey);
-      
+
       if (languageCode != null) {
         _currentLanguage = AppLanguage.values.firstWhere(
           (lang) => lang.code == languageCode,
           orElse: () => AppLanguage.turkish,
         );
       }
-      
+
       _logger.info('🌍 Dil tercihi yüklendi: ${_currentLanguage.displayName}');
     } catch (e, stackTrace) {
       _logger.error('Dil tercihi yüklenirken hata oluştu', e, stackTrace);
@@ -60,10 +60,10 @@ class LanguageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_languageKey, language.code);
-      
+
       _currentLanguage = language;
       _logger.info('🌍 Dil değiştirildi: ${language.displayName}');
-      
+
       return true;
     } catch (e, stackTrace) {
       _logger.error('Dil tercihi kaydedilirken hata oluştu', e, stackTrace);
@@ -78,66 +78,69 @@ class LanguageService {
 
   /// UI metinlerini döndürür
   String get appTitle => getLocalizedText('RPG Oyunu', 'RPG Game');
-  
-  String get categorySelectionTitle => getLocalizedText(
-    'SEZYON', 
-    'SEZYON'
-  );
-  
+
+  String get categorySelectionTitle => getLocalizedText('SEZYON', 'SEZYON');
+
   String get categorySelectionSubtitle => getLocalizedText(
     'Maceranın hangi türde başlamasını istiyorsunuz?',
-    'What type of adventure would you like to start?'
+    'What type of adventure would you like to start?',
   );
 
   String get settings => getLocalizedText('Ayarlar', 'Settings');
-  
+
   String get language => getLocalizedText('Dil', 'Language');
-  
+
   String get selectLanguage => getLocalizedText('Dil Seçin', 'Select Language');
-  
+
   String get restart => getLocalizedText('Yeniden Başlat', 'Restart');
-  
-  String get restartGame => getLocalizedText('Oyunu Yeniden Başlat', 'Restart Game');
-  
+
+  String get restartGame =>
+      getLocalizedText('Oyunu Yeniden Başlat', 'Restart Game');
+
   String get restartConfirmation => getLocalizedText(
     'Mevcut hikayeniz silinecek. Emin misiniz?',
-    'Your current story will be deleted. Are you sure?'
+    'Your current story will be deleted. Are you sure?',
   );
-  
+
   String get cancel => getLocalizedText('İptal', 'Cancel');
-  
+
   String get ok => getLocalizedText('Tamam', 'OK');
-  
+
   String get error => getLocalizedText('Hata', 'Error');
-  
+
   String get loading => getLocalizedText('Yükleniyor...', 'Loading...');
-  
+
   String get storyLoading => getLocalizedText(
     'Hikayeniz hazırlanıyor...',
-    'Your story is being prepared...'
-  );
-  
-  String get storyContinuing => getLocalizedText('Hikayenize devam ediliyor...', 'Continuing your story...');
-
-  String get aiThinking => getLocalizedText('AI düşünüyor...', 'AI is thinking...');
-  
-  String get inputHint => getLocalizedText(
-    'Ne yapmak istiyorsunuz?',
-    'What would you like to do?'
+    'Your story is being prepared...',
   );
 
-  String get audioSettings => getLocalizedText('Ses Ayarları', 'Audio Settings');
-  
+  String get storyContinuing => getLocalizedText(
+    'Hikayenize devam ediliyor...',
+    'Continuing your story...',
+  );
+
+  String get aiThinking =>
+      getLocalizedText('AI düşünüyor...', 'AI is thinking...');
+
+  String get inputHint =>
+      getLocalizedText('Ne yapmak istiyorsunuz?', 'What would you like to do?');
+
+  String get audioSettings =>
+      getLocalizedText('Ses Ayarları', 'Audio Settings');
+
   String get musicVolume => getLocalizedText('Müzik Sesi', 'Music Volume');
-  
-  String get soundEffectsVolume => getLocalizedText('Ses Efektleri', 'Sound Effects');
-  
+
+  String get soundEffectsVolume =>
+      getLocalizedText('Ses Efektleri', 'Sound Effects');
+
   String get musicEnabled => getLocalizedText('Müzik Açık', 'Music Enabled');
-  
-  String get soundEffectsEnabled => getLocalizedText('Ses Efektleri Açık', 'Sound Effects Enabled');
-  
+
+  String get soundEffectsEnabled =>
+      getLocalizedText('Ses Efektleri Açık', 'Sound Effects Enabled');
+
   String get mute => getLocalizedText('Sessiz', 'Mute');
-  
+
   String get unmute => getLocalizedText('Sesi Aç', 'Unmute');
 
   /// Kategori isimlerini döndürür
@@ -163,6 +166,22 @@ class LanguageService {
   /// Macera başlığını döndürür
   String getAdventureTitle(String categoryKey) {
     final categoryName = getCategoryName(categoryKey);
-    return getLocalizedText('$categoryName Macerası', '$categoryName Adventure');
+    return getLocalizedText(
+      '$categoryName Macerası',
+      '$categoryName Adventure',
+    );
   }
-} 
+
+  /// Hikaye sonu metinleri
+  String get storyCompleted =>
+      getLocalizedText('Hikaye Tamamlandı!', 'Story Completed!');
+
+  String get storyEndMessage => getLocalizedText(
+    'Maceran sona erdi. Yeni bir hikaye başlatmak ister misin?',
+    'Your adventure has ended. Would you like to start a new story?',
+  );
+
+  String get mainMenu => getLocalizedText('Ana Menü', 'Main Menu');
+
+  String get newStory => getLocalizedText('Yeni Hikaye', 'New Story');
+}

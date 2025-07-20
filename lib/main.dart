@@ -44,7 +44,8 @@ Future<void> main() async {
 
   // Google Play Games servisini başlat
   try {
-    await GooglePlayGamesService().signIn();
+    final gamesService = GooglePlayGamesService();
+    await gamesService.isSignedInAsync(); // Mevcut giriş durumunu kontrol et
     logger.info('🎮 Google Play Games servisi başlatıldı');
   } catch (e) {
     logger.error('Google Play Games servisi başlatılırken hata', e);

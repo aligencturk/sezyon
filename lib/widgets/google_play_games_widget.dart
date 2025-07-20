@@ -50,22 +50,20 @@ class _GooglePlayGamesWidgetState extends State<GooglePlayGamesWidget> {
               onPressed: _gamesService.isSignedIn
                   ? null
                   : () async {
-                      await _gamesService.signIn();
+                      final success = await _gamesService.signIn();
+                      if (success && mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Google Play Games\'e giriş yapıldı!',
+                            ),
+                          ),
+                        );
+                      }
                       setState(() {});
                     },
               icon: const Icon(Icons.login),
               label: const Text('Giriş Yap'),
-            ),
-
-            ElevatedButton.icon(
-              onPressed: _gamesService.isSignedIn
-                  ? () async {
-                      await _gamesService.signOut();
-                      setState(() {});
-                    }
-                  : null,
-              icon: const Icon(Icons.logout),
-              label: const Text('Çıkış Yap'),
             ),
 
             ElevatedButton.icon(

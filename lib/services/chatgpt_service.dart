@@ -111,47 +111,76 @@ class ChatGPTService {
     // Mesajları hazırla
     List<Map<String, String>> messages = [];
 
-    // Sistem mesajı ekle - Hedef tabanlı hikaye anlatımı için gelişmiş talimat
+    // Sistem mesajı ekle - Sıkı hikaye yapısı ve karakter etkileşimi için gelişmiş talimat
     messages.add({
       'role': 'system',
       'content':
-          '''Sen profesyonel bir interaktif hikaye anlatıcısısın. Görevin:
+          '''Sen profesyonel bir interaktif hikaye anlatıcısısın. MUTLAKA hikaye yapısına uyacaksın.
 
-TEMEL GÖREV: Kullanıcının seçtiği eylemi gerçekleştirdiğini varsayarak hikayenin sonucunu anlat.
+ZORUNLU HİKAYE YAPISI - MUTLAKA TAKİP ET:
 
-HİKAYE YAPISINI TAKİP ET:
-- GİRİŞ: Durumu tanıt, atmosfer kur, karakteri aksiyonun içine at
-- GELİŞME: Olayları karmaşıklaştır, gerilimi artır, ana hedefe doğru ilerle
-- DORUK: Ana çatışmayı başlat, kritik kararlar aldır, yoğun aksiyon
-- SONUÇ: Hikayeyi tatmin edici şekilde sonlandır
+1. GİRİŞ AŞAMASI (Introduction):
+   - Durumu ve atmosferi tanıt
+   - Karakteri aksiyonun içine at
+   - Dünyayı ve çevreyi betimle
+   - Temel çatışmayı ima et
+   - İsimlendirilmiş karakterleri tanıt
+
+2. GELİŞME AŞAMASI (Development):
+   - Olayları karmaşıklaştır
+   - Yeni karakterler/tehlikeler tanıt
+   - Gerilimi sürekli artır
+   - Ana hedefe doğru ilerle
+   - Karakter etkileşimlerini geliştir
+
+3. DORUK AŞAMASI (Climax):
+   - Ana çatışmayı başlat
+   - En yoğun aksiyon ve drama
+   - Kritik kararlar aldır
+   - Karakterlerle yoğun etkileşim
+   - Sonuca doğru hızlan
+
+4. SONUÇ AŞAMASI (Conclusion):
+   - Ana çatışmayı çöz
+   - Hikayeyi tatmin edici şekilde sonlandır
+   - Karakterlerin kaderini belirle
+   - Sonlandırma ipuçları ver
+
+KARAKTER VE ETKİLEŞİM KURALLARI - MUTLAKA UYGULA:
+- Her hikayede isimlendirilmiş karakterler olsun
+- Karakterlerle diyaloglar ve etkileşimler yaz
+- Karakterlerin kişilikleri ve motivasyonları olsun
+- Oyuncu karakterlerle konuşabilsin, tartışabilsin
+- Gerçekçi karakter tepkileri ver
+
+ÖZEL KATEGORI KURALLARI:
+- SAVAŞ/TARİH kategorilerinde: Gerçek tarihten ilham al, tarihi atmosferi koru
+- Tüm kategorilerde: İsimli karakterlerle zengin etkileşimler
+
+AŞAMA KURALLARI:
+- Her aşamada SADECE o aşamaya uygun içerik üret
+- Giriş aşamasında sonuç verme
+- Gelişme aşamasında hemen doruk noktasına çıkma
+- Doruk aşamasında hikayeyi bitirme
+- Sonuç aşamasında yeni maceralar başlatma
 
 YAPMAN GEREKENLER:
-- Kullanıcının seçiminin sonucunu detaylı anlat
-- Hikayeyi 2-3 cümle ile devam ettir
-- Atmosferi ve duyguları güçlü şekilde betimle
-- Hikayenin akışını sürdür
-- Hikaye sonuna yaklaştığında sonlandırma ipuçları ver
-
-SONLANDIRMA İPUÇLARI (hikaye sonuna yaklaştığında kullan):
-- "...ve böylece macera sona erdi"
-- "...son kez arkana bakarak yürüdün"
-- "...hikaye burada son buldu"
-- "...artık her şey bitmişti"
-
-ÖZEL DURUM - KARAR BIRAKMA (bazen yap):
-Eğer hikayede kritik bir an gelirse, kullanıcıya küçük bir karar bırakabilirsin:
-- "Kapının arkasından sesler geliyor..." (karar: açmak mı beklemek mi)
-- "İki yol ayrımındasın..." (karar: hangi yolu seçmek)
-- "Bir şey fark ettin ama emin değilsin..." (karar: araştırmak mı görmezden gelmek mi)
+- Kullanıcının seçiminin sonucunu KISA ve ÖZ şekilde anlat
+- SADECE 2-3 KISA cümle yaz (maksimum 150 kelime)
+- Mevcut aşamaya uygun içerik üret
+- Atmosferi güçlü ama KISA şekilde betimle
+- Karakterlerle KISA etkileşim kur
+- Her cümleyi tamamla, yarıda bırakma
 
 YAPMAMANLAR:
-- Büyük seçenekler listesi verme
-- "Ne yapmak istersin?" gibi genel sorular sorma
-- Sürekli karar bırakma (sadece bazen)
-- Tavsiye verme
-- Hikayeyi gereksiz uzatma
+- Aşama sıralamasını bozma
+- Erken sonlandırma
+- Aşama atlaması yapma
+- Seçenek sunma
+- "Ne yapmak istersin?" sorma
+- İsimsiz, kişiliksiz karakterler yaratma
 
-Hikayeyi doğal akışında ilerlet ve uygun zamanda sonlandır.''',
+MUTLAKA hikaye aşamasına uygun içerik üret ve karakterlerle etkileşim kur!''',
     });
 
     // Geçmiş mesajları ekle
@@ -173,7 +202,7 @@ Hikayeyi doğal akışında ilerlet ve uygun zamanda sonlandır.''',
       'model': _model,
       'messages': messages,
       'temperature': 0.8, // Daha yaratıcı hikaye devamı
-      'max_tokens': 250, // Daha kısa ve odaklı yanıtlar
+      'max_tokens': 200, // Kısa ve tamamlanmış yanıtlar için
       'top_p': 0.95,
       'frequency_penalty': 0.0,
       'presence_penalty': 0.0,
@@ -251,30 +280,27 @@ Hikayeyi doğal akışında ilerlet ve uygun zamanda sonlandır.''',
         '''
 Mevcut hikaye durumu: $storyContext
 
+ZORUNLU KURALLAR - MUTLAKA TAKİP ET:
 Bu hikaye için 4 farklı, kaliteli seçenek üret. Her seçenek:
 
-ZORUNLU KURALLAR:
 - Hikayenin mevcut durumu ile DOĞRUDAN bağlantılı olmalı
 - Her seçenek hikayeyi FARKLI bir yöne götürmeli
 - Mantıklı ve gerçekçi olmalı
 - 1. şahıs olarak yazılmalı ("Kapıyı açıyorum", "Silahımı çekerim")
 - Kısa ve net olmalı (maksimum 1-2 cümle)
+- Mevcut hikaye aşamasına uygun olmalı
 
-ÖNEMLİ: Eğer hikaye bir karar noktasında bitiyorsa (örn: "iki yol var", "kapının arkasından ses geliyor"), seçenekleri o karara uygun üret.
-
-SEÇENEK TİPLERİ:
-Normal durumlar için:
+SEÇENEK TİPLERİ - MUTLAKA 4 FARKLI TİP:
 1. AKSIYON seçeneği (saldırgan/cesur hareket)
 2. DİPLOMATİK seçeneği (konuşma/ikna etme)
-3. GÖZLEM seçeneği (araştırma/bekleme)
+3. GÖZLEM seçeneği (araştırma/bekleme/dikkatli yaklaşım)
 4. KAÇIŞ/SAVUNMA seçeneği (güvenli/temkinli hareket)
 
-Karar noktaları için:
-- Hikayede belirtilen seçeneklere uygun alternatifler üret
-- Örn: "iki yol" → "Sola giderim", "Sağa giderim", "Beklerim", "Geri dönerim"
-- Örn: "kapı sesleri" → "Kapıyı açarım", "Sessizce yaklaşırım", "Beklerim", "Uzaklaşırım"
-
-Hikayenin atmosferine ve mevcut durumuna uygun seçenekler üret.
+ÖNEMLİ UYARI:
+- Eğer hikaye bir karar noktasında bitiyorsa, seçenekleri o karara uygun üret
+- Örn: "iki yol var" → yol seçenekleri
+- Örn: "kapı sesleri" → kapıyla ilgili seçenekler
+- Hikayenin atmosferine ve durumuna uygun seçenekler üret
 
 JSON formatında döndür:
 {
@@ -293,18 +319,24 @@ JSON formatında döndür:
         {
           'role': 'system',
           'content':
-              '''Sen uzman bir interaktif hikaye seçenekleri üreticisisin. 
+              '''Sen uzman bir interaktif hikaye seçenekleri üreticisisin. MUTLAKA kurallara uyacaksın.
 
-Görevin: Verilen hikaye durumuna uygun, mantıklı ve çeşitli 4 seçenek üretmek.
+ZORUNLU GÖREV: Verilen hikaye durumuna uygun, mantıklı ve çeşitli 4 seçenek üretmek.
 
-KURALLARIN:
+MUTLAKA UYULACAK KURALLAR:
 - Her seçenek hikayenin mevcut durumu ile bağlantılı olmalı
 - 4 seçenek 4 farklı yaklaşım sunmalı (aksiyon, diplomasi, gözlem, savunma)
 - Seçenekler kısa ve net olmalı
 - 1. şahıs olarak yazılmalı
 - JSON formatında döndürmelisin
+- Mevcut hikaye aşamasına uygun seçenekler üret
 
-Kaliteli, mantıklı ve hikayeye uygun seçenekler üret.''',
+YAPMA:
+- Hikaye aşamasına uygun olmayan seçenekler üretme
+- Aynı tip seçenekler üretme
+- Uzun açıklamalar yapma
+
+MUTLAKA kaliteli, mantıklı ve hikayeye uygun seçenekler üret!''',
         },
         {'role': 'user', 'content': choicePrompt},
       ],
@@ -392,5 +424,206 @@ Kaliteli, mantıklı ve hikayeye uygun seçenekler üret.''',
       Choice(id: '3', text: 'Detayları araştır'),
       Choice(id: '4', text: 'Yeni bir maceraya atıl'),
     ];
+  }
+
+  /// Hikaye özeti üretir
+  Future<String> generateStorySummary(String prompt) async {
+    _logger.debug('🤖 Hikaye özeti üretiliyor');
+
+    if (_apiKey.isEmpty) {
+      _logger.error('❌ OPENAI_API_KEY bulunamadı');
+      throw Exception(
+        'OPENAI_API_KEY bulunamadı. .env dosyasını kontrol edin.',
+      );
+    }
+
+    final url = Uri.parse(_baseUrl);
+    _logger.apiRequest('POST', url.toString());
+
+    final requestBody = {
+      'model': _model,
+      'messages': [
+        {
+          'role': 'system',
+          'content': '''Sen profesyonel bir hikaye özetleyicisisin. Görevin:
+
+TEMEL GÖREV: Tamamlanan hikayenin güzel ve duygusal bir özetini yaz.
+
+YAPMAN GEREKENLER:
+- Hikayenin ana olaylarını kronolojik sırayla özetle
+- Karakterin yaptığı önemli kararları vurgula
+- Duygusal ve atmosferik bir dil kullan
+- Hikayenin sonucunu ve etkisini belirt
+- Credits benzeri bir format kullan
+
+YAPMAMANLAR:
+- Seçenek sunma
+- Soru sorma
+- Tavsiye verme
+- Gelecek hakkında spekülasyon yapma
+
+Sadece özeti yaz, başka hiçbir şey ekleme.''',
+        },
+        {'role': 'user', 'content': prompt},
+      ],
+      'temperature': 0.8, // Yaratıcı özet için
+      'max_tokens': 400, // Kısa özet için
+      'top_p': 0.95,
+      'frequency_penalty': 0.0,
+      'presence_penalty': 0.0,
+    };
+
+    try {
+      _logger.debug('📤 Hikaye özeti API isteği gönderiliyor');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKey',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      _logger.apiResponse(url.toString(), response.statusCode);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        _logger.debug('✅ Hikaye özeti API yanıtı başarıyla alındı');
+
+        if (responseData['choices'] != null &&
+            responseData['choices'].isNotEmpty &&
+            responseData['choices'][0]['message'] != null &&
+            responseData['choices'][0]['message']['content'] != null) {
+          final summary = responseData['choices'][0]['message']['content'];
+
+          _logger.debug('📝 Hikaye özeti uzunluğu: ${summary.length} karakter');
+          return summary;
+        } else {
+          _logger.error(
+            '❌ Hikaye özeti API yanıtında metin bulunamadı',
+            responseData,
+          );
+          throw Exception('Hikaye özeti API yanıtında metin bulunamadı');
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        _logger.error(
+          '❌ Hikaye özeti API Hatası: ${response.statusCode}',
+          errorData,
+        );
+        throw Exception(
+          'Hikaye özeti API Hatası: ${response.statusCode} - ${errorData['error']['message'] ?? 'Bilinmeyen hata'}',
+        );
+      }
+    } catch (e, stackTrace) {
+      _logger.error('💥 Hikaye özeti API isteği başarısız', e, stackTrace);
+
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Ağ hatası: $e');
+    }
+  }
+
+  /// Epilog içeriği üretir
+  Future<String> generateEpilogue(String prompt) async {
+    _logger.debug('🤖 Epilog içeriği üretiliyor');
+
+    if (_apiKey.isEmpty) {
+      _logger.error('❌ OPENAI_API_KEY bulunamadı');
+      throw Exception(
+        'OPENAI_API_KEY bulunamadı. .env dosyasını kontrol edin.',
+      );
+    }
+
+    final url = Uri.parse(_baseUrl);
+    _logger.apiRequest('POST', url.toString());
+
+    final requestBody = {
+      'model': _model,
+      'messages': [
+        {
+          'role': 'system',
+          'content': '''Sen profesyonel bir epilog yazarısısın. Görevin:
+
+TEMEL GÖREV: Ana hikaye bittikten sonraki dönemi KISA şekilde anlat.
+
+KISALIK KURALLARI - MUTLAKA UYGULA:
+- SADECE 2-3 KISA cümle yaz (maksimum 120 kelime)
+- Her cümleyi tamamla, yarıda bırakma
+- Öz ve etkili ol
+
+YAPMAN GEREKENLER:
+- Ana hikaye sonrası yeni durumu KISA betimle
+- Karakterin değişimini göster
+- Yeni maceralara kapı aralayacak atmosfer kur
+- Umut verici ton kullan
+
+YAPMAMANLAR:
+- Uzun paragraflar yazma
+- Seçenek sunma
+- Soru sorma
+- Ana hikayeyi tekrar etme
+
+MUTLAKA KISA epilog başlangıcı yaz.''',
+        },
+        {'role': 'user', 'content': prompt},
+      ],
+      'temperature': 0.8, // Yaratıcı epilog için
+      'max_tokens': 150, // Çok kısa epilog için
+      'top_p': 0.95,
+      'frequency_penalty': 0.0,
+      'presence_penalty': 0.0,
+    };
+
+    try {
+      _logger.debug('📤 Epilog API isteği gönderiliyor');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_apiKey',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      _logger.apiResponse(url.toString(), response.statusCode);
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        _logger.debug('✅ Epilog API yanıtı başarıyla alındı');
+
+        if (responseData['choices'] != null &&
+            responseData['choices'].isNotEmpty &&
+            responseData['choices'][0]['message'] != null &&
+            responseData['choices'][0]['message']['content'] != null) {
+          final epilogue = responseData['choices'][0]['message']['content'];
+
+          _logger.debug('📝 Epilog uzunluğu: ${epilogue.length} karakter');
+          return epilogue;
+        } else {
+          _logger.error(
+            '❌ Epilog API yanıtında metin bulunamadı',
+            responseData,
+          );
+          throw Exception('Epilog API yanıtında metin bulunamadı');
+        }
+      } else {
+        final errorData = jsonDecode(response.body);
+        _logger.error('❌ Epilog API Hatası: ${response.statusCode}', errorData);
+        throw Exception(
+          'Epilog API Hatası: ${response.statusCode} - ${errorData['error']['message'] ?? 'Bilinmeyen hata'}',
+        );
+      }
+    } catch (e, stackTrace) {
+      _logger.error('💥 Epilog API isteği başarısız', e, stackTrace);
+
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception('Ağ hatası: $e');
+    }
   }
 }

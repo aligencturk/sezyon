@@ -184,4 +184,21 @@ class LanguageService {
   String get mainMenu => getLocalizedText('Ana Menü', 'Main Menu');
 
   String get newStory => getLocalizedText('Yeni Hikaye', 'New Story');
+
+  String get storySummary => getLocalizedText('Hikaye Özeti', 'Story Summary');
+
+  String get continueStory =>
+      getLocalizedText('Hikayeye Devam Et', 'Continue Story');
+
+  String get epilogue => getLocalizedText('Epilog', 'Epilogue');
+
+  String get storySummaryQuestion => getLocalizedText(
+    'Hikayenizin özetini görmek ister misiniz?',
+    'Would you like to see your story summary?',
+  );
+
+  String get storySummaryLoading => getLocalizedText(
+    'Hikaye özeti yükleniyor...',
+    'Story summary loading...',
+  );
 }

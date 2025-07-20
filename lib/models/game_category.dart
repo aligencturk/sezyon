@@ -33,43 +33,85 @@ enum GameCategory {
   /// Türkçe başlangıç prompt'u
   String _getTurkishInitialPrompt() {
     final basePrompt =
-        '''Sen profesyonel bir RPG oyunu yöneticisisin. Oyuncu için etkileyici bir başlangıç hikayesi yaz.
+        '''Sen profesyonel bir RPG oyunu yöneticisisin. Oyuncu için GİRİŞ aşamasında KISA bir başlangıç hikayesi yaz.
 
-KURALLAR:
-- Kısa ama atmosferik bir paragraf yaz (3-4 cümle)
-- Oyuncuyu hemen aksiyonun içine at
-- Gerilim ve merak uyandır
-- Hikayeyi açık uçlu bitir ama soru sorma
-- "Hazır mısın?", "Ne yapacaksın?" gibi sorular kullanma
-- Sadece durumu betimle ve bekle
+ZORUNLU HİKAYE YAPISI - MUTLAKA TAKİP ET:
+Bu hikaye GİRİŞ AŞAMASINDA başlıyor. Sadece giriş aşamasına uygun içerik üret.
 
+GİRİŞ AŞAMASI KURALLARI:
+- Dünyayı ve durumu KISA şekilde tanıt
+- Karakteri aksiyonun içine at
+- Atmosfer kur ve merak uyandır
+- Temel çatışmayı ima et
+- HENÜZ sonuç verme, sadece durumu betimle
+- HENÜZ doruk noktasına çıkma
+
+KISALIK KURALLARI - MUTLAKA UYGULA:
+- SADECE 2-3 KISA cümle yaz (maksimum 100 kelime)
+- Her cümleyi tamamla, yarıda bırakma
+- Öz ve etkili ol
+- Gereksiz detaylardan kaçın
+
+YAPMA:
+- Uzun paragraflar yazma
+- Hikayeyi bitirme
+- Ana çatışmayı çözme
+- "Hazır mısın?", "Ne yapacaksın?" gibi sorular sorma
+- Seçenek sunma
+
+MUTLAKA KISA ve sadece GİRİŞ aşamasına uygun içerik üret!
 Dil: Türkçe''';
     String categoryPrompt = '';
 
     switch (this) {
       case GameCategory.war:
-        categoryPrompt =
-            'Tema: Savaş. Oyuncu, savaşın ortasında kalmış bir asker veya sivil olabilir.';
+        categoryPrompt = '''Tema: Gerçek Tarihten İlham Alan Savaş Hikayesi.
+
+ZORUNLU KURALLAR:
+- Gerçek bir tarihi savaştan ilham al (1. Dünya Savaşı, 2. Dünya Savaşı, Çanakkale, Kurtuluş Savaşı, Vietnam, Kore vb.)
+- Tarihi gerçeklere uygun atmosfer ve detaylar kullan
+- Gerçek coğrafi yerler ve dönem özellikleri
+- Oyuncu bir asker, sivil, doktor, gazeteci veya savaşa tanık olan biri olabilir
+- Hikayede isimlendirilmiş karakterler olsun (Komutan Mehmet, Hemşire Anna, Gazeteci Pierre vb.)
+- Karakterlerle etkileşim ve diyaloglar olsun
+- Tarihi atmosferi koruyarak kurgusal hikaye anlat''';
         break;
       case GameCategory.sciFi:
-        categoryPrompt =
-            'Tema: Bilim Kurgu. Oyuncu, uzak bir gelecekte, bir uzay gemisinde veya yabancı bir gezegende olabilir.';
+        categoryPrompt = '''Tema: Bilim Kurgu. 
+- Oyuncu, uzak bir gelecekte, bir uzay gemisinde veya yabancı bir gezegende olabilir
+- İsimlendirilmiş karakterler olsun (Kaptan Nova, Dr. Zara, Android X-7 vb.)
+- Karakterlerle etkileşim ve diyaloglar olsun''';
         break;
       case GameCategory.fantasy:
-        categoryPrompt =
-            'Tema: Fantastik. Oyuncu, ejderhaların, büyücülerin ve krallıkların olduğu bir diyarda bir maceracı olabilir.';
+        categoryPrompt = '''Tema: Fantastik. 
+- Oyuncu, ejderhaların, büyücülerin ve krallıkların olduğu bir diyarda bir maceracı olabilir
+- İsimlendirilmiş karakterler olsun (Büyücü Eldara, Şövalye Gareth, Ejder Pyrion vb.)
+- Karakterlerle etkileşim ve diyaloglar olsun''';
         break;
       case GameCategory.mystery:
-        categoryPrompt =
-            'Tema: Gizem. Oyuncu, 1920\'lerin kasvetli bir şehrinde bir dedektif veya gizemli bir olaya tanık olan biri olabilir.';
+        categoryPrompt = '''Tema: Gizem. 
+- Oyuncu, 1920'lerin kasvetli bir şehrinde bir dedektif veya gizemli bir olaya tanık olan biri olabilir
+- İsimlendirilmiş karakterler olsun (Dedektif Holmes, Bayan Margaret, Şüpheli Charles vb.)
+- Karakterlerle etkileşim ve diyaloglar olsun''';
         break;
       case GameCategory.historical:
-        categoryPrompt =
-            'Tema: Tarihi. Oyuncu, Antik Roma, Orta Çağ Japonya\'sı veya Vahşi Batı gibi bir dönemde yaşayan bir karakter olabilir.';
+        categoryPrompt = '''Tema: Gerçek Tarihten İlham Alan Tarihi Hikaye.
+
+ZORUNLU KURALLAR:
+- Gerçek bir tarihi dönemden ilham al (Osmanlı İmparatorluğu, Roma İmparatorluğu, Orta Çağ, Rönesans, Sanayi Devrimi vb.)
+- Tarihi gerçeklere uygun atmosfer, kıyafetler, teknoloji seviyesi
+- Gerçek tarihi şehirler ve yerler (İstanbul, Roma, Paris, Londra vb.)
+- Dönemin sosyal yapısı, kültürü ve yaşam tarzını yansıt
+- Oyuncu bir tüccar, sanatçı, asker, soylu veya halktan biri olabilir
+- Hikayede isimlendirilmiş karakterler olsun (Tüccar Ahmet, Ressam Leonardo, Kont Wilhelm vb.)
+- Karakterlerle etkileşim ve diyaloglar olsun
+- Tarihi atmosferi koruyarak kurgusal hikaye anlat''';
         break;
       case GameCategory.apocalypse:
-        categoryPrompt =
-            'Tema: Kıyamet Sonrası. Oyuncu, medeniyetin çöktüğü, tehlikelerle dolu bir dünyada hayatta kalmaya çalışan biri olabilir.';
+        categoryPrompt = '''Tema: Kıyamet Sonrası. 
+- Oyuncu, medeniyetin çöktüğü, tehlikelerle dolu bir dünyada hayatta kalmaya çalışan biri olabilir
+- İsimlendirilmiş karakterler olsun (Rehber Marcus, Doktor Sarah, Çete Lideri Kane vb.)
+- Karakterlerle etkileşim ve diyaloglar olsun''';
         break;
     }
     return '$basePrompt\n$categoryPrompt';
@@ -78,43 +120,85 @@ Dil: Türkçe''';
   /// İngilizce başlangıç prompt'u
   String _getEnglishInitialPrompt() {
     final basePrompt =
-        '''You are a professional RPG game master. Write an immersive starting story for the player.
+        '''You are a professional RPG game master. Write a SHORT immersive starting story for the player in INTRODUCTION phase.
 
-RULES:
-- Write a short but atmospheric paragraph (3-4 sentences)
-- Throw the player directly into the action
-- Create tension and intrigue
-- End the story open-ended but don't ask questions
-- Don't use "Are you ready?", "What do you do?" type questions
-- Just describe the situation and wait
+MANDATORY STORY STRUCTURE - MUST FOLLOW:
+This story starts in INTRODUCTION PHASE. Generate content only appropriate for introduction phase.
 
+INTRODUCTION PHASE RULES:
+- Introduce the world and situation BRIEFLY
+- Throw character into action
+- Set atmosphere and create intrigue
+- Hint at basic conflict
+- DO NOT give conclusions yet, just describe situation
+- DO NOT reach climax yet
+
+BREVITY RULES - MUST APPLY:
+- Write ONLY 2-3 SHORT sentences (maximum 100 words)
+- Complete each sentence, don't cut off mid-sentence
+- Be concise and effective
+- Avoid unnecessary details
+
+DON'T:
+- Write long paragraphs
+- End the story
+- Resolve main conflict
+- Ask "Are you ready?", "What do you do?" type questions
+- Offer choices
+
+MUST generate SHORT content only appropriate for INTRODUCTION phase!
 Language: English''';
     String categoryPrompt = '';
 
     switch (this) {
       case GameCategory.war:
-        categoryPrompt =
-            'Theme: War. The player could be a soldier or a civilian caught in the middle of a war.';
+        categoryPrompt = '''Theme: Real History-Inspired War Story.
+
+MANDATORY RULES:
+- Draw inspiration from a real historical war (WWI, WWII, Vietnam, Korean War, Civil War, etc.)
+- Use historically accurate atmosphere and details
+- Real geographical locations and period characteristics
+- Player could be a soldier, civilian, doctor, journalist, or war witness
+- Include named characters in the story (Commander Smith, Nurse Marie, Journalist Paul, etc.)
+- Include character interactions and dialogues
+- Tell fictional story while maintaining historical atmosphere''';
         break;
       case GameCategory.sciFi:
-        categoryPrompt =
-            'Theme: Sci-Fi. The player could be in a distant future, on a spaceship, or an alien planet.';
+        categoryPrompt = '''Theme: Sci-Fi.
+- Player could be in a distant future, on a spaceship, or an alien planet
+- Include named characters (Captain Nova, Dr. Zara, Android X-7, etc.)
+- Include character interactions and dialogues''';
         break;
       case GameCategory.fantasy:
-        categoryPrompt =
-            'Theme: Fantasy. The player could be an adventurer in a land of dragons, wizards, and kingdoms.';
+        categoryPrompt = '''Theme: Fantasy.
+- Player could be an adventurer in a land of dragons, wizards, and kingdoms
+- Include named characters (Wizard Eldara, Knight Gareth, Dragon Pyrion, etc.)
+- Include character interactions and dialogues''';
         break;
       case GameCategory.mystery:
-        categoryPrompt =
-            'Theme: Mystery. The player could be a detective in a gloomy 1920s city or a witness to a mysterious event.';
+        categoryPrompt = '''Theme: Mystery.
+- Player could be a detective in a gloomy 1920s city or witness to a mysterious event
+- Include named characters (Detective Holmes, Lady Margaret, Suspect Charles, etc.)
+- Include character interactions and dialogues''';
         break;
       case GameCategory.historical:
-        categoryPrompt =
-            'Theme: Historical. The player could be a character living in a period like Ancient Rome, Medieval Japan, or the Wild West.';
+        categoryPrompt = '''Theme: Real History-Inspired Historical Story.
+
+MANDATORY RULES:
+- Draw inspiration from a real historical period (Ottoman Empire, Roman Empire, Medieval times, Renaissance, Industrial Revolution, etc.)
+- Use historically accurate atmosphere, clothing, technology level
+- Real historical cities and places (Istanbul, Rome, Paris, London, etc.)
+- Reflect the social structure, culture and lifestyle of the period
+- Player could be a merchant, artist, soldier, noble, or commoner
+- Include named characters in the story (Merchant Ahmed, Artist Leonardo, Count Wilhelm, etc.)
+- Include character interactions and dialogues
+- Tell fictional story while maintaining historical atmosphere''';
         break;
       case GameCategory.apocalypse:
-        categoryPrompt =
-            'Theme: Post-Apocalyptic. The player could be a survivor in a world full of dangers where civilization has collapsed.';
+        categoryPrompt = '''Theme: Post-Apocalyptic.
+- Player could be a survivor in a world full of dangers where civilization has collapsed
+- Include named characters (Guide Marcus, Doctor Sarah, Gang Leader Kane, etc.)
+- Include character interactions and dialogues''';
         break;
     }
     return '$basePrompt\n$categoryPrompt';
@@ -314,38 +398,70 @@ $history
 
 Oyuncunun seçtiği eylem: "$userInput"
 
-HİKAYE AŞAMASI: ${_getPhaseDescription(phase, true)}
+ZORUNLU HİKAYE AŞAMASI: ${_getPhaseDescription(phase, true)}
 
-GÖREV: Oyuncunun seçtiği eylemi gerçekleştirdiğini varsayarak hikayenin sonucunu anlat.
-
+MUTLAKA UYULACAK KURALLAR:
 ${_getPhaseSpecificRules(phase, true)}
 
+KISALIK KURALLARI - MUTLAKA UYGULA:
+- SADECE 2-3 KISA cümle yaz (maksimum 150 kelime)
+- Her cümleyi tamamla, yarıda bırakma
+- Öz ve etkili ol
+- Gereksiz detaylardan kaçın
+
+AŞAMA KURALLARI - MUTLAKA TAKİP ET:
+- SADECE mevcut aşamaya uygun içerik üret
+- Aşama sıralamasını ASLA bozma
+- ${phase == StoryPhase.introduction ? 'Henüz sonuç verme, sadece durumu tanıt' : ''}
+- ${phase == StoryPhase.development ? 'Henüz doruk noktasına çıkma, sadece geliştir' : ''}
+- ${phase == StoryPhase.climax ? 'Ana çatışmayı başlat ama henüz bitirme' : ''}
+- ${phase == StoryPhase.conclusion ? 'Artık hikayeyi sonlandırabilirsin' : ''}
+
+GÖREV: Oyuncunun seçtiği eylemi gerçekleştirdiğini varsayarak hikayenin sonucunu KISA şekilde anlat.
+
 YAPMA:
+- Uzun paragraflar yazma
+- Aşama atlaması
+- Erken sonlandırma
 - Seçenek sunma
 - "Ne yapmak istersin?" sorma
-- Liste verme
-- Tavsiye verme
 
-Sadece hikayeyi yaz, başka hiçbir şey ekleme.''';
+MUTLAKA KISA ve mevcut aşamaya uygun içerik üret!''';
     } else {
       return '''Previous conversation history:
 $history
 
 Player's chosen action: "$userInput"
 
-STORY PHASE: ${_getPhaseDescription(phase, false)}
+MANDATORY STORY PHASE: ${_getPhaseDescription(phase, false)}
 
-TASK: Assume the player performed their chosen action and describe the story's outcome.
-
+MUST FOLLOW RULES:
 ${_getPhaseSpecificRules(phase, false)}
 
+BREVITY RULES - MUST APPLY:
+- Write ONLY 2-3 SHORT sentences (maximum 150 words)
+- Complete each sentence, don't cut off mid-sentence
+- Be concise and effective
+- Avoid unnecessary details
+
+PHASE RULES - MUST FOLLOW:
+- Generate content ONLY appropriate for current phase
+- NEVER break phase sequence
+- ${phase == StoryPhase.introduction ? 'Do not give conclusions yet, just introduce situation' : ''}
+- ${phase == StoryPhase.development ? 'Do not reach climax yet, just develop' : ''}
+- ${phase == StoryPhase.climax ? 'Start main conflict but do not finish yet' : ''}
+- ${phase == StoryPhase.conclusion ? 'Now you can conclude the story' : ''}
+
+TASK: Assume the player performed their chosen action and describe the story's outcome BRIEFLY.
+
 DON'T:
+- Write long paragraphs
+- Skip phases
+- End early
 - Offer choices
 - Ask "What do you want to do?"
-- Give lists
-- Give advice
 
-Only write the story, add nothing else.''';
+MUST generate SHORT content appropriate for current phase!''';
     }
   }
 
@@ -368,6 +484,10 @@ Only write the story, add nothing else.''';
         return isTurkish
             ? 'SONUÇ - Hikayeyi sonlandırmaya hazırlan'
             : 'CONCLUSION - Prepare to conclude the story';
+      case StoryPhase.epilogue:
+        return isTurkish
+            ? 'EPİLOG - Hikaye sonrası devam'
+            : 'EPILOGUE - Post-story continuation';
     }
   }
 
@@ -425,6 +545,19 @@ Only write the story, add nothing else.''';
 - Achieve main goal (${_getCategoryGoal(false)})
 - Provide satisfying conclusion
 - End story if appropriate''';
+
+      case StoryPhase.epilogue:
+        return isTurkish
+            ? '''KURALLAR:
+- Ana hikaye sonrası dönemi anlat
+- Karakterin değişimini göster
+- Yeni maceralara kapı arala
+- Umut verici atmosfer kur'''
+            : '''RULES:
+- Describe post-main story period
+- Show character's transformation
+- Open doors to new adventures
+- Create hopeful atmosphere''';
     }
   }
 
@@ -451,6 +584,213 @@ Only write the story, add nothing else.''';
             : 'experiencing historical event';
       case GameCategory.apocalypse:
         return isTurkish ? 'hayatta kalma' : 'survival';
+    }
+  }
+
+  /// Hikaye özeti üretme prompt'u
+  String getStorySummaryPrompt(
+    List<String> conversationHistory,
+    bool isTurkish,
+  ) {
+    final history = conversationHistory.join('\n\n');
+
+    if (isTurkish) {
+      return '''Tamamlanan hikaye:
+$history
+
+GÖREV: Bu hikayenin güzel bir özetini yaz (credits benzeri).
+
+KURALLAR:
+- Hikayenin ana olaylarını kronolojik sırayla özetle
+- Karakterin yaptığı önemli kararları vurgula
+- Duygusal ve atmosferik bir dil kullan
+- ${_getCategorySummaryStyle(true)}
+- 3-4 paragraf olsun
+- Hikayenin sonucunu ve etkisini belirt
+
+Örnek format:
+"Hikayeniz [kategori] dünyasında başladı...
+Verdiğiniz kararlar...
+Sonunda...
+Bu macera..."
+
+Sadece özeti yaz, başka hiçbir şey ekleme.''';
+    } else {
+      return '''Completed story:
+$history
+
+TASK: Write a beautiful summary of this story (credits-like).
+
+RULES:
+- Summarize main events chronologically
+- Highlight important decisions made by character
+- Use emotional and atmospheric language
+- ${_getCategorySummaryStyle(false)}
+- 3-4 paragraphs
+- State the outcome and impact of the story
+
+Example format:
+"Your story began in the [category] world...
+The decisions you made...
+In the end...
+This adventure..."
+
+Only write the summary, add nothing else.''';
+    }
+  }
+
+  /// Kategori özel özet stili
+  String _getCategorySummaryStyle(bool isTurkish) {
+    switch (this) {
+      case GameCategory.war:
+        return isTurkish
+            ? 'Savaşın acımasızlığını ve kahramanlığı vurgula'
+            : 'Emphasize the brutality and heroism of war';
+      case GameCategory.mystery:
+        return isTurkish
+            ? 'Gizemi çözme sürecini ve ipuçlarını vurgula'
+            : 'Emphasize the mystery-solving process and clues';
+      case GameCategory.fantasy:
+        return isTurkish
+            ? 'Büyülü atmosferi ve epik macerayı vurgula'
+            : 'Emphasize magical atmosphere and epic adventure';
+      case GameCategory.sciFi:
+        return isTurkish
+            ? 'Teknolojik keşifleri ve gelecek vizyonunu vurgula'
+            : 'Emphasize technological discoveries and future vision';
+      case GameCategory.historical:
+        return isTurkish
+            ? 'Tarihi atmosferi ve dönemin özelliklerini vurgula'
+            : 'Emphasize historical atmosphere and period characteristics';
+      case GameCategory.apocalypse:
+        return isTurkish
+            ? 'Hayatta kalma mücadelesini ve umut temalarını vurgula'
+            : 'Emphasize survival struggle and themes of hope';
+    }
+  }
+
+  /// Epilog prompt'u oluşturur
+  String getEpiloguePrompt(List<String> conversationHistory, bool isTurkish) {
+    if (isTurkish) {
+      return '''Tamamlanan hikaye:
+${conversationHistory.join('\n\n')}
+
+GÖREV: Bu hikayenin epilog aşamasını başlat.
+
+HİKAYE SONRASI TEMA: ${_getEpilogueTheme(true)}
+
+KURALLAR:
+- Ana hikaye bittikten sonraki dönemi anlat
+- ${_getEpilogueSpecificRules(true)}
+- Karakterin yeni durumunu ve çevresini betimle
+- Yeni maceralara kapı aralayacak atmosfer kur
+- 2-3 cümle ile başlangıç yap
+
+Sadece epilog başlangıcını yaz, seçenek sunma.''';
+    } else {
+      return '''Completed story:
+${conversationHistory.join('\n\n')}
+
+TASK: Start the epilogue phase of this story.
+
+POST-STORY THEME: ${_getEpilogueTheme(false)}
+
+RULES:
+- Describe the period after the main story ended
+- ${_getEpilogueSpecificRules(false)}
+- Describe character's new situation and environment
+- Create atmosphere that opens doors to new adventures
+- Start with 2-3 sentences
+
+Only write the epilogue beginning, don't offer choices.''';
+    }
+  }
+
+  /// Epilog teması
+  String _getEpilogueTheme(bool isTurkish) {
+    switch (this) {
+      case GameCategory.war:
+        return isTurkish
+            ? 'Savaş sonrası psikoloji ve ülkenin yeniden inşası'
+            : 'Post-war psychology and country reconstruction';
+      case GameCategory.mystery:
+        return isTurkish
+            ? 'Gizem çözüldükten sonra yeni sırlar ve sonuçlar'
+            : 'New secrets and consequences after mystery solved';
+      case GameCategory.fantasy:
+        return isTurkish
+            ? 'Büyülü görev sonrası yeni güçler ve sorumluluklar'
+            : 'New powers and responsibilities after magical quest';
+      case GameCategory.sciFi:
+        return isTurkish
+            ? 'Görev sonrası teknolojik gelişmeler ve keşifler'
+            : 'Technological developments and discoveries after mission';
+      case GameCategory.historical:
+        return isTurkish
+            ? 'Tarihi olay sonrası dönemin değişimi ve etkileri'
+            : 'Period changes and effects after historical event';
+      case GameCategory.apocalypse:
+        return isTurkish
+            ? 'Hayatta kaldıktan sonra yeni toplum kurma'
+            : 'Building new society after survival';
+    }
+  }
+
+  /// Epilog özel kuralları
+  String _getEpilogueSpecificRules(bool isTurkish) {
+    switch (this) {
+      case GameCategory.war:
+        return isTurkish
+            ? '''Savaş travmasını, yeniden inşa sürecini ve barış zamanını anlat
+- Gerçek tarihi savaş sonrası dönemden ilham al
+- Savaş arkadaşları, komutanlar, siviller gibi isimli karakterlerle etkileşim
+- Savaş sonrası psikolojik durumu ve toplumsal değişimleri betimle'''
+            : '''Describe war trauma, reconstruction process and peacetime
+- Draw inspiration from real post-war historical periods
+- Interactions with named characters like war comrades, commanders, civilians
+- Describe post-war psychological state and social changes''';
+      case GameCategory.mystery:
+        return isTurkish
+            ? '''Çözülen gizemin etkilerini ve ortaya çıkan yeni ipuçlarını anlat
+- Dedektif, şüpheliler, tanıklar gibi isimli karakterlerle etkileşim
+- Gizem çözümünün toplumsal etkilerini göster'''
+            : '''Describe effects of solved mystery and emerging new clues
+- Interactions with named characters like detectives, suspects, witnesses
+- Show social impact of mystery resolution''';
+      case GameCategory.fantasy:
+        return isTurkish
+            ? '''Kazanılan güçlerin sorumluluğunu ve yeni maceraları anlat
+- Büyücüler, şövalyeler, kraliyet üyeleri gibi isimli karakterlerle etkileşim
+- Büyülü dünyanın değişimini ve yeni sorumlulukları betimle'''
+            : '''Describe responsibility of gained powers and new adventures
+- Interactions with named characters like wizards, knights, royalty
+- Describe magical world changes and new responsibilities''';
+      case GameCategory.sciFi:
+        return isTurkish
+            ? '''Teknolojik ilerlemelerin etkilerini ve yeni keşifleri anlat
+- Bilim insanları, mühendisler, uzay mürettebatı gibi isimli karakterlerle etkileşim
+- Teknolojik gelişmelerin toplumsal etkilerini göster'''
+            : '''Describe effects of technological advances and new discoveries
+- Interactions with named characters like scientists, engineers, space crew
+- Show social impact of technological developments''';
+      case GameCategory.historical:
+        return isTurkish
+            ? '''Tarihi olayın uzun vadeli etkilerini ve değişimleri anlat
+- Gerçek tarihi dönem sonrası değişimlerden ilham al
+- Tüccarlar, sanatçılar, soylu aileler gibi isimli karakterlerle etkileşim
+- Dönemin sosyal, ekonomik ve kültürel değişimlerini betimle'''
+            : '''Describe long-term effects and changes of historical event
+- Draw inspiration from real historical period changes
+- Interactions with named characters like merchants, artists, noble families
+- Describe social, economic and cultural changes of the period''';
+      case GameCategory.apocalypse:
+        return isTurkish
+            ? '''Yeni toplum kurma sürecini ve umut dolu geleceği anlat
+- Hayatta kalanlar, liderler, uzmanlar gibi isimli karakterlerle etkileşim
+- Yeni toplumsal düzenin kurulması ve umut temalarını işle'''
+            : '''Describe new society building process and hopeful future
+- Interactions with named characters like survivors, leaders, specialists
+- Process establishment of new social order and themes of hope''';
     }
   }
 }

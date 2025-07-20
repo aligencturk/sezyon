@@ -30,6 +30,8 @@ class _StoryScreenState extends State<StoryScreen> {
   bool _isLoading = true;
   bool _isWaitingForApiResponse = false;
   bool _isStoryEnded = false;
+  bool _isInEpilogue = false;
+  String? _storySummary;
   double _musicVolume = 0.5;
   double _soundVolume = 0.7;
   bool _isMusicEnabled = true;
@@ -154,11 +156,16 @@ class _StoryScreenState extends State<StoryScreen> {
           .toList();
 
       print('🎯 History hazırlandı - ${history.length} mesaj');
+
+      // Mevcut hikaye aşamasını belirle
+      final currentPhase = widget.category.determineStoryPhase(history);
+      print('🎯 Mevcut hikaye aşaması: $currentPhase');
+
       final continuePrompt = widget.category.getContinuePrompt(
         choice.text,
         history,
       );
-      print('🎯 Prompt hazırlandı');
+      print('🎯 Prompt hazırlandı - Aşama: $currentPhase');
 
       print('🎯 ChatGPT API çağrılıyor...');
       final response = await _chatgptService.generateContentWithHistory(
@@ -169,7 +176,6 @@ class _StoryScreenState extends State<StoryScreen> {
 
       // Hikayenin sonlanıp sonlanmadığını kontrol et
       final shouldEnd = widget.category.shouldEndStory(history, response);
-      final currentPhase = widget.category.determineStoryPhase(history);
 
       print('🎯 Hikaye aşaması: $currentPhase');
       print('🎯 Hikaye sonlanmalı mı: $shouldEnd');
@@ -178,10 +184,27 @@ class _StoryScreenState extends State<StoryScreen> {
       bool hasChoices = true;
 
       if (shouldEnd) {
-        // Hikaye sonlandı - seçenek sunma
+        // Hikaye sonlandı - özet üret
         hasChoices = false;
         _isStoryEnded = true;
-        print('🎯 Hikaye sonlandı - seçenek üretilmiyor');
+        print('🎯 Hikaye sonlandı - özet üretiliyor...');
+
+        try {
+          final summaryPrompt = widget.category.getStorySummaryPrompt(
+            history,
+            _languageService.isTurkish,
+          );
+          _storySummary = await _chatgptService.generateStorySummary(
+            summaryPrompt,
+          );
+          print('🎯 Hikaye özeti üretildi');
+        } catch (e) {
+          print('🎯 Hikaye özeti üretilemedi: $e');
+          _storySummary = _languageService.getLocalizedText(
+            'Hikayeniz tamamlandı! Maceranız boyunca verdiğiniz kararlar sizi bu noktaya getirdi.',
+            'Your story is complete! The decisions you made throughout your adventure brought you to this point.',
+          );
+        }
       } else {
         // Hikaye devam ediyor - seçenekler üret
         print('🎯 Seçenekler üretiliyor...');
@@ -378,6 +401,128 @@ class _StoryScreenState extends State<StoryScreen> {
         ),
       ),
     );
+  }
+
+  /// Hikaye özetini gösterir
+  void _showStorySummary() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.black.withValues(alpha: 0.9),
+        title: Row(
+          children: [
+            Icon(
+              Icons.auto_stories,
+              color: Colors.amber.withValues(alpha: 0.8),
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _languageService.getLocalizedText(
+                'Hikaye Özeti',
+                'Story Summary',
+              ),
+              style: GoogleFonts.merriweather(
+                color: Colors.amber,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Text(
+              _storySummary ??
+                  _languageService.getLocalizedText(
+                    'Hikaye özeti yükleniyor...',
+                    'Story summary loading...',
+                  ),
+              style: GoogleFonts.sourceSans3(
+                fontSize: 16,
+                color: Colors.white,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              _languageService.ok,
+              style: const TextStyle(color: Colors.amber),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Epilog aşamasını başlatır
+  void _startEpilogue() async {
+    setState(() {
+      _isLoading = true;
+      _isStoryEnded = false;
+      _isInEpilogue = true;
+    });
+
+    try {
+      // Mevcut hikaye geçmişini al
+      final history = _messages
+          .where((m) => m.isAnimated)
+          .map((m) => "${m.isUser ? 'Player' : 'AI'}: ${m.text}")
+          .toList()
+          .reversed
+          .toList();
+
+      // Epilog prompt'u oluştur
+      final epiloguePrompt = widget.category.getEpiloguePrompt(
+        history,
+        _languageService.isTurkish,
+      );
+
+      // Epilog içeriğini üret
+      final epilogueContent = await _chatgptService.generateEpilogue(
+        epiloguePrompt,
+      );
+
+      // Epilog seçenekleri üret
+      final epilogueChoices = await _chatgptService.generateChoices(
+        epilogueContent,
+        history,
+      );
+
+      final epilogueMessage = Message(
+        text: epilogueContent,
+        isUser: false,
+        hasChoices: true,
+        choices: epilogueChoices,
+        storyPhase: StoryPhase.epilogue,
+        isStoryEnd: false,
+        isEpilogue: true,
+        isAnimated: false,
+      );
+
+      if (mounted) {
+        setState(() {
+          _messages.clear(); // Önceki mesajları temizle
+          _messages.add(epilogueMessage);
+          _isLoading = false;
+        });
+      }
+
+      _logger.gameEvent('Epilog başlatıldı');
+    } catch (e, stackTrace) {
+      _logger.error('Epilog başlatılamadı', e, stackTrace);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isStoryEnded = true; // Hata durumunda hikaye sonu ekranına dön
+        });
+        _showErrorDialog(e.toString());
+      }
+    }
   }
 
   @override
@@ -753,7 +898,10 @@ class _StoryScreenState extends State<StoryScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _languageService.storyEndMessage,
+                      _languageService.getLocalizedText(
+                        'Hikayenizin özetini görmek ister misiniz?',
+                        'Would you like to see your story summary?',
+                      ),
                       style: GoogleFonts.sourceSans3(
                         fontSize: 14,
                         color: Colors.white70,
@@ -766,9 +914,37 @@ class _StoryScreenState extends State<StoryScreen> {
             },
           ),
           const SizedBox(height: 20),
-          // Aksiyon butonları
+          // Hikaye özeti butonu
           TweenAnimationBuilder<double>(
             duration: const Duration(milliseconds: 1000),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOut,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: ElevatedButton.icon(
+                  onPressed: () => _showStorySummary(),
+                  icon: const Icon(Icons.summarize, size: 18),
+                  label: Text(
+                    _languageService.getLocalizedText(
+                      'Hikaye Özeti',
+                      'Story Summary',
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber.withValues(alpha: 0.8),
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    minimumSize: const Size(double.infinity, 0),
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          // Ana aksiyon butonları
+          TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 1200),
             tween: Tween(begin: 0.0, end: 1.0),
             curve: Curves.easeOut,
             builder: (context, value, child) {
@@ -788,12 +964,32 @@ class _StoryScreenState extends State<StoryScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _startEpilogue(),
+                        icon: const Icon(Icons.play_arrow, size: 18),
+                        label: Text(
+                          _languageService.getLocalizedText(
+                            'Hikayeye Devam Et',
+                            'Continue Story',
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[700],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton.icon(
                         onPressed: () {
                           setState(() {
                             _isStoryEnded = false;
+                            _isInEpilogue = false;
+                            _storySummary = null;
                           });
                           _restartGame();
                         },

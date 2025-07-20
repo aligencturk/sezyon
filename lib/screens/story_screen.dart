@@ -8,6 +8,7 @@ import 'package:sezyon/services/chatgpt_service.dart';
 import 'package:sezyon/services/language_service.dart';
 import 'package:sezyon/services/logger_service.dart';
 import 'package:sezyon/services/audio_service.dart';
+import 'package:sezyon/services/user_service.dart';
 
 class StoryScreen extends StatefulWidget {
   final GameCategory category;
@@ -27,6 +28,7 @@ class _StoryScreenState extends State<StoryScreen> {
   late final LanguageService _languageService;
   late final LoggerService _logger;
   final AudioService _audioService = AudioService();
+  final UserService _userService = UserService();
 
   bool _isLoading = true;
   bool _isWaitingForApiResponse = false;
@@ -153,6 +155,10 @@ class _StoryScreenState extends State<StoryScreen> {
 
       if (shouldEnd) {
         _isStoryEnded = true;
+
+        // Hikaye tamamlandığında bulut kayıt yap
+        await _saveStoryCompletion();
+
         // Hikaye özeti üret
         try {
           final summaryPrompt = widget.category.getStorySummaryPrompt(
@@ -410,6 +416,130 @@ class _StoryScreenState extends State<StoryScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Hikaye tamamlandığında bulut kayıt yap
+  Future<void> _saveStoryCompletion() async {
+    try {
+      final storyId =
+          '${widget.category.key}_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Tamamlanan hikayeyi kaydet
+      _userService.cloudSave.addCompletedStory(storyId);
+
+      // Kategoriyi favorilere ekle
+      _userService.cloudSave.addFavoriteCategory(widget.category.key);
+
+      // Seçim sayısını güncelle (mesaj sayısının yarısı kadar seçim yapılmış)
+      final choiceCount = (_messages.length / 2).round();
+      for (int i = 0; i < choiceCount; i++) {
+        _userService.cloudSave.incrementChoicesMade();
+      }
+
+      // Oyun süresini güncelle (yaklaşık hesaplama)
+      final playTimeMinutes = (_messages.length * 2); // Her mesaj ~2 dakika
+      _userService.cloudSave.updatePlayTime(playTimeMinutes * 60);
+
+      // Başarımları kontrol et ve kilitle
+      await _checkAndUnlockAchievements();
+
+      _logger.info('Hikaye tamamlanma verisi kaydedildi: $storyId');
+    } catch (e) {
+      _logger.error('Hikaye kaydetme hatası', e);
+    }
+  }
+
+  /// Başarımları kontrol et ve kilitle
+  Future<void> _checkAndUnlockAchievements() async {
+    final gameData = _userService.cloudSave.gameData;
+    final completedStories = List<String>.from(
+      gameData['completedStories'] ?? [],
+    );
+    final totalChoices = gameData['statistics']['totalChoicesMade'] ?? 0;
+    final playTime = gameData['totalPlayTime'] ?? 0;
+
+    // İlk hikaye başarımı
+    if (completedStories.length == 1) {
+      await _userService.unlockAchievement('first_story_completed');
+      _showAchievementUnlocked('İlk Hikaye', 'İlk hikayenizi tamamladınız!');
+    }
+
+    // 5 hikaye başarımı
+    if (completedStories.length == 5) {
+      await _userService.unlockAchievement('five_stories_completed');
+      _showAchievementUnlocked('Hikaye Ustası', '5 hikaye tamamladınız!');
+    }
+
+    // 10 hikaye başarımı
+    if (completedStories.length == 10) {
+      await _userService.unlockAchievement('ten_stories_completed');
+      _showAchievementUnlocked('Efsane Anlatıcı', '10 hikaye tamamladınız!');
+    }
+
+    // Çok seçim yapma başarımı
+    if (totalChoices >= 100) {
+      await _userService.unlockAchievement('hundred_choices_made');
+      _showAchievementUnlocked('Karar Verici', '100 seçim yaptınız!');
+    }
+
+    // Uzun oyun süresi başarımı (1 saat)
+    if (playTime >= 3600) {
+      await _userService.unlockAchievement('one_hour_played');
+      _showAchievementUnlocked('Zaman Yolcusu', '1 saat oynadınız!');
+    }
+
+    // Kategori bazlı başarımlar
+    final categoryKey = widget.category.key;
+    final categoryStories = completedStories
+        .where((id) => id.startsWith(categoryKey))
+        .length;
+
+    if (categoryStories >= 3) {
+      await _userService.unlockAchievement('${categoryKey}_specialist');
+      _showAchievementUnlocked(
+        '${widget.category.name} Uzmanı',
+        'Bu kategoride 3 hikaye tamamladınız!',
+      );
+    }
+  }
+
+  /// Başarım kilitleme bildirimi göster
+  void _showAchievementUnlocked(String title, String description) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.emoji_events, color: Colors.amber),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
+                    ),
+                  ),
+                  Text(description, style: const TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.black87,
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+          side: const BorderSide(color: Colors.amber, width: 1),
+        ),
       ),
     );
   }

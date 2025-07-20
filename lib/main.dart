@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:sezyon/screens/splash_screen.dart';
-import 'screens/category_selection_screen.dart';
 import 'services/logger_service.dart';
 import 'services/language_service.dart';
 import 'services/audio_service.dart';
-import 'services/google_play_games_service.dart';
+import 'services/user_service.dart';
 
 /// Ana uygulama giriş noktası
 Future<void> main() async {
@@ -42,13 +40,13 @@ Future<void> main() async {
     logger.error('Audio servisi başlatılırken hata', e);
   }
 
-  // Google Play Games servisini başlat
+  // User servisini başlat
   try {
-    final gamesService = GooglePlayGamesService();
-    await gamesService.isSignedInAsync(); // Mevcut giriş durumunu kontrol et
-    logger.info('🎮 Google Play Games servisi başlatıldı');
+    final userService = UserService();
+    await userService.initialize();
+    logger.info('👤 User servisi başlatıldı');
   } catch (e) {
-    logger.error('Google Play Games servisi başlatılırken hata', e);
+    logger.error('User servisi başlatılırken hata', e);
   }
 
   runApp(const SezyonApp());

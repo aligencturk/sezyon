@@ -242,56 +242,73 @@ MANDATORY RULES:
     // Her kategori için farklı aşama geçiş noktaları - daha uzun hikayeler
     switch (this) {
       case GameCategory.war:
-        if (messageCount <= 8)
+        if (messageCount <= 8) {
           return StoryPhase.introduction; // Savaş öncesi durum, hazırlık
-        if (messageCount <= 16)
+        }
+        if (messageCount <= 16) {
           return StoryPhase.development; // Savaşa sürüklenme süreci
-        if (messageCount <= 24)
+        }
+        if (messageCount <= 24) {
           return StoryPhase.climax; // Savaş anı, kritik çatışmalar
+        }
         return StoryPhase.conclusion; // Savaş sonrası, sonuçlar
 
       case GameCategory.mystery:
-        if (messageCount <= 10)
+        if (messageCount <= 10) {
           return StoryPhase.introduction; // Gizem ortaya çıkıyor
-        if (messageCount <= 20)
+        }
+        if (messageCount <= 20) {
           return StoryPhase.development; // İpuçları toplama, araştırma
-        if (messageCount <= 28)
+        }
+        if (messageCount <= 28) {
           return StoryPhase.climax; // Ana ipucu bulma, çözüme yaklaşma
+        }
         return StoryPhase.conclusion; // Gizemi çözme
 
       case GameCategory.fantasy:
-        if (messageCount <= 8)
+        if (messageCount <= 8) {
           return StoryPhase.introduction; // Büyülü dünyaya giriş
-        if (messageCount <= 18)
+        }
+        if (messageCount <= 18) {
           return StoryPhase
               .development; // Macera gelişiyor, zorluklarla karşılaşma
-        if (messageCount <= 26)
+        }
+        if (messageCount <= 26) {
           return StoryPhase.climax; // Ana boss/büyük tehlike
+        }
         return StoryPhase.conclusion; // Görevi tamamlama
 
       case GameCategory.sciFi:
-        if (messageCount <= 8)
+        if (messageCount <= 8) {
           return StoryPhase.introduction; // Uzay/gelecek dünyasına giriş
-        if (messageCount <= 18)
+        }
+        if (messageCount <= 18) {
           return StoryPhase.development; // Görev gelişiyor, teknolojik sorunlar
-        if (messageCount <= 26)
+        }
+        if (messageCount <= 26) {
           return StoryPhase.climax; // Ana görev, kritik kararlar
+        }
         return StoryPhase.conclusion; // Görevi bitirme
 
       case GameCategory.historical:
-        if (messageCount <= 10)
+        if (messageCount <= 10) {
           return StoryPhase.introduction; // Tarihi döneme giriş
-        if (messageCount <= 20)
+        }
+        if (messageCount <= 20) {
           return StoryPhase.development; // Tarihi olayların gelişimi
-        if (messageCount <= 28)
+        }
+        if (messageCount <= 28) {
           return StoryPhase.climax; // Tarihi anın yaşanması
+        }
         return StoryPhase.conclusion; // Tarihi sonuçlar
 
       case GameCategory.apocalypse:
-        if (messageCount <= 8)
+        if (messageCount <= 8) {
           return StoryPhase.introduction; // Kıyamet sonrası dünyaya giriş
-        if (messageCount <= 18)
+        }
+        if (messageCount <= 18) {
           return StoryPhase.development; // Hayatta kalma mücadelesi
+        }
         if (messageCount <= 26) return StoryPhase.climax; // En büyük tehlike
         return StoryPhase.conclusion; // Güvenli bölgeye ulaşma
     }

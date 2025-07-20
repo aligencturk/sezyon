@@ -98,12 +98,10 @@ class _SezyonAppState extends State<SezyonApp> with WidgetsBindingObserver {
         primaryColor: const Color(0xFF6A1B9A),
         colorScheme: const ColorScheme.dark(
           primary: Color(0xFF8E24AA), // Ana butonlar, aktif elemanlar
-          secondary: Color(0xFF4A148C), // İkincil vurgu, AI mesajları
-          background: Color(0xFF121212), // Ana arka plan
+          secondary: Color(0xFF4A148C), // Ana arka plan
           surface: Color(0xFF1E1E1E), // Kartlar, diyaloglar
           onPrimary: Colors.white,
           onSecondary: Colors.white,
-          onBackground: Colors.white,
           onSurface: Colors.white,
           error: Colors.redAccent,
           onError: Colors.white,

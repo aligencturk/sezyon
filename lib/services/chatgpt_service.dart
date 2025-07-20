@@ -205,7 +205,7 @@ MUTLAKA hikaye aşamasına uygun içerik üret ve karakterlerle etkileşim kur!'
       'model': _model,
       'messages': messages,
       'temperature': 0.8, // Daha yaratıcı hikaye devamı
-      'max_tokens': 800, // Daha uzun ve detaylı hikaye için
+      'max_tokens': 2000, // Çok daha uzun ve detaylı hikaye için
       'top_p': 0.95,
       'frequency_penalty': 0.0,
       'presence_penalty': 0.0,
@@ -373,7 +373,7 @@ Sadece özeti yaz, başka hiçbir şey ekleme.''',
       characterName: characterName,
     );
 
-    return await _generateWithPrompt(prompt, temperature: 0.8, maxTokens: 700);
+    return await _generateWithPrompt(prompt, temperature: 0.8, maxTokens: 1500);
   }
 
   /// Yeni prompt sistemi ile hikaye devamı üretir
@@ -394,7 +394,7 @@ Sadece özeti yaz, başka hiçbir şey ekleme.''',
       turnCount: turnCount,
     );
 
-    return await _generateWithPrompt(prompt, temperature: 0.8, maxTokens: 700);
+    return await _generateWithPrompt(prompt, temperature: 0.8, maxTokens: 1800);
   }
 
   /// Yeni prompt sistemi ile hikaye finali üretir

@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:sezyon/models/game_category.dart';
 import 'package:sezyon/screens/settings_screen.dart';
-import 'package:sezyon/screens/story_screen.dart';
+import 'package:sezyon/screens/character_name_screen.dart';
 import 'package:sezyon/screens/credits_screen.dart';
 import 'package:sezyon/services/language_service.dart';
 import 'package:sezyon/services/logger_service.dart';
@@ -437,7 +437,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
       Navigator.push(
         context,
         FadePageRoute(
-          child: StoryScreen(category: category),
+          child: CharacterNameScreen(category: category),
           transitionDuration: const Duration(
             milliseconds: 800,
           ), // Yeni ekran daha yavaş açılsın

@@ -488,6 +488,9 @@ MUST generate SHORT content appropriate for current phase!''';
         return isTurkish
             ? 'EPİLOG - Hikaye sonrası devam'
             : 'EPILOGUE - Post-story continuation';
+      case StoryPhase.gameplay:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
   }
 
@@ -558,6 +561,9 @@ MUST generate SHORT content appropriate for current phase!''';
 - Show character's transformation
 - Open doors to new adventures
 - Create hopeful atmosphere''';
+      case StoryPhase.gameplay:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
   }
 

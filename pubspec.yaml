@@ -43,6 +43,7 @@ dependencies:
   flutter_staggered_animations: ^1.1.1
   lottie: ^3.3.1
   audioplayers: ^5.2.1
+  games_services: ^4.0.0
 
 dev_dependencies:
   flutter_test:

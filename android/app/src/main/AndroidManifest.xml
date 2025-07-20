@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Ses izinleri -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Google Play Games izinleri -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
     <application
         android:label="sezyon"

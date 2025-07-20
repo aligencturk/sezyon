@@ -7,6 +7,7 @@ import 'screens/category_selection_screen.dart';
 import 'services/logger_service.dart';
 import 'services/language_service.dart';
 import 'services/audio_service.dart';
+import 'services/google_play_games_service.dart';
 
 /// Ana uygulama giriş noktası
 Future<void> main() async {
@@ -39,6 +40,14 @@ Future<void> main() async {
     logger.info('🎵 Audio servisi başlatıldı');
   } catch (e) {
     logger.error('Audio servisi başlatılırken hata', e);
+  }
+
+  // Google Play Games servisini başlat
+  try {
+    await GooglePlayGamesService().signIn();
+    logger.info('🎮 Google Play Games servisi başlatıldı');
+  } catch (e) {
+    logger.error('Google Play Games servisi başlatılırken hata', e);
   }
 
   runApp(const SezyonApp());

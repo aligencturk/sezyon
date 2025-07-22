@@ -54,7 +54,10 @@ class GooglePlayGamesService {
 
     try {
       final result = await GamesServices.unlock(
-        achievement: Achievement(androidID: achievementId),
+        achievement: Achievement(
+          androidID: achievementId,
+          iOSID: achievementId, // iOS için de aynı ID kullanıyoruz
+        ),
       );
 
       if (result == 'success') {
@@ -76,7 +79,11 @@ class GooglePlayGamesService {
 
     try {
       final result = await GamesServices.submitScore(
-        score: Score(androidLeaderboardID: leaderboardId, value: score),
+        score: Score(
+          androidLeaderboardID: leaderboardId,
+          iOSLeaderboardID: leaderboardId, // iOS için de aynı ID
+          value: score,
+        ),
       );
 
       if (result == 'success') {

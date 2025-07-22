@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/language_service.dart';
 import '../services/logger_service.dart';
 import '../services/audio_service.dart';
+import '../services/user_service.dart';
+import '../widgets/google_play_games_widget.dart';
 
 /// Ayarlar ekranı
 class SettingsScreen extends StatefulWidget {
@@ -17,13 +19,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final LanguageService _languageService = LanguageService();
   final LoggerService _logger = LoggerService();
   final AudioService _audioService = AudioService();
+  final UserService _userService = UserService();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_languageService.settings),
-      ),
+      appBar: AppBar(title: Text(_languageService.settings)),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
@@ -33,15 +34,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: _languageService.language,
           ),
           const SizedBox(height: 10),
-          ...AppLanguage.values.map((language) => _buildLanguageOption(language)),
+          ...AppLanguage.values.map(
+            (language) => _buildLanguageOption(language),
+          ),
           const SizedBox(height: 30),
           _buildSectionTitle(
             context,
             icon: Icons.music_note,
-            title: _languageService.getLocalizedText('Ses Ayarları', 'Audio Settings'),
+            title: _languageService.getLocalizedText(
+              'Ses Ayarları',
+              'Audio Settings',
+            ),
           ),
           const SizedBox(height: 10),
           _buildAudioSettingsCard(),
+          const SizedBox(height: 30),
+          _buildSectionTitle(
+            context,
+            icon: Icons.games,
+            title: _languageService.getLocalizedText(
+              'Google Play Games',
+              'Google Play Games',
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildGooglePlayGamesCard(),
           const SizedBox(height: 30),
           _buildSectionTitle(
             context,
@@ -55,7 +72,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, {required IconData icon, required String title}) {
+  Widget _buildSectionTitle(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(left: 8.0),
       child: Row(
@@ -130,7 +151,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           _buildAudioToggle(
             Icons.music_note,
-            _languageService.getLocalizedText('Arka Plan Müziği', 'Background Music'),
+            _languageService.getLocalizedText(
+              'Arka Plan Müziği',
+              'Background Music',
+            ),
             _audioService.isMusicEnabled,
             (value) => _toggleMusic(value),
           ),
@@ -144,16 +168,173 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 20),
           _buildVolumeSlider(
             Icons.music_note,
-            _languageService.getLocalizedText('Müzik Ses Seviyesi', 'Music Volume'),
+            _languageService.getLocalizedText(
+              'Müzik Ses Seviyesi',
+              'Music Volume',
+            ),
             _audioService.musicVolume,
             (value) => _setMusicVolume(value),
           ),
           const SizedBox(height: 15),
           _buildVolumeSlider(
             Icons.volume_up,
-            _languageService.getLocalizedText('Ses Efekti Seviyesi', 'Sound Effects Volume'),
+            _languageService.getLocalizedText(
+              'Ses Efekti Seviyesi',
+              'Sound Effects Volume',
+            ),
             _audioService.soundVolume,
             (value) => _setSoundVolume(value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGooglePlayGamesCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _userService.isGooglePlayGamesUser
+                    ? Icons.check_circle
+                    : Icons.cancel,
+                color: _userService.isGooglePlayGamesUser
+                    ? Colors.green
+                    : Colors.red,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _userService.isGooglePlayGamesUser
+                    ? _languageService.getLocalizedText('Bağlı', 'Connected')
+                    : _languageService.getLocalizedText(
+                        'Bağlı değil',
+                        'Not connected',
+                      ),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (!_userService.isGooglePlayGamesUser)
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    try {
+                      await _userService.setGooglePlayGamesUser();
+                      if (mounted) {
+                        setState(() {});
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              _languageService.getLocalizedText(
+                                'Google Play Games\'e giriş yapıldı!',
+                                'Signed in to Google Play Games!',
+                              ),
+                            ),
+                            backgroundColor: Colors.green.shade600,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              _languageService.getLocalizedText(
+                                'Giriş başarısız',
+                                'Sign in failed',
+                              ),
+                            ),
+                            backgroundColor: Colors.red.shade600,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.login, size: 18),
+                  label: Text(
+                    _languageService.getLocalizedText('Giriş Yap', 'Sign In'),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              if (_userService.isGooglePlayGamesUser) ...[
+                ElevatedButton.icon(
+                  onPressed: () => _userService.showAchievements(),
+                  icon: const Icon(Icons.emoji_events, size: 18),
+                  label: Text(
+                    _languageService.getLocalizedText(
+                      'Başarımlar',
+                      'Achievements',
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber.shade600,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () => _userService.showLeaderboard(
+                    'CgkI_EXAMPLE_TOTAL_STORIES',
+                  ),
+                  icon: const Icon(Icons.leaderboard, size: 18),
+                  label: Text(
+                    _languageService.getLocalizedText(
+                      'Liderlik',
+                      'Leaderboard',
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue.shade600,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    await _userService.signOut();
+                    if (mounted) {
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            _languageService.getLocalizedText(
+                              'Çıkış yapıldı',
+                              'Signed out',
+                            ),
+                          ),
+                          backgroundColor: Colors.orange.shade600,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.logout, size: 18),
+                  label: Text(
+                    _languageService.getLocalizedText('Çıkış', 'Sign Out'),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ],
           ),
         ],
       ),
@@ -185,22 +366,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildAudioToggle(IconData icon, String title, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildAudioToggle(
+    IconData icon,
+    String title,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: Theme.of(context).colorScheme.primary,
-          size: 20,
-        ),
+        Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
         ),
         Switch(
@@ -212,17 +391,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildVolumeSlider(IconData icon, String title, double value, ValueChanged<double> onChanged) {
+  Widget _buildVolumeSlider(
+    IconData icon,
+    String title,
+    double value,
+    ValueChanged<double> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(
-              icon,
-              color: Theme.of(context).colorScheme.primary,
-              size: 20,
-            ),
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -257,11 +437,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildInfoItem(IconData icon, String title, String value) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: Colors.grey.shade600,
-          size: 20,
-        ),
+        Icon(icon, color: Colors.grey.shade600, size: 20),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -293,10 +469,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _toggleMusic(bool value) async {
     // Buton tıklama sesi - mevcut dosya yoksa kaldır
     // _audioService.playSoundEffect('audio/button_click.wav');
-    
+
     await _audioService.toggleMusic();
     setState(() {});
-    
+
     _logger.gameEvent('Müzik ayarı değiştirildi', {
       'enabled': _audioService.isMusicEnabled,
     });
@@ -308,10 +484,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // if (_audioService.isSoundEnabled) {
     //   _audioService.playSoundEffect('audio/button_click.wav');
     // }
-    
+
     _audioService.toggleSound();
     setState(() {});
-    
+
     _logger.gameEvent('Ses efekti ayarı değiştirildi', {
       'enabled': _audioService.isSoundEnabled,
     });
@@ -321,17 +497,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _setMusicVolume(double value) async {
     await _audioService.setMusicVolume(value);
     setState(() {});
-    
-    _logger.gameEvent('Müzik ses seviyesi değiştirildi', {
-      'volume': value,
-    });
+
+    _logger.gameEvent('Müzik ses seviyesi değiştirildi', {'volume': value});
   }
 
   /// Ses efekti ses seviyesini ayarla
   Future<void> _setSoundVolume(double value) async {
     await _audioService.setSoundVolume(value);
     setState(() {});
-    
+
     _logger.gameEvent('Ses efekti ses seviyesi değiştirildi', {
       'volume': value,
     });
@@ -347,11 +521,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
 
     final success = await _languageService.setLanguage(language);
-    
+
     if (success && mounted) {
       widget.onLanguageChanged();
       setState(() {});
-      
+
       // Başarı mesajı göster
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -384,7 +558,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
 
-      _logger.error('Dil değiştirme başarısız', {'targetLanguage': language.displayName});
+      _logger.error('Dil değiştirme başarısız', {
+        'targetLanguage': language.displayName,
+      });
     }
   }
-} 
+}

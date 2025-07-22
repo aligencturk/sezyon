@@ -100,17 +100,29 @@ class GameIntegration {
   // Hikaye tamamlandığında başarım kilitle
   static Future<void> onStoryCompleted(String category) async {
     switch (category.toLowerCase()) {
-      case 'macera':
-        await _gamesService.unlockAchievement('ADVENTURE_MASTER');
+      case 'war':
+      case 'savaş':
+        await _gamesService.unlockAchievement('CgkI_EXAMPLE_WAR_MASTER');
         break;
-      case 'korku':
-        await _gamesService.unlockAchievement('HORROR_SURVIVOR');
+      case 'fantasy':
+      case 'fantastik':
+        await _gamesService.unlockAchievement('CgkI_EXAMPLE_FANTASY_MASTER');
         break;
-      case 'romantik':
-        await _gamesService.unlockAchievement('LOVE_STORY_EXPERT');
-        break;
+      case 'scifi':
       case 'bilim kurgu':
-        await _gamesService.unlockAchievement('SCI_FI_EXPLORER');
+        await _gamesService.unlockAchievement('CgkI_EXAMPLE_SCIFI_MASTER');
+        break;
+      case 'mystery':
+      case 'gizem':
+        await _gamesService.unlockAchievement('CgkI_EXAMPLE_MYSTERY_MASTER');
+        break;
+      case 'historical':
+      case 'tarih':
+        await _gamesService.unlockAchievement('CgkI_EXAMPLE_HISTORICAL_MASTER');
+        break;
+      case 'apocalypse':
+      case 'kıyamet':
+        await _gamesService.unlockAchievement('CgkI_EXAMPLE_APOCALYPSE_MASTER');
         break;
     }
   }

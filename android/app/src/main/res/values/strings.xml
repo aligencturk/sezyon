@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Google Play Games App ID - Play Console'dan aldığınız gerçek ID -->
+    <string name="app_id">PLAY_CONSOLE_DAN_ALDIGINIZ_APP_ID</string>
+    
+    <!-- Başarım ID'leri - Play Console'da oluşturduğunuz gerçek ID'ler -->
+    <string name="achievement_first_story">PLAY_CONSOLE_FIRST_STORY_ID</string>
+    <string name="achievement_story_collector">PLAY_CONSOLE_STORY_COLLECTOR_ID</string>
+    <string name="achievement_story_master">PLAY_CONSOLE_STORY_MASTER_ID</string>
+    <string name="achievement_story_legend">PLAY_CONSOLE_STORY_LEGEND_ID</string>
+    <string name="achievement_weekly_reader">PLAY_CONSOLE_WEEKLY_READER_ID</string>
+    <string name="achievement_monthly_reader">PLAY_CONSOLE_MONTHLY_READER_ID</string>
+    <string name="achievement_war_master">PLAY_CONSOLE_WAR_MASTER_ID</string>
+    <string name="achievement_fantasy_master">PLAY_CONSOLE_FANTASY_MASTER_ID</string>
+    <string name="achievement_scifi_master">PLAY_CONSOLE_SCIFI_MASTER_ID</string>
+    <string name="achievement_mystery_master">PLAY_CONSOLE_MYSTERY_MASTER_ID</string>
+    <string name="achievement_historical_master">PLAY_CONSOLE_HISTORICAL_MASTER_ID</string>
+    <string name="achievement_apocalypse_master">PLAY_CONSOLE_APOCALYPSE_MASTER_ID</string>
+    
+    <!-- Liderlik Tablosu ID'leri - Play Console'da oluşturduğunuz gerçek ID'ler -->
+    <string name="leaderboard_total_stories">PLAY_CONSOLE_TOTAL_STORIES_ID</string>
+    <string name="leaderboard_daily_stories">PLAY_CONSOLE_DAILY_STORIES_ID</string>
+</resources>

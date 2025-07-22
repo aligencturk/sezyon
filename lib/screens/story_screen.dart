@@ -9,6 +9,7 @@ import 'package:sezyon/services/language_service.dart';
 import 'package:sezyon/services/logger_service.dart';
 import 'package:sezyon/services/audio_service.dart';
 import 'package:sezyon/services/user_service.dart';
+import 'package:sezyon/widgets/google_play_games_widget.dart';
 
 class StoryScreen extends StatefulWidget {
   final GameCategory category;
@@ -441,6 +442,16 @@ class _StoryScreenState extends State<StoryScreen> {
       // Oyun süresini güncelle (yaklaşık hesaplama)
       final playTimeMinutes = (_messages.length * 2); // Her mesaj ~2 dakika
       _userService.cloudSave.updatePlayTime(playTimeMinutes * 60);
+
+      // Google Play Games başarımları
+      await GameIntegration.onStoryCompleted(widget.category.key);
+
+      // Toplam hikaye sayısını liderlik tablosuna gönder
+      final gameData = _userService.cloudSave.gameData;
+      final totalStories = List<String>.from(
+        gameData['completedStories'] ?? [],
+      ).length;
+      await GameIntegration.updateStoryCount(totalStories);
 
       // Başarımları kontrol et ve kilitle
       await _checkAndUnlockAchievements();

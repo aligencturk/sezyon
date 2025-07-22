@@ -82,162 +82,194 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF4A148C), Color(0xFF6A1B9A), Color(0xFF8E24AA)],
+      body: Stack(
+        children: [
+          // Arka plan
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.8),
+                  Colors.black.withValues(alpha: 0.6),
+                  Colors.black.withValues(alpha: 0.8),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo ve başlık
-                Column(
-                  children: [
-                    Icon(
-                      Icons.auto_stories,
-                      size: 80,
-                      color: Colors.white.withOpacity(0.9),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Sezyon',
-                      style: GoogleFonts.merriweather(
-                        fontSize: 48,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo ve başlık
+                  Column(
+                    children: [
+                      Text(
+                        'Sezyon',
+                        style: GoogleFonts.merriweather(
+                          fontSize: 48,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Hikayeni Yaz, Maceraya Başla',
-                      style: GoogleFonts.sourceSans3(
-                        fontSize: 18,
-                        color: Colors.white.withOpacity(0.8),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Hikayeni Yaz, Maceraya Başla',
+                        style: GoogleFonts.sourceSans3(
+                          fontSize: 18,
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
 
-                const SizedBox(height: 80),
+                  const SizedBox(height: 80),
 
-                // Giriş butonları
-                Column(
-                  children: [
-                    // Google ile giriş
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _signInWithGoogle,
-                        icon: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
+                  // Giriş butonları
+                  Column(
+                    children: [
+                      // Google ile giriş
+                      Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _signInWithGoogle,
+                          icon: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.games,
+                                  size: 24,
                                   color: Colors.white,
                                 ),
-                              )
-                            : const Icon(Icons.games, size: 24),
-                        label: Text(
-                          _isLoading
-                              ? 'Giriş yapılıyor...'
-                              : 'Google Play Games ile Giriş',
-                          style: GoogleFonts.sourceSans3(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF4A148C),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Misafir girişi
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: OutlinedButton.icon(
-                        onPressed: _isLoading ? null : _continueAsGuest,
-                        icon: const Icon(Icons.person_outline, size: 24),
-                        label: Text(
-                          'Misafir Olarak Devam Et',
-                          style: GoogleFonts.sourceSans3(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          side: const BorderSide(color: Colors.white, width: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 40),
-
-                // Bilgi metni
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.info_outline,
-                            color: Colors.white70,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Google Play Games Avantajları:',
+                          label: Text(
+                            _isLoading
+                                ? 'Giriş yapılıyor...'
+                                : 'Google Play Games ile Giriş',
                             style: GoogleFonts.sourceSans3(
-                              fontSize: 14,
+                              fontSize: 16,
                               fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
                           ),
-                        ],
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '• Başarımları kilitle\n• Liderlik tablolarında yarış\n• İlerlemenizi bulutta kaydedin\n• Arkadaşlarınızla karşılaştırın',
-                        style: GoogleFonts.sourceSans3(
-                          fontSize: 13,
-                          color: Colors.white70,
-                          height: 1.4,
+
+                      const SizedBox(height: 16),
+
+                      // Misafir girişi
+                      Container(
+                        width: double.infinity,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(15),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: _isLoading ? null : _continueAsGuest,
+                          icon: const Icon(
+                            Icons.person_outline,
+                            size: 24,
+                            color: Colors.white,
+                          ),
+                          label: Text(
+                            'Misafir Olarak Devam Et',
+                            style: GoogleFonts.sourceSans3(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
-                ),
-              ],
+
+                  const SizedBox(height: 40),
+
+                  // Bilgi metni
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Google Play Games Avantajları:',
+                              style: GoogleFonts.sourceSans3(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '• Başarımları kilitle\n• Liderlik tablolarında yarış\n• İlerlemenizi bulutta kaydedin\n• Arkadaşlarınızla karşılaştırın',
+                          style: GoogleFonts.sourceSans3(
+                            fontSize: 13,
+                            color: Colors.white70,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

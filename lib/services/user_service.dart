@@ -12,7 +12,7 @@ class UserService {
 
   final GooglePlayGamesService _gamesService = GooglePlayGamesService();
   final LoggerService _logger = LoggerService();
-  final CloudSaveService _cloudSaveService = CloudSaveService();
+  CloudSaveService? _cloudSaveService;
 
   UserType _userType = UserType.guest;
   String? _userName;
@@ -26,7 +26,14 @@ class UserService {
   bool get isGooglePlayGamesUser => _userType == UserType.googlePlayGames;
   bool get isGuest => _userType == UserType.guest;
   bool get isInitialized => _isInitialized;
-  CloudSaveService get cloudSave => _cloudSaveService;
+  CloudSaveService get cloudSave {
+    if (_cloudSaveService == null) {
+      _cloudSaveService = CloudSaveService();
+      // Callback'i ayarla
+      _cloudSaveService!.setUserServiceCallback(() => isGooglePlayGamesUser);
+    }
+    return _cloudSaveService!;
+  }
 
   /// Servisi başlat ve kullanıcı durumunu yükle
   Future<void> initialize() async {
@@ -49,7 +56,7 @@ class UserService {
       }
 
       // CloudSaveService'i başlat ve yerel kayıtları yükle
-      await _cloudSaveService.loadLocalSave();
+      await cloudSave.loadLocalSave();
 
       _isInitialized = true;
       _logger.info('User service başlatıldı - Kullanıcı tipi: $_userType');
@@ -68,7 +75,7 @@ class UserService {
       await _saveUserType('google_play_games');
 
       // Bulut kayıtları senkronize et
-      await _cloudSaveService.syncWithCloud();
+      await cloudSave.syncWithCloud();
     } else {
       throw Exception('Google Play Games girişi başarısız');
     }

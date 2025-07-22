@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'logger_service.dart';
-import 'user_service.dart';
 
 /// Oyun verilerini bulutta saklama servisi
 class CloudSaveService {
@@ -10,7 +9,18 @@ class CloudSaveService {
   CloudSaveService._internal();
 
   final LoggerService _logger = LoggerService();
-  final UserService _userService = UserService();
+
+  // UserService durumunu kontrol etmek için callback
+  bool Function()? _isGooglePlayGamesUserCallback;
+
+  /// UserService callback'ini ayarla
+  void setUserServiceCallback(bool Function() callback) {
+    _isGooglePlayGamesUserCallback = callback;
+  }
+
+  bool get _isGooglePlayGamesUser {
+    return _isGooglePlayGamesUserCallback?.call() ?? false;
+  }
 
   /// Oyun verisi modeli
   Map<String, dynamic> _gameData = {
@@ -64,7 +74,7 @@ class CloudSaveService {
 
   /// Bulut kayıt (Google Play Games kullanıcıları için)
   Future<bool> saveToCloud() async {
-    if (!_userService.isGooglePlayGamesUser) {
+    if (!_isGooglePlayGamesUser) {
       _logger.info('Misafir kullanıcı - bulut kayıt yapılamıyor');
       return false;
     }
@@ -84,7 +94,7 @@ class CloudSaveService {
 
   /// Buluttan yükle (Google Play Games kullanıcıları için)
   Future<bool> loadFromCloud() async {
-    if (!_userService.isGooglePlayGamesUser) {
+    if (!_isGooglePlayGamesUser) {
       _logger.info('Misafir kullanıcı - buluttan yükleme yapılamıyor');
       return false;
     }
@@ -170,7 +180,7 @@ class CloudSaveService {
     await saveLocal();
 
     // Google Play Games kullanıcısıysa buluta da kaydet
-    if (_userService.isGooglePlayGamesUser) {
+    if (_isGooglePlayGamesUser) {
       await saveToCloud();
     }
   }
@@ -222,7 +232,7 @@ class CloudSaveService {
 
   /// Senkronizasyon durumu kontrolü
   bool get needsSync {
-    if (!_userService.isGooglePlayGamesUser) return false;
+    if (!_isGooglePlayGamesUser) return false;
 
     // Son kayıt zamanını kontrol et
     final lastSaved = DateTime.tryParse(_gameData['lastSaved'] ?? '');
@@ -234,7 +244,7 @@ class CloudSaveService {
 
   /// Manuel senkronizasyon
   Future<bool> syncWithCloud() async {
-    if (!_userService.isGooglePlayGamesUser) {
+    if (!_isGooglePlayGamesUser) {
       _logger.info('Misafir kullanıcı - senkronizasyon yapılamıyor');
       return false;
     }

@@ -17,7 +17,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.example.sezyon.sezyon"
-    compileSdk = flutter.compileSdkVersion
+    // Google Play Games için minimum compile SDK 34
+    compileSdk = 34
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -31,8 +32,10 @@ android {
 
     defaultConfig {
         applicationId = "com.example.sezyon.sezyon"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        // Google Play Games için minimum SDK 21 (Android 5.0)
+        minSdk = 21
+        // Google Play Games için önerilen target SDK
+        targetSdk = 34
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
@@ -58,4 +61,13 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Google Play Games Services v2 SDK
+    implementation("com.google.android.gms:play-services-games-v2:19.0.0")
+    // Google Play Services Base (gerekli)
+    implementation("com.google.android.gms:play-services-base:18.2.0")
+    // Google Play Services Auth (giriş için)
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
 }

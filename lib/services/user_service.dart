@@ -139,7 +139,14 @@ class UserService {
   /// Başarım kilitle (sadece Google Play Games kullanıcıları için)
   Future<void> unlockAchievement(String achievementId) async {
     if (_userType == UserType.googlePlayGames) {
-      await _gamesService.unlockAchievement(achievementId);
+      try {
+        await _gamesService.unlockAchievement(achievementId);
+      } catch (e) {
+        _logger.error(
+          'Başarım kilitlenemedi - henüz yapılandırılmamış olabilir: $achievementId',
+          e,
+        );
+      }
     } else {
       _logger.info('Misafir kullanıcı - başarım kilitlenemedi: $achievementId');
     }
@@ -157,7 +164,14 @@ class UserService {
   /// Başarımları göster (sadece Google Play Games kullanıcıları için)
   Future<void> showAchievements() async {
     if (_userType == UserType.googlePlayGames) {
-      await _gamesService.showAchievements();
+      try {
+        await _gamesService.showAchievements();
+      } catch (e) {
+        _logger.error(
+          'Başarımlar gösterilemedi - henüz yapılandırılmamış olabilir',
+          e,
+        );
+      }
     } else {
       _logger.info('Misafir kullanıcı - başarımlar gösterilemiyor');
     }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Google Play Games App ID - Play Console'dan aldığınız gerçek ID -->
-    <string name="app_id">PLAY_CONSOLE_DAN_ALDIGINIZ_APP_ID</string>
+    <string name="app_id">751071900614</string>
     
     <!-- Başarım ID'leri - Play Console'da oluşturduğunuz gerçek ID'ler -->
     <string name="achievement_first_story">PLAY_CONSOLE_FIRST_STORY_ID</string>

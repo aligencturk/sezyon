@@ -18,7 +18,7 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.rivorya.sezyon"
     // Google Play Games için minimum compile SDK 34
-    compileSdk = 34
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -35,7 +35,7 @@ android {
         // Google Play Games için minimum SDK 21 (Android 5.0)
         minSdk = 21
         // Google Play Games için önerilen target SDK
-        targetSdk = 34
+        targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

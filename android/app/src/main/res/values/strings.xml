@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Google Play Games App ID - Play Console'dan aldığınız gerçek ID -->
+    <!-- Google Play Games App ID - Test ID (Gerçek uygulamada Play Console'dan alınacak) -->
     <string name="app_id">751071900614</string>
     
     <!-- Başarım ID'leri - Play Console'da oluşturduğunuz gerçek ID'ler -->

@@ -12,6 +12,7 @@ import 'package:sezyon/services/language_service.dart';
 import 'package:sezyon/services/logger_service.dart';
 import 'package:sezyon/services/audio_service.dart';
 import 'package:sezyon/utils/custom_page_route.dart';
+import 'package:sezyon/widgets/banner_ad_widget.dart';
 
 /// Oyun kategorisi seçimi ekranı
 class CategorySelectionScreen extends StatefulWidget {
@@ -166,35 +167,48 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
               ],
             )
           : null,
-      body: Stack(
+      body: Column(
         children: [
-          // Mevcut tüm içerik
-          Stack(
-            children: [
-              _buildAnimatedTexts(),
-              AnimatedOpacity(
-                opacity: _introStep.index >= _IntroStep.categories.index
-                    ? 1.0
-                    : 0.0,
-                duration: const Duration(milliseconds: 500),
-                child: Column(
+          // Ana içerik
+          Expanded(
+            child: Stack(
+              children: [
+                // Mevcut tüm içerik
+                Stack(
                   children: [
-                    SizedBox(height: MediaQuery.of(context).size.height * 0.25),
-                    Expanded(child: _buildCategoryIntroView()),
-                    _buildIntroControls(),
+                    _buildAnimatedTexts(),
+                    AnimatedOpacity(
+                      opacity: _introStep.index >= _IntroStep.categories.index
+                          ? 1.0
+                          : 0.0,
+                      duration: const Duration(milliseconds: 500),
+                      child: Column(
+                        children: [
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.25),
+                          Expanded(child: _buildCategoryIntroView()),
+                          _buildIntroControls(),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          // Kararma efekti için üst katman
-          IgnorePointer(
-            child: AnimatedOpacity(
-              opacity: _isTransitioning ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 500),
-              child: Container(color: Colors.black),
+                // Kararma efekti için üst katman
+                IgnorePointer(
+                  child: AnimatedOpacity(
+                    opacity: _isTransitioning ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 500),
+                    child: Container(color: Colors.black),
+                  ),
+                ),
+              ],
             ),
           ),
+          // Alt banner reklam
+          if (_introStep.index >= _IntroStep.finished.index)
+            const BannerAdWidget(
+              height: 50,
+              margin: EdgeInsets.only(bottom: 8),
+            ),
         ],
       ),
     );

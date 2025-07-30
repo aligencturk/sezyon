@@ -6,6 +6,7 @@ import 'services/logger_service.dart';
 import 'services/language_service.dart';
 import 'services/audio_service.dart';
 import 'services/user_service.dart';
+import 'services/ad_service.dart';
 
 /// Ana uygulama giriş noktası
 Future<void> main() async {
@@ -47,6 +48,15 @@ Future<void> main() async {
     logger.info('👤 User servisi başlatıldı');
   } catch (e) {
     logger.error('User servisi başlatılırken hata', e);
+  }
+
+  // Reklam servisini başlat
+  try {
+    final adService = AdService();
+    await adService.initialize();
+    logger.info('📱 Reklam servisi başlatıldı');
+  } catch (e) {
+    logger.error('Reklam servisi başlatılırken hata', e);
   }
 
   runApp(const SezyonApp());

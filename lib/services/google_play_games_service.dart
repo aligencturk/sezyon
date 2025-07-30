@@ -15,6 +15,14 @@ class GooglePlayGamesService {
   /// Google Play Games'e giriş yap
   Future<bool> signIn() async {
     try {
+      // Test modunda çalışıyor mu kontrol et
+      final isSignedIn = await GamesServices.isSignedIn;
+      if (isSignedIn) {
+        _isSignedIn = true;
+        _logger.i('Google Play Games zaten giriş yapılmış');
+        return true;
+      }
+
       final result = await GamesServices.signIn();
       _isSignedIn = result == 'success';
 
@@ -22,12 +30,15 @@ class GooglePlayGamesService {
         _logger.i('Google Play Games giriş başarılı');
       } else {
         _logger.w('Google Play Games giriş başarısız: $result');
+        // Test modunda çalışması için false döndür ama hata fırlatma
+        _isSignedIn = false;
       }
 
       return _isSignedIn;
     } catch (e) {
       _logger.e('Google Play Games giriş hatası: $e');
       _isSignedIn = false;
+      // Test modunda çalışması için false döndür ama hata fırlatma
       return false;
     }
   }

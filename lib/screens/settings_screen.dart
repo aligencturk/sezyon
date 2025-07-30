@@ -5,6 +5,7 @@ import '../services/logger_service.dart';
 import '../services/audio_service.dart';
 import '../services/user_service.dart';
 import '../widgets/google_play_games_widget.dart';
+import '../widgets/banner_ad_widget.dart';
 
 /// Ayarlar ekranı
 class SettingsScreen extends StatefulWidget {
@@ -25,48 +26,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(_languageService.settings)),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      body: Column(
         children: [
-          _buildSectionTitle(
-            context,
-            icon: Icons.language,
-            title: _languageService.language,
-          ),
-          const SizedBox(height: 10),
-          ...AppLanguage.values.map(
-            (language) => _buildLanguageOption(language),
-          ),
-          const SizedBox(height: 30),
-          _buildSectionTitle(
-            context,
-            icon: Icons.music_note,
-            title: _languageService.getLocalizedText(
-              'Ses Ayarları',
-              'Audio Settings',
+          // Ana içerik
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                _buildSectionTitle(
+                  context,
+                  icon: Icons.language,
+                  title: _languageService.language,
+                ),
+                const SizedBox(height: 10),
+                ...AppLanguage.values.map(
+                  (language) => _buildLanguageOption(language),
+                ),
+                const SizedBox(height: 30),
+                _buildSectionTitle(
+                  context,
+                  icon: Icons.music_note,
+                  title: _languageService.getLocalizedText(
+                    'Ses Ayarları',
+                    'Audio Settings',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _buildAudioSettingsCard(),
+                const SizedBox(height: 30),
+                _buildSectionTitle(
+                  context,
+                  icon: Icons.games,
+                  title: _languageService.getLocalizedText(
+                    'Google Play Games',
+                    'Google Play Games',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _buildGooglePlayGamesCard(),
+                const SizedBox(height: 30),
+                _buildSectionTitle(
+                  context,
+                  icon: Icons.info_outline,
+                  title: _languageService.getLocalizedText('Bilgi', 'Information'),
+                ),
+                const SizedBox(height: 10),
+                _buildInfoCard(),
+              ],
             ),
           ),
-          const SizedBox(height: 10),
-          _buildAudioSettingsCard(),
-          const SizedBox(height: 30),
-          _buildSectionTitle(
-            context,
-            icon: Icons.games,
-            title: _languageService.getLocalizedText(
-              'Google Play Games',
-              'Google Play Games',
-            ),
+          // Alt banner reklam
+          const BannerAdWidget(
+            height: 50,
+            margin: EdgeInsets.only(bottom: 8),
           ),
-          const SizedBox(height: 10),
-          _buildGooglePlayGamesCard(),
-          const SizedBox(height: 30),
-          _buildSectionTitle(
-            context,
-            icon: Icons.info_outline,
-            title: _languageService.getLocalizedText('Bilgi', 'Information'),
-          ),
-          const SizedBox(height: 10),
-          _buildInfoCard(),
         ],
       ),
     );

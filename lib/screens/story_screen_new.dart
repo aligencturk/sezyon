@@ -8,6 +8,7 @@ import '../services/chatgpt_service.dart';
 import '../services/language_service.dart';
 import '../services/logger_service.dart';
 import '../services/audio_service.dart';
+import '../widgets/banner_ad_widget.dart';
 
 class StoryScreenNew extends StatefulWidget {
   final GameCategory category;
@@ -374,45 +375,57 @@ class _StoryScreenNewState extends State<StoryScreenNew> {
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          // Arka plan
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.8),
-                  Colors.black.withValues(alpha: 0.6),
-                  Colors.black.withValues(alpha: 0.8),
-                ],
-              ),
-            ),
-          ),
           // Ana içerik
-          Column(
-            children: [
-              Expanded(
-                child: _isLoading && _messages.isEmpty
-                    ? const SizedBox.shrink()
-                    : _buildMessageList(),
-              ),
-              if (_isWaitingForApiResponse) _buildTypingIndicator(),
-              if (_isStoryEnded) _buildStoryEndButtons() else _buildInputArea(),
-            ],
-          ),
-          // Yükleme göstergesi
-          AnimatedOpacity(
-            opacity: _isLoading ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 800),
-            child: IgnorePointer(
-              ignoring: !_isLoading,
-              child: Container(
-                color: Colors.black,
-                child: Center(child: _buildLoadingIndicator()),
-              ),
+          Expanded(
+            child: Stack(
+              children: [
+                // Arka plan
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.8),
+                        Colors.black.withValues(alpha: 0.6),
+                        Colors.black.withValues(alpha: 0.8),
+                      ],
+                    ),
+                  ),
+                ),
+                // Ana içerik
+                Column(
+                  children: [
+                    Expanded(
+                      child: _isLoading && _messages.isEmpty
+                          ? const SizedBox.shrink()
+                          : _buildMessageList(),
+                    ),
+                    if (_isWaitingForApiResponse) _buildTypingIndicator(),
+                    if (_isStoryEnded) _buildStoryEndButtons() else _buildInputArea(),
+                  ],
+                ),
+                // Yükleme göstergesi
+                AnimatedOpacity(
+                  opacity: _isLoading ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 800),
+                  child: IgnorePointer(
+                    ignoring: !_isLoading,
+                    child: Container(
+                      color: Colors.black,
+                      child: Center(child: _buildLoadingIndicator()),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ),
+          // Alt banner reklam
+          const BannerAdWidget(
+            height: 50,
+            margin: EdgeInsets.only(bottom: 8),
           ),
         ],
       ),

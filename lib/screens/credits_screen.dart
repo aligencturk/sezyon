@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/language_service.dart';
+import '../widgets/banner_ad_widget.dart';
 import '../services/audio_service.dart';
 
 /// Credits ekranı
@@ -132,192 +133,205 @@ class _CreditsScreenState extends State<CreditsScreen>
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Stack(
+      body: Column(
         children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF1a1a1a), Colors.black, Color(0xFF1a1a1a)],
-              ),
-            ),
-          ),
-
-          AnimatedBuilder(
-            animation: _scrollAnimation,
-            builder: (context, child) {
-              if (_creditsHeight == 0) {
-                return Opacity(opacity: 0, child: child);
-              }
-
-              final totalDistance = screenHeight + _creditsHeight;
-              final offset =
-                  screenHeight - (_scrollAnimation.value * totalDistance);
-
-              // Credits yazıları scroll bitince yavaşça kaybolsun
-              double opacity = 1.0;
-              if (_scrollAnimation.value > 0.75) {
-                // Daha erken kaybolmaya başlasın
-                opacity =
-                    (1.0 - _scrollAnimation.value) /
-                    0.25; // Kalan %25'te kaybolsun
-                opacity = opacity.clamp(0.0, 1.0);
-              }
-
-              return Opacity(
-                opacity: opacity,
-                child: Transform.translate(
-                  offset: Offset(0, offset),
-                  child: child,
-                ),
-              );
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 40),
-              child: Column(
-                key: _creditsColumnKey,
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    height: screenHeight * 0.2,
-                  ), // Daha erken başlaması için azalttık
-
-                  _buildTitle('Sezyon'),
-                  const SizedBox(height: 50),
-
-                  _buildSection(
-                    _languageService.getLocalizedText(
-                      'Geliştirici',
-                      'Developer',
+          // Ana içerik
+          Expanded(
+            child: Stack(
+              children: [
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFF1a1a1a), Colors.black, Color(0xFF1a1a1a)],
                     ),
-                    'Ali Talip Gençtürk',
                   ),
-                  const SizedBox(height: 40),
+                ),
 
-                  _buildSection(
-                    _languageService.getLocalizedText('Müzikler', 'Music'),
-                    '',
-                  ),
-                  const SizedBox(height: 20),
+                AnimatedBuilder(
+                  animation: _scrollAnimation,
+                  builder: (context, child) {
+                    if (_creditsHeight == 0) {
+                      return Opacity(opacity: 0, child: child);
+                    }
 
-                  _buildMusicCredit(
-                    'Ana Menü Müziği',
-                    'lucafrancini - Atmospheric Glitch',
-                    'Ana Menü',
-                  ),
-                  _buildMusicCredit(
-                    'Gizem Kategorisi Müziği',
-                    'Alexandr Zhelanov - Mystery Manor',
-                    'Gizem Senaryosu',
-                  ),
-                  _buildMusicCredit(
-                    'Savaş Kategorisi Müziği',
-                    'Zefz - Orchestral Epic Fantasy Music',
-                    'Savaş Senaryosu',
-                  ),
-                  _buildMusicCredit(
-                    'Bilim Kurgu Kategorisi Müziği',
-                    'Ted Kerr - Sci-Fi Ambient - Crashed Ship',
-                    'Bilim Kurgu',
-                  ),
-                  _buildMusicCredit(
-                    'Fantastik Kategorisi Müziği',
-                    'HitCtrl - Misty Mountains',
-                    'Fantastik Senaryo',
-                  ),
-                  _buildMusicCredit(
-                    'Tarihi Kategorisi Müziği',
-                    'TAD - Anti Entity',
-                    'Tarihi Senaryo',
-                  ),
-                  _buildMusicCredit(
-                    'Kıyamet Sonrası Kategorisi Müziği',
-                    'Trevor Lentz - The Void',
-                    'Kıyamet Senaryosu',
-                  ),
+                    final totalDistance = screenHeight + _creditsHeight;
+                    final offset =
+                        screenHeight - (_scrollAnimation.value * totalDistance);
 
-                  SizedBox(
-                    height:
-                        screenHeight *
-                        2.0, // Daha fazla boşluk - yazılar tamamen kaybolsun
-                  ),
-                ],
-              ),
-            ),
-          ),
+                    // Credits yazıları scroll bitince yavaşça kaybolsun
+                    double opacity = 1.0;
+                    if (_scrollAnimation.value > 0.75) {
+                      // Daha erken kaybolmaya başlasın
+                      opacity =
+                          (1.0 - _scrollAnimation.value) /
+                          0.25; // Kalan %25'te kaybolsun
+                      opacity = opacity.clamp(0.0, 1.0);
+                    }
 
-          AnimatedBuilder(
-            animation: Listenable.merge([_scaleAnimation, _glowAnimation]),
-            builder: (context, child) {
-              if (_finalAnimationController.isAnimating ||
-                  _finalAnimationController.isCompleted) {
-                return Center(
-                  child: Transform.scale(
-                    scale: _scaleAnimation.value,
-                    child: Opacity(
-                      opacity: _scaleAnimation.value.clamp(0.0, 1.0),
+                    return Opacity(
+                      opacity: opacity,
                       child: Transform.translate(
-                        // Uzaktan gelme efekti için Y ekseninde hareket
-                        offset: Offset(0, (1 - _scaleAnimation.value) * 100),
+                        offset: Offset(0, offset),
                         child: child,
                       ),
-                    ),
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildGlowingTitle('Sezyon', _glowAnimation.value),
-
-                const SizedBox(height: 20),
-
-                // Alt yazılar da aynı animasyonla gelsin
-                AnimatedBuilder(
-                  animation: _scaleAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: (_scaleAnimation.value - 0.3).clamp(
-                        0.0,
-                        1.0,
-                      ), // Biraz gecikmeli görünüm
-                      child: child,
                     );
                   },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      key: _creditsColumnKey,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: screenHeight * 0.2,
+                        ), // Daha erken başlaması için azalttık
+
+                        _buildTitle('Sezyon'),
+                        const SizedBox(height: 50),
+
+                        _buildSection(
+                          _languageService.getLocalizedText(
+                            'Geliştirici',
+                            'Developer',
+                          ),
+                          'Ali Talip Gençtürk',
+                        ),
+                        const SizedBox(height: 40),
+
+                        _buildSection(
+                          _languageService.getLocalizedText('Müzikler', 'Music'),
+                          '',
+                        ),
+                        const SizedBox(height: 20),
+
+                        _buildMusicCredit(
+                          'Ana Menü Müziği',
+                          'lucafrancini - Atmospheric Glitch',
+                          'Ana Menü',
+                        ),
+                        _buildMusicCredit(
+                          'Gizem Kategorisi Müziği',
+                          'Alexandr Zhelanov - Mystery Manor',
+                          'Gizem Senaryosu',
+                        ),
+                        _buildMusicCredit(
+                          'Savaş Kategorisi Müziği',
+                          'Zefz - Orchestral Epic Fantasy Music',
+                          'Savaş Senaryosu',
+                        ),
+                        _buildMusicCredit(
+                          'Bilim Kurgu Kategorisi Müziği',
+                          'Ted Kerr - Sci-Fi Ambient - Crashed Ship',
+                          'Bilim Kurgu',
+                        ),
+                        _buildMusicCredit(
+                          'Fantastik Kategorisi Müziği',
+                          'HitCtrl - Misty Mountains',
+                          'Fantastik Senaryo',
+                        ),
+                        _buildMusicCredit(
+                          'Tarihi Kategorisi Müziği',
+                          'TAD - Anti Entity',
+                          'Tarihi Senaryo',
+                        ),
+                        _buildMusicCredit(
+                          'Kıyamet Sonrası Kategorisi Müziği',
+                          'Trevor Lentz - The Void',
+                          'Kıyamet Senaryosu',
+                        ),
+
+                        SizedBox(
+                          height:
+                              screenHeight *
+                              2.0, // Daha fazla boşluk - yazılar tamamen kaybolsun
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                AnimatedBuilder(
+                  animation: Listenable.merge([_scaleAnimation, _glowAnimation]),
+                  builder: (context, child) {
+                    if (_finalAnimationController.isAnimating ||
+                        _finalAnimationController.isCompleted) {
+                      return Center(
+                        child: Transform.scale(
+                          scale: _scaleAnimation.value,
+                          child: Opacity(
+                            opacity: _scaleAnimation.value.clamp(0.0, 1.0),
+                            child: Transform.translate(
+                              // Uzaktan gelme efekti için Y ekseninde hareket
+                              offset: Offset(0, (1 - _scaleAnimation.value) * 100),
+                              child: child,
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        '© 2025 Ali Talip Gençtürk',
-                        style: GoogleFonts.sourceSans3(
-                          fontSize: 14,
-                          color: Colors.grey.shade500,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      _buildGlowingTitle('Sezyon', _glowAnimation.value),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 20),
 
-                      Text(
-                        _languageService.getLocalizedText(
-                          'Tüm hakları saklıdır',
-                          'All rights reserved',
+                      // Alt yazılar da aynı animasyonla gelsin
+                      AnimatedBuilder(
+                        animation: _scaleAnimation,
+                        builder: (context, child) {
+                          return Opacity(
+                            opacity: (_scaleAnimation.value - 0.3).clamp(
+                              0.0,
+                              1.0,
+                            ), // Biraz gecikmeli görünüm
+                            child: child,
+                          );
+                        },
+                        child: Column(
+                          children: [
+                            Text(
+                              '© 2025 Ali Talip Gençtürk',
+                              style: GoogleFonts.sourceSans3(
+                                fontSize: 14,
+                                color: Colors.grey.shade500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            Text(
+                              _languageService.getLocalizedText(
+                                'Tüm hakları saklıdır',
+                                'All rights reserved',
+                              ),
+                              style: GoogleFonts.sourceSans3(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
-                        style: GoogleFonts.sourceSans3(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
-                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 ),
               ],
             ),
+          ),
+
+          // Alt banner reklam
+          const BannerAdWidget(
+            height: 50,
+            margin: EdgeInsets.only(bottom: 8),
           ),
         ],
       ),

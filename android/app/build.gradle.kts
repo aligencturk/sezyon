@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.example.sezyon.sezyon"
+    namespace = "com.rivorya.sezyon"
     // Google Play Games için minimum compile SDK 34
     compileSdk = 34
     ndkVersion = "27.0.12077973"
@@ -31,7 +31,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.sezyon.sezyon"
+        applicationId = "com.rivorya.sezyon"
         // Google Play Games için minimum SDK 21 (Android 5.0)
         minSdk = 21
         // Google Play Games için önerilen target SDK

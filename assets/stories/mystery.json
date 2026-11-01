@@ -1,0 +1,39 @@
+{
+  "start": "intro",
+  "nodes": {
+    "intro": {
+      "text": {
+        "tr": "Sisli sokakta bir fener titriyor. {name}, cinayet mahallinde garip bir not buldun.",
+        "en": "A lantern flickers in the foggy street. {name}, you found a strange note at the crime scene."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Notu takip et",
+            "en": "Follow the note"
+          },
+          "next": "end_a"
+        },
+        {
+          "text": {
+            "tr": "Şüpheliyi sorgula",
+            "en": "Question the suspect"
+          },
+          "next": "end_b"
+        }
+      ]
+    },
+    "end_a": {
+      "text": {
+        "tr": "Not seni eski bir kütüphaneye götürdü ve gerçek katili buldun.",
+        "en": "The note led you to an old library and you found the real killer."
+      }
+    },
+    "end_b": {
+      "text": {
+        "tr": "Sorguda şüpheli çöktü ve her şeyi itiraf etti. Dava kapandı.",
+        "en": "The suspect broke down under questioning and confessed everything. Case closed."
+      }
+    }
+  }
+}

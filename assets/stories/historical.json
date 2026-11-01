@@ -1,0 +1,39 @@
+{
+  "start": "intro",
+  "nodes": {
+    "intro": {
+      "text": {
+        "tr": "Şehir kapıları kapanmak üzere. {name}, elçi sana mühürlü bir mektup uzatıyor.",
+        "en": "The city gates are about to close. {name}, the envoy hands you a sealed letter."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Mektubu teslim et",
+            "en": "Deliver the letter"
+          },
+          "next": "end_a"
+        },
+        {
+          "text": {
+            "tr": "Mektubu aç",
+            "en": "Open the letter"
+          },
+          "next": "end_b"
+        }
+      ]
+    },
+    "end_a": {
+      "text": {
+        "tr": "Mektubu zamanında teslim ettin ve savaş önlendi. Tarih seni hatırlayacak.",
+        "en": "You delivered the letter in time and war was averted. History will remember you."
+      }
+    },
+    "end_b": {
+      "text": {
+        "tr": "Mektubu açtın ve bir ihanet ortaya çıkardın. Tarihin akışı değişti.",
+        "en": "You opened the letter and exposed a betrayal. The course of history changed."
+      }
+    }
+  }
+}

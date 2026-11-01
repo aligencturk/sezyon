@@ -120,9 +120,6 @@ class LanguageService {
     'Continuing your story...',
   );
 
-  String get aiThinking =>
-      getLocalizedText('AI düşünüyor...', 'AI is thinking...');
-
   String get inputHint =>
       getLocalizedText('Ne yapmak istiyorsunuz?', 'What would you like to do?');
 

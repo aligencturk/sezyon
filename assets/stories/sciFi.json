@@ -1,0 +1,39 @@
+{
+  "start": "intro",
+  "nodes": {
+    "intro": {
+      "text": {
+        "tr": "Gemi alarm veriyor. {name}, bilinmeyen bir sinyal ana bilgisayarı kilitledi.",
+        "en": "The ship's alarm is blaring. {name}, an unknown signal has locked the main computer."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Sinyali takip et",
+            "en": "Follow the signal"
+          },
+          "next": "end_a"
+        },
+        {
+          "text": {
+            "tr": "Sinyali kes",
+            "en": "Cut the signal"
+          },
+          "next": "end_b"
+        }
+      ]
+    },
+    "end_a": {
+      "text": {
+        "tr": "Sinyal seni kadim bir istasyona götürdü. Yıldızların ötesindeki sır artık senin.",
+        "en": "The signal led you to an ancient station. The secret beyond the stars is now yours."
+      }
+    },
+    "end_b": {
+      "text": {
+        "tr": "Sinyali kestin, gemi güvende ama merak içini kemirmeye devam ediyor.",
+        "en": "You cut the signal. The ship is safe, but curiosity keeps gnawing at you."
+      }
+    }
+  }
+}

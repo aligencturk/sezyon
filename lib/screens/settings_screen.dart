@@ -364,12 +364,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Column(
         children: [
           _buildInfoItem(
-            Icons.smart_toy,
-            _languageService.getLocalizedText('AI Modeli', 'AI Model'),
-            'Gemini 2.0 Flash',
-          ),
-          const Divider(height: 30),
-          _buildInfoItem(
             Icons.developer_mode,
             _languageService.getLocalizedText('Geliştirici', 'Developer'),
             'Ali Genç Türk',

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/game_category.dart';
 import '../services/language_service.dart';
-import 'story_screen_new.dart';
+import 'story_screen.dart';
 import '../widgets/banner_ad_widget.dart';
 
 class CharacterNameScreen extends StatefulWidget {
@@ -65,7 +65,7 @@ class _CharacterNameScreenState extends State<CharacterNameScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => StoryScreenNew(
+        builder: (context) => StoryScreen(
           category: widget.category,
           characterName: characterName,
         ),

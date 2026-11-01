@@ -1,0 +1,39 @@
+{
+  "start": "intro",
+  "nodes": {
+    "intro": {
+      "text": {
+        "tr": "Ejderha gölgesi köyün üzerinden geçti. {name}, yaşlı büyücü seni çağırıyor.",
+        "en": "A dragon's shadow passes over the village. {name}, the old wizard calls for you."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Mağaraya git",
+            "en": "Go to the cave"
+          },
+          "next": "end_a"
+        },
+        {
+          "text": {
+            "tr": "Köyü savun",
+            "en": "Defend the village"
+          },
+          "next": "end_b"
+        }
+      ]
+    },
+    "end_a": {
+      "text": {
+        "tr": "Mağarada ejderhayla anlaştın. Efsanen krallıkta anlatılacak.",
+        "en": "In the cave you struck a deal with the dragon. Your legend will be told across the kingdom."
+      }
+    },
+    "end_b": {
+      "text": {
+        "tr": "Köylülerle birlikte surları tuttun. Ejderha geri çekildi, ama geri dönecek.",
+        "en": "You held the walls with the villagers. The dragon retreated, but it will return."
+      }
+    }
+  }
+}

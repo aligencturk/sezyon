@@ -2,19 +2,24 @@ import 'dart:async';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:sezyon/models/game_category.dart';
-import 'package:sezyon/models/message.dart';
-import 'package:sezyon/services/chatgpt_service.dart';
-import 'package:sezyon/services/language_service.dart';
-import 'package:sezyon/services/logger_service.dart';
-import 'package:sezyon/services/audio_service.dart';
-import 'package:sezyon/services/user_service.dart';
-import 'package:sezyon/widgets/google_play_games_widget.dart';
+import '../models/game_category.dart';
+import '../models/message.dart';
+import '../models/story_node.dart';
+import '../services/story_service.dart';
+import '../services/language_service.dart';
+import '../services/logger_service.dart';
+import '../services/audio_service.dart';
+import '../widgets/banner_ad_widget.dart';
 
 class StoryScreen extends StatefulWidget {
   final GameCategory category;
+  final String characterName;
 
-  const StoryScreen({super.key, required this.category});
+  const StoryScreen({
+    super.key,
+    required this.category,
+    required this.characterName,
+  });
 
   @override
   State<StoryScreen> createState() => _StoryScreenState();
@@ -23,79 +28,70 @@ class StoryScreen extends StatefulWidget {
 class _StoryScreenState extends State<StoryScreen> {
   final List<Message> _messages = [];
   final _scrollController = ScrollController();
-  final _textController = TextEditingController();
-  final _focusNode = FocusNode();
-  final _chatgptService = ChatGPTService();
+  final _storyService = StoryService();
   late final LanguageService _languageService;
   late final LoggerService _logger;
   final AudioService _audioService = AudioService();
-  final UserService _userService = UserService();
 
   bool _isLoading = true;
-  bool _isWaitingForApiResponse = false;
   bool _isStoryEnded = false;
-
-  String? _storySummary;
-  double _musicVolume = 0.5;
-  double _soundVolume = 0.7;
-  bool _isMusicEnabled = true;
-  bool _isSoundEnabled = true;
+  StoryNode? _currentNode;
+  final List<String> _chosenTexts = [];
+  int _turnCount = 0;
 
   @override
   void initState() {
     super.initState();
     _languageService = LanguageService();
     _logger = LoggerService();
-    _loadAudioSettings();
     _startGame();
-  }
-
-  void _loadAudioSettings() {
-    _musicVolume = _audioService.musicVolume;
-    _soundVolume = _audioService.soundVolume;
-    _isMusicEnabled = _audioService.isMusicEnabled;
-    _isSoundEnabled = _audioService.isSoundEnabled;
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _textController.dispose();
-    _focusNode.dispose();
     _audioService.reset();
     super.dispose();
   }
+
+  String _text(Map<String, String> text) =>
+      _storyService.localize(text, widget.characterName);
 
   Future<void> _startGame() async {
     setState(() {
       _isLoading = true;
     });
-    _logger.gameEvent('Oyun başlatılıyor', {'category': widget.category.name});
+
+    _logger.gameEvent('Hikaye başlatılıyor', {
+      'category': widget.category.name,
+      'characterName': widget.characterName,
+    });
 
     // Kategori bazlı müziğe geç
     await _audioService.playCategoryMusic(widget.category.key);
 
     try {
-      final initialPrompt = widget.category.getInitialPrompt();
-      final initialStory = await _chatgptService.generateContent(initialPrompt);
-
-      final firstMessage = Message(
-        text: initialStory,
-        isUser: false,
-        storyPhase: StoryPhase.introduction,
-        isStoryEnd: false,
-        isAnimated: false,
-      );
+      await _storyService.load(widget.category);
+      final node = _storyService.start;
 
       if (mounted) {
         setState(() {
-          _messages.add(firstMessage);
+          _currentNode = node;
+          _messages.add(
+            Message(
+              text: _text(node.text),
+              isUser: false,
+              storyPhase: StoryPhase.introduction,
+              isAnimated: false,
+            ),
+          );
+          _isStoryEnded = node.isEnd;
           _isLoading = false;
+          _turnCount = 1;
         });
       }
-      _logger.gameEvent('İlk hikaye alındı');
     } catch (e, stackTrace) {
-      _logger.error('Oyun başlatılamadı', e, stackTrace);
+      _logger.error('Hikaye yüklenemedi', e, stackTrace);
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -105,112 +101,54 @@ class _StoryScreenState extends State<StoryScreen> {
     }
   }
 
-  Future<void> _sendMessage() async {
-    final userInput = _textController.text.trim();
-    if (userInput.isEmpty || _isWaitingForApiResponse) return;
-
-    _logger.gameEvent('Kullanıcı mesaj gönderdi', {'message': userInput});
-
-    // Kullanıcı mesajını ekle
-    final userMessage = Message(
-      text: userInput,
-      isUser: true,
-      isAnimated: true,
-    );
-
-    setState(() {
-      _messages.insert(0, userMessage);
-      _isWaitingForApiResponse = true;
+  void _choose(StoryChoice choice) {
+    final choiceText = _text(choice.text);
+    _logger.gameEvent('Seçim yapıldı', {
+      'choice': choiceText,
+      'turnCount': _turnCount,
     });
 
-    // Text field'ı temizle
-    _textController.clear();
+    final next = _storyService.node(choice.next);
+    _chosenTexts.add(choiceText);
 
-    // Scroll'u en üste taşı
+    setState(() {
+      _messages.insert(0, Message(text: choiceText, isUser: true, isAnimated: true));
+      _messages.insert(
+        0,
+        Message(
+          text: _text(next.text),
+          isUser: false,
+          storyPhase: next.isEnd ? StoryPhase.conclusion : StoryPhase.development,
+          isStoryEnd: next.isEnd,
+          isAnimated: false,
+        ),
+      );
+      _currentNode = next;
+      _isStoryEnded = next.isEnd;
+      _turnCount++;
+    });
+
     _scrollController.animateTo(
       0.0,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
-
-    try {
-      // Mesaj geçmişini hazırla
-      final history = _messages
-          .where((m) => m.isAnimated)
-          .map((m) => "${m.isUser ? 'Player' : 'AI'}: ${m.text}")
-          .toList()
-          .reversed
-          .toList();
-
-      // Mevcut hikaye aşamasını belirle
-      final currentPhase = widget.category.determineStoryPhase(history);
-
-      // API çağrısı yap
-      final response = await _chatgptService.generateContentWithHistory(
-        userInput,
-        history,
-      );
-
-      // Hikayenin sonlanıp sonlanmadığını kontrol et
-      final shouldEnd = widget.category.shouldEndStory(history, response);
-
-      if (shouldEnd) {
-        _isStoryEnded = true;
-
-        // Hikaye tamamlandığında bulut kayıt yap
-        await _saveStoryCompletion();
-
-        // Hikaye özeti üret
-        try {
-          final summaryPrompt = widget.category.getStorySummaryPrompt(
-            history,
-            _languageService.isTurkish,
-          );
-          _storySummary = await _chatgptService.generateStorySummary(
-            summaryPrompt,
-          );
-        } catch (e) {
-          _storySummary = _languageService.getLocalizedText(
-            'Hikayeniz tamamlandı! Maceranız boyunca verdiğiniz kararlar sizi bu noktaya getirdi.',
-            'Your story is complete! The decisions you made throughout your adventure brought you to this point.',
-          );
-        }
-      }
-
-      final aiMessage = Message(
-        text: response,
-        isUser: false,
-        storyPhase: currentPhase,
-        isStoryEnd: shouldEnd,
-        isAnimated: false,
-      );
-
-      if (mounted) {
-        setState(() {
-          _isWaitingForApiResponse = false;
-          _messages.insert(0, aiMessage);
-        });
-      }
-
-      _logger.info('Yapay zeka yanıtı alındı');
-    } catch (e, stackTrace) {
-      _logger.error('Yapay zeka yanıtı alınamadı', e, stackTrace);
-      if (mounted) {
-        setState(() {
-          _isWaitingForApiResponse = false;
-        });
-        _showErrorDialog(e.toString());
-      }
-    }
   }
+
+  String get _storySummary => _languageService.getLocalizedText(
+    '${widget.characterName}\'in hikayesi tamamlandı! Verdiğin kararlar: ${_chosenTexts.join(', ')}.',
+    '${widget.characterName}\'s story is complete! Your decisions: ${_chosenTexts.join(', ')}.',
+  );
 
   void _restartGame() {
     _logger.gameEvent('Oyun yeniden başlatılıyor');
     setState(() {
       _messages.clear();
+      _chosenTexts.clear();
+      _currentNode = null;
       _isLoading = true;
       _isStoryEnded = false;
-      _storySummary = null;
+      _turnCount = 0;
     });
     _startGame();
   }
@@ -254,118 +192,6 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
 
-  void _showAudioSettingsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Row(
-            children: [
-              const Icon(Icons.volume_up, color: Colors.blue),
-              const SizedBox(width: 8),
-              Text(_languageService.audioSettings),
-            ],
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Müzik ayarları
-                Row(
-                  children: [
-                    Icon(
-                      _isMusicEnabled ? Icons.music_note : Icons.music_off,
-                      color: _isMusicEnabled ? Colors.green : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _languageService.musicVolume,
-                        style: GoogleFonts.sourceSans3(fontSize: 16),
-                      ),
-                    ),
-                    Switch(
-                      value: _isMusicEnabled,
-                      onChanged: (value) {
-                        setDialogState(() {
-                          _isMusicEnabled = value;
-                        });
-                        _audioService.toggleMusic();
-                      },
-                    ),
-                  ],
-                ),
-                if (_isMusicEnabled) ...[
-                  Slider(
-                    value: _musicVolume,
-                    min: 0.0,
-                    max: 1.0,
-                    divisions: 10,
-                    label: '${(_musicVolume * 100).round()}%',
-                    onChanged: (value) {
-                      setDialogState(() {
-                        _musicVolume = value;
-                      });
-                      _audioService.setMusicVolume(value);
-                    },
-                  ),
-                ],
-                const SizedBox(height: 16),
-                // Ses efektleri ayarları
-                Row(
-                  children: [
-                    Icon(
-                      _isSoundEnabled ? Icons.volume_up : Icons.volume_off,
-                      color: _isSoundEnabled ? Colors.green : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _languageService.soundEffectsVolume,
-                        style: GoogleFonts.sourceSans3(fontSize: 16),
-                      ),
-                    ),
-                    Switch(
-                      value: _isSoundEnabled,
-                      onChanged: (value) {
-                        setDialogState(() {
-                          _isSoundEnabled = value;
-                        });
-                        _audioService.toggleSound();
-                      },
-                    ),
-                  ],
-                ),
-                if (_isSoundEnabled) ...[
-                  Slider(
-                    value: _soundVolume,
-                    min: 0.0,
-                    max: 1.0,
-                    divisions: 10,
-                    label: '${(_soundVolume * 100).round()}%',
-                    onChanged: (value) {
-                      setDialogState(() {
-                        _soundVolume = value;
-                      });
-                      _audioService.setSoundVolume(value);
-                    },
-                  ),
-                ],
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(_languageService.ok),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   void _showStorySummary() {
     showDialog(
       context: context,
@@ -381,8 +207,8 @@ class _StoryScreenState extends State<StoryScreen> {
             const SizedBox(width: 8),
             Text(
               _languageService.getLocalizedText(
-                'Hikaye Özeti',
-                'Story Summary',
+                '${widget.characterName}\'in Hikayesi',
+                '${widget.characterName}\'s Story',
               ),
               style: GoogleFonts.merriweather(
                 color: Colors.amber,
@@ -395,11 +221,7 @@ class _StoryScreenState extends State<StoryScreen> {
           width: double.maxFinite,
           child: SingleChildScrollView(
             child: Text(
-              _storySummary ??
-                  _languageService.getLocalizedText(
-                    'Hikaye özeti yükleniyor...',
-                    'Story summary loading...',
-                  ),
+              _storySummary,
               style: GoogleFonts.sourceSans3(
                 fontSize: 16,
                 color: Colors.white,
@@ -421,210 +243,30 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
 
-  /// Hikaye tamamlandığında bulut kayıt yap
-  Future<void> _saveStoryCompletion() async {
-    try {
-      final storyId =
-          '${widget.category.key}_${DateTime.now().millisecondsSinceEpoch}';
-
-      // Tamamlanan hikayeyi kaydet
-      _userService.cloudSave.addCompletedStory(storyId);
-
-      // Kategoriyi favorilere ekle
-      _userService.cloudSave.addFavoriteCategory(widget.category.key);
-
-      // Seçim sayısını güncelle (mesaj sayısının yarısı kadar seçim yapılmış)
-      final choiceCount = (_messages.length / 2).round();
-      for (int i = 0; i < choiceCount; i++) {
-        _userService.cloudSave.incrementChoicesMade();
-      }
-
-      // Oyun süresini güncelle (yaklaşık hesaplama)
-      final playTimeMinutes = (_messages.length * 2); // Her mesaj ~2 dakika
-      _userService.cloudSave.updatePlayTime(playTimeMinutes * 60);
-
-      // Google Play Games başarımları
-      await GameIntegration.onStoryCompleted(widget.category.key);
-
-      // Toplam hikaye sayısını liderlik tablosuna gönder
-      final gameData = _userService.cloudSave.gameData;
-      final totalStories = List<String>.from(
-        gameData['completedStories'] ?? [],
-      ).length;
-      await GameIntegration.updateStoryCount(totalStories);
-
-      // Başarımları kontrol et ve kilitle
-      await _checkAndUnlockAchievements();
-
-      _logger.info('Hikaye tamamlanma verisi kaydedildi: $storyId');
-    } catch (e) {
-      _logger.error('Hikaye kaydetme hatası', e);
-    }
-  }
-
-  /// Başarımları kontrol et ve kilitle
-  Future<void> _checkAndUnlockAchievements() async {
-    final gameData = _userService.cloudSave.gameData;
-    final completedStories = List<String>.from(
-      gameData['completedStories'] ?? [],
-    );
-    final totalChoices = gameData['statistics']['totalChoicesMade'] ?? 0;
-    final playTime = gameData['totalPlayTime'] ?? 0;
-
-    // İlk hikaye başarımı
-    if (completedStories.length == 1) {
-      await _userService.unlockAchievement('first_story_completed');
-      _showAchievementUnlocked('İlk Hikaye', 'İlk hikayenizi tamamladınız!');
-    }
-
-    // 5 hikaye başarımı
-    if (completedStories.length == 5) {
-      await _userService.unlockAchievement('five_stories_completed');
-      _showAchievementUnlocked('Hikaye Ustası', '5 hikaye tamamladınız!');
-    }
-
-    // 10 hikaye başarımı
-    if (completedStories.length == 10) {
-      await _userService.unlockAchievement('ten_stories_completed');
-      _showAchievementUnlocked('Efsane Anlatıcı', '10 hikaye tamamladınız!');
-    }
-
-    // Çok seçim yapma başarımı
-    if (totalChoices >= 100) {
-      await _userService.unlockAchievement('hundred_choices_made');
-      _showAchievementUnlocked('Karar Verici', '100 seçim yaptınız!');
-    }
-
-    // Uzun oyun süresi başarımı (1 saat)
-    if (playTime >= 3600) {
-      await _userService.unlockAchievement('one_hour_played');
-      _showAchievementUnlocked('Zaman Yolcusu', '1 saat oynadınız!');
-    }
-
-    // Kategori bazlı başarımlar
-    final categoryKey = widget.category.key;
-    final categoryStories = completedStories
-        .where((id) => id.startsWith(categoryKey))
-        .length;
-
-    if (categoryStories >= 3) {
-      await _userService.unlockAchievement('${categoryKey}_specialist');
-      _showAchievementUnlocked(
-        '${widget.category.name} Uzmanı',
-        'Bu kategoride 3 hikaye tamamladınız!',
-      );
-    }
-  }
-
-  /// Başarım kilitleme bildirimi göster
-  void _showAchievementUnlocked(String title, String description) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.emoji_events, color: Colors.amber),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.amber,
-                    ),
-                  ),
-                  Text(description, style: const TextStyle(fontSize: 12)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.black87,
-        duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-          side: const BorderSide(color: Colors.amber, width: 1),
-        ),
-      ),
-    );
-  }
-
-  void _startEpilogue() async {
-    setState(() {
-      _isLoading = true;
-      _isStoryEnded = false;
-    });
-
-    try {
-      final history = _messages
-          .where((m) => m.isAnimated)
-          .map((m) => "${m.isUser ? 'Player' : 'AI'}: ${m.text}")
-          .toList()
-          .reversed
-          .toList();
-
-      final epiloguePrompt = widget.category.getEpiloguePrompt(
-        history,
-        _languageService.isTurkish,
-      );
-
-      final epilogueContent = await _chatgptService.generateEpilogue(
-        epiloguePrompt,
-      );
-
-      final epilogueMessage = Message(
-        text: epilogueContent,
-        isUser: false,
-        storyPhase: StoryPhase.epilogue,
-        isStoryEnd: false,
-        isEpilogue: true,
-        isAnimated: false,
-      );
-
-      if (mounted) {
-        setState(() {
-          _messages.clear();
-          _messages.add(epilogueMessage);
-          _isLoading = false;
-        });
-      }
-
-      _logger.gameEvent('Epilog başlatıldı');
-    } catch (e, stackTrace) {
-      _logger.error('Epilog başlatılamadı', e, stackTrace);
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _isStoryEnded = true;
-        });
-        _showErrorDialog(e.toString());
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(
-          _languageService.getAdventureTitle(widget.category.key),
-          style: GoogleFonts.merriweather(fontSize: 20),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.characterName,
+              style: GoogleFonts.merriweather(fontSize: 18),
+            ),
+            Text(
+              '${_languageService.getLocalizedText('Tur', 'Turn')} $_turnCount',
+              style: GoogleFonts.sourceSans3(
+                fontSize: 12,
+                color: Colors.white70,
+              ),
+            ),
+          ],
         ),
         backgroundColor: Colors.black.withValues(alpha: 0.3),
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.volume_up),
-            onPressed: _showAudioSettingsDialog,
-            tooltip: _languageService.audioSettings,
-          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _messages.isNotEmpty && !_isLoading
@@ -634,45 +276,56 @@ class _StoryScreenState extends State<StoryScreen> {
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          // Arka plan
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.8),
-                  Colors.black.withValues(alpha: 0.6),
-                  Colors.black.withValues(alpha: 0.8),
-                ],
-              ),
-            ),
-          ),
           // Ana içerik
-          Column(
-            children: [
-              Expanded(
-                child: _isLoading && _messages.isEmpty
-                    ? const SizedBox.shrink()
-                    : _buildMessageList(),
-              ),
-              if (_isWaitingForApiResponse) _buildTypingIndicator(),
-              if (_isStoryEnded) _buildStoryEndButtons() else _buildInputArea(),
-            ],
-          ),
-          // Yükleme göstergesi
-          AnimatedOpacity(
-            opacity: _isLoading ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 800),
-            child: IgnorePointer(
-              ignoring: !_isLoading,
-              child: Container(
-                color: Colors.black,
-                child: Center(child: _buildLoadingIndicator()),
-              ),
+          Expanded(
+            child: Stack(
+              children: [
+                // Arka plan
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.8),
+                        Colors.black.withValues(alpha: 0.6),
+                        Colors.black.withValues(alpha: 0.8),
+                      ],
+                    ),
+                  ),
+                ),
+                // Ana içerik
+                Column(
+                  children: [
+                    Expanded(
+                      child: _isLoading && _messages.isEmpty
+                          ? const SizedBox.shrink()
+                          : _buildMessageList(),
+                    ),
+                    if (_isStoryEnded) _buildStoryEndButtons() else _buildChoices(),
+                  ],
+                ),
+                // Yükleme göstergesi
+                AnimatedOpacity(
+                  opacity: _isLoading ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 800),
+                  child: IgnorePointer(
+                    ignoring: !_isLoading,
+                    child: Container(
+                      color: Colors.black,
+                      child: Center(child: _buildLoadingIndicator()),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          ),
+          // Alt banner reklam
+          const BannerAdWidget(
+            height: 50,
+            margin: EdgeInsets.only(bottom: 8),
           ),
         ],
       ),
@@ -681,19 +334,35 @@ class _StoryScreenState extends State<StoryScreen> {
 
   Widget _buildLoadingIndicator() {
     return Center(
-      child: AnimatedTextKit(
-        animatedTexts: [
-          TyperAnimatedText(
-            _languageService.storyLoading,
-            textStyle: GoogleFonts.sourceSans3(
-              fontSize: 18,
-              color: Colors.white.withValues(alpha: 0.8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnimatedTextKit(
+            animatedTexts: [
+              TyperAnimatedText(
+                _languageService.getLocalizedText(
+                  '${widget.characterName} için hikaye hazırlanıyor...',
+                  'Preparing story for ${widget.characterName}...',
+                ),
+                textStyle: GoogleFonts.sourceSans3(
+                  fontSize: 18,
+                  color: Colors.white.withValues(alpha: 0.8),
+                ),
+                speed: const Duration(milliseconds: 100),
+              ),
+            ],
+            isRepeatingAnimation: true,
+            repeatForever: true,
+          ),
+          const SizedBox(height: 20),
+          Text(
+            widget.category.displayName,
+            style: GoogleFonts.merriweather(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            speed: const Duration(milliseconds: 100),
           ),
         ],
-        isRepeatingAnimation: true,
-        repeatForever: true,
       ),
     );
   }
@@ -703,7 +372,7 @@ class _StoryScreenState extends State<StoryScreen> {
       reverse: true,
       padding: EdgeInsets.fromLTRB(
         10,
-        MediaQuery.of(context).padding.top + 60,
+        MediaQuery.of(context).padding.top + 80,
         10,
         10,
       ),
@@ -716,55 +385,6 @@ class _StoryScreenState extends State<StoryScreen> {
     );
   }
 
-  Widget _buildTypingIndicator() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.purple.withValues(alpha: 0.3),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.computer,
-                  color: Colors.purple.withValues(alpha: 0.8),
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                AnimatedTextKit(
-                  animatedTexts: [
-                    TyperAnimatedText(
-                      _languageService.storyContinuing,
-                      textStyle: GoogleFonts.sourceSans3(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      speed: const Duration(milliseconds: 80),
-                    ),
-                  ],
-                  isRepeatingAnimation: true,
-                  repeatForever: true,
-                  pause: const Duration(milliseconds: 1000),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMessageBubble(Message message) {
     final isUserMessage = message.isUser;
     final alignment = isUserMessage
@@ -774,7 +394,7 @@ class _StoryScreenState extends State<StoryScreen> {
         ? Theme.of(context).colorScheme.primary
         : Theme.of(context).colorScheme.secondary.withValues(alpha: 0.6);
 
-    // AI mesajları için animasyonlu metin
+    // Hikaye mesajları için animasyonlu metin
     if (!isUserMessage && !message.isAnimated) {
       message.isAnimated = true;
       return Container(
@@ -784,7 +404,7 @@ class _StoryScreenState extends State<StoryScreen> {
           alignment: alignment,
           child: Container(
             constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.8,
+              maxWidth: MediaQuery.of(context).size.width * 0.85,
             ),
             padding: const EdgeInsets.symmetric(
               vertical: 12.0,
@@ -801,6 +421,7 @@ class _StoryScreenState extends State<StoryScreen> {
                   textStyle: GoogleFonts.sourceSans3(
                     color: Colors.white,
                     fontSize: 16,
+                    height: 1.4,
                   ),
                   speed: const Duration(milliseconds: 30),
                 ),
@@ -827,7 +448,7 @@ class _StoryScreenState extends State<StoryScreen> {
         alignment: alignment,
         child: Container(
           constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.8,
+            maxWidth: MediaQuery.of(context).size.width * 0.85,
           ),
           padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 18.0),
           decoration: BoxDecoration(
@@ -836,18 +457,23 @@ class _StoryScreenState extends State<StoryScreen> {
           ),
           child: Text(
             message.text,
-            style: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16),
+            style: GoogleFonts.sourceSans3(
+              color: Colors.white,
+              fontSize: 16,
+              height: 1.4,
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildInputArea() {
+  Widget _buildChoices() {
+    final choices = _currentNode?.choices ?? const <StoryChoice>[];
     return Container(
       padding: EdgeInsets.fromLTRB(
         16.0,
-        8.0,
+        12.0,
         16.0,
         MediaQuery.of(context).padding.bottom + 8.0,
       ),
@@ -861,66 +487,35 @@ class _StoryScreenState extends State<StoryScreen> {
           top: BorderSide(color: Colors.white.withValues(alpha: 0.1), width: 1),
         ),
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: TextField(
-              controller: _textController,
-              focusNode: _focusNode,
-              enabled: !_isWaitingForApiResponse,
-              maxLines: null,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => _sendMessage(),
-              style: GoogleFonts.sourceSans3(color: Colors.white, fontSize: 16),
-              decoration: InputDecoration(
-                hintText: _languageService.getLocalizedText(
-                  'Ne yapmak istiyorsun?',
-                  'What do you want to do?',
-                ),
-                hintStyle: GoogleFonts.sourceSans3(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 16,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.3),
+          for (final choice in choices)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8.0),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _choose(choice),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: Text(
+                    _text(choice.text),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.sourceSans3(fontSize: 16),
                   ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(
-                    color: Colors.white.withValues(alpha: 0.3),
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 2,
-                  ),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                filled: true,
-                fillColor: Colors.black.withValues(alpha: 0.4),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: IconButton(
-              onPressed: _isWaitingForApiResponse ? null : _sendMessage,
-              icon: const Icon(Icons.send, color: Colors.white, size: 20),
-              tooltip: _languageService.getLocalizedText('Gönder', 'Send'),
-            ),
-          ),
         ],
       ),
     );
@@ -959,9 +554,12 @@ class _StoryScreenState extends State<StoryScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      _languageService.storyCompleted,
+                      _languageService.getLocalizedText(
+                        '${widget.characterName}\'in hikayesi tamamlandı!',
+                        '${widget.characterName}\'s story is complete!',
+                      ),
                       style: GoogleFonts.merriweather(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.amber,
                       ),
@@ -1001,16 +599,6 @@ class _StoryScreenState extends State<StoryScreen> {
                     side: BorderSide(
                       color: Colors.amber.withValues(alpha: 0.5),
                     ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _startEpilogue,
-                  icon: const Icon(Icons.play_arrow),
-                  label: Text(
-                    _languageService.getLocalizedText('Epilog', 'Epilogue'),
                   ),
                 ),
               ),

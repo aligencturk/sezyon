@@ -1,0 +1,39 @@
+{
+  "start": "intro",
+  "nodes": {
+    "intro": {
+      "text": {
+        "tr": "Dünyanın yıkıntıları arasında su azalıyor. {name}, haritada işaretli bir sığınak var.",
+        "en": "Water is running low in the ruins of the world. {name}, there is a marked shelter on the map."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Sığınağa git",
+            "en": "Head to the shelter"
+          },
+          "next": "end_a"
+        },
+        {
+          "text": {
+            "tr": "Yağmacıları atlat",
+            "en": "Evade the raiders"
+          },
+          "next": "end_b"
+        }
+      ]
+    },
+    "end_a": {
+      "text": {
+        "tr": "Sığınağa ulaştın. İçeride diğer hayatta kalanlar seni bekliyordu.",
+        "en": "You reached the shelter. Other survivors were waiting inside."
+      }
+    },
+    "end_b": {
+      "text": {
+        "tr": "Yağmacıları atlattın ve su buldun. Yarın yine hayattasın.",
+        "en": "You evaded the raiders and found water. You live to see tomorrow."
+      }
+    }
+  }
+}

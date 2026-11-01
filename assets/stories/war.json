@@ -1,0 +1,39 @@
+{
+  "start": "intro",
+  "nodes": {
+    "intro": {
+      "text": {
+        "tr": "Siper çamurla dolu, uzaktan top sesleri geliyor. {name}, komutan sana yeni bir görev veriyor.",
+        "en": "The trench is full of mud and cannon fire rumbles in the distance. {name}, the commander gives you a new mission."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Gece baskınına katıl",
+            "en": "Join the night raid"
+          },
+          "next": "end_a"
+        },
+        {
+          "text": {
+            "tr": "Siperde kal ve nöbet tut",
+            "en": "Hold the trench"
+          },
+          "next": "end_b"
+        }
+      ]
+    },
+    "end_a": {
+      "text": {
+        "tr": "Karanlıkta ilerledin ve düşman cephaneliğini ele geçirdin. Cephe senin sayende nefes aldı.",
+        "en": "You advanced in the dark and seized the enemy depot. The front line breathes thanks to you."
+      }
+    },
+    "end_b": {
+      "text": {
+        "tr": "Nöbette kaldın, sabaha kadar saldırıyı püskürttün. Zafer küçük ama değerli.",
+        "en": "You held the trench and repelled the assault until dawn. A small but precious victory."
+      }
+    }
+  }
+}

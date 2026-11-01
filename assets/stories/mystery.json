@@ -3,36 +3,158 @@
   "nodes": {
     "intro": {
       "text": {
-        "tr": "Sisli sokakta bir fener titriyor. {name}, cinayet mahallinde garip bir not buldun.",
-        "en": "A lantern flickers in the foggy street. {name}, you found a strange note at the crime scene."
+        "tr": "Sis, Karasis'in eski çarşısını yutmuş. Antikacı Vural'ın dükkânında bir ceset, masada ise kan lekeli bir not var: 'Gece yarısı, eski kütüphane.' {name}, müfettiş yardımcısı olarak olay yerindesin.",
+        "en": "Fog has swallowed the old bazaar of Karasis. There is a body in the antique dealer Vural's shop, and a bloodstained note on the desk: 'Midnight, the old library.' {name}, you are at the scene as the inspector's assistant."
       },
       "choices": [
         {
           "text": {
-            "tr": "Notu takip et",
-            "en": "Follow the note"
+            "tr": "Notun peşinden eski kütüphaneye git",
+            "en": "Follow the note to the old library"
           },
-          "next": "end_a"
+          "next": "a1"
         },
         {
           "text": {
-            "tr": "Şüpheliyi sorgula",
-            "en": "Question the suspect"
+            "tr": "Vural'ın yardımcısı Defne'yi sorgula",
+            "en": "Question Vural's assistant, Defne"
           },
-          "next": "end_b"
+          "next": "b1"
         }
       ]
     },
-    "end_a": {
+    "a1": {
       "text": {
-        "tr": "Not seni eski bir kütüphaneye götürdü ve gerçek katili buldun.",
-        "en": "The note led you to an old library and you found the real killer."
+        "tr": "Kütüphane tozlu ve sessiz. Üçüncü rafta bir kitabın arkasında gizli bir çekmece buluyorsun: içinde bir anahtar ve Vural'ın günlüğünden yırtılmış bir sayfa var.",
+        "en": "The library is dusty and silent. Behind a book on the third shelf you find a hidden drawer containing a key and a page torn from Vural's diary."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Anahtarı dükkâna götür ve kilidi bul",
+            "en": "Take the key to the shop and find its lock"
+          },
+          "next": "a2"
+        },
+        {
+          "text": {
+            "tr": "Günlük sayfasını oku ve adı geçen kişiyi bul",
+            "en": "Read the diary page and track down the person it names"
+          },
+          "next": "m2"
+        }
+      ]
+    },
+    "b1": {
+      "text": {
+        "tr": "Defne titreyen elleriyle çay koyuyor. 'Vural son günlerde rakibi Ferit'ten korkuyordu,' diyor, 've bir şeyi kütüphanede sakladığını söylemişti.'",
+        "en": "Defne pours tea with trembling hands. 'Vural was afraid of his rival Ferit these past few days,' she says, 'and he told me he had hidden something in the library.'"
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Ferit'in atölyesine git",
+            "en": "Go to Ferit's workshop"
+          },
+          "next": "b2"
+        },
+        {
+          "text": {
+            "tr": "Kütüphanedeki saklı şeyi ara",
+            "en": "Search for what was hidden in the library"
+          },
+          "next": "m2"
+        }
+      ]
+    },
+    "a2": {
+      "text": {
+        "tr": "Anahtar, dükkânın bodrumundaki demir bir kasaya uyuyor. İçinde bir kaçakçılık defteri ve Defne'nin imzasını taşıyan bir sözleşme var.",
+        "en": "The key fits an iron safe in the shop's basement. Inside are a smuggling ledger and a contract bearing Defne's signature."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Defteri polise teslim et",
+            "en": "Hand the ledger over to the police"
+          },
+          "next": "end1"
+        },
+        {
+          "text": {
+            "tr": "Defteri Defne'ye göster",
+            "en": "Show the ledger to Defne"
+          },
+          "next": "end3"
+        }
+      ]
+    },
+    "m2": {
+      "text": {
+        "tr": "Elindeki günlük sayfası ve gizli çekmecedeki mektup tek isme işaret ediyor: Ferit. Vural onu kaçakçılık defteriyle tehdit etmiş, Ferit de gece yarısı kütüphanede buluşmayı kabul etmişti. Ama bir şey uymuyor: nottaki el yazısı Defne'nin yazısına benziyor.",
+        "en": "The diary page and the letter from the hidden drawer point to a single name: Ferit. Vural had threatened him with the smuggling ledger, and Ferit had agreed to meet at midnight in the library. But something is off: the handwriting on the note looks like Defne's."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Ferit'i tutuklat",
+            "en": "Have Ferit arrested"
+          },
+          "next": "end2"
+        },
+        {
+          "text": {
+            "tr": "Defne'yle yüzleş",
+            "en": "Confront Defne"
+          },
+          "next": "end3"
+        }
+      ]
+    },
+    "b2": {
+      "text": {
+        "tr": "Ferit'in atölyesi karanlık. Masasında yarım kalmış bir bavul ve şehir dışına bir bilet duruyor. Kapı aralık, içeriden biri geliyor.",
+        "en": "Ferit's workshop is dark. A half-packed suitcase and a ticket out of town sit on his desk. The door is ajar and someone is coming in."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Saklan ve ne olduğunu izle",
+            "en": "Hide and watch what happens"
+          },
+          "next": "end4"
+        },
+        {
+          "text": {
+            "tr": "Ortaya çık ve Ferit'i tutukla",
+            "en": "Step out and arrest Ferit"
+          },
+          "next": "end2"
+        }
+      ]
+    },
+    "end1": {
+      "text": {
+        "tr": "Defter polise teslim edildi ve kaçakçılık ağı çöktü. Vural'ı Ferit'in adamları öldürmüştü; dosya kapandı. Ama Karasis'in sisi hâlâ dağılmıyor.",
+        "en": "The ledger went to the police and the smuggling ring collapsed. Ferit's men had killed Vural, and the case was closed. But the fog over Karasis still refuses to lift."
       }
     },
-    "end_b": {
+    "end2": {
       "text": {
-        "tr": "Sorguda şüpheli çöktü ve her şeyi itiraf etti. Dava kapandı.",
-        "en": "The suspect broke down under questioning and confessed everything. Case closed."
+        "tr": "Ferit tutuklandı ve suçunu inkâr etti. Mahkemede kanıtlar yetmedi; gerçek katil hâlâ aranıyor. Doğru adamı yakalamış olabilirsin... ya da olmayabilirsin.",
+        "en": "Ferit was arrested and denied everything. The evidence fell short in court, and the real killer is still being sought. You may have caught the right man... or you may not have."
+      }
+    },
+    "end3": {
+      "text": {
+        "tr": "Defne gözyaşlarıyla itiraf etti: Vural onu kaçakçılığa zorluyordu ve bir gece kontrolünü kaybetmişti. Gerçek ortaya çıktı; adaletin yüzü bu kez acı.",
+        "en": "Defne confessed in tears: Vural had forced her into smuggling, and one night she lost control. The truth came out, and this time the face of justice is a bitter one."
+      }
+    },
+    "end4": {
+      "text": {
+        "tr": "Saklandığın yerden Ferit'in telefonda kiminle konuştuğunu duydun: şehrin belediye başkanı. Katilin kim olduğunu henüz bilmiyorsun, ama çok daha büyük bir şeyin ucundasın. Dava yeni başlıyor.",
+        "en": "From your hiding place you heard whom Ferit was speaking to on the phone: the mayor of the city. You still do not know who the killer is, but you are at the edge of something far bigger. The case is only beginning."
       }
     }
   }

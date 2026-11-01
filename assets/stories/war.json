@@ -3,36 +3,158 @@
   "nodes": {
     "intro": {
       "text": {
-        "tr": "Siper çamurla dolu, uzaktan top sesleri geliyor. {name}, komutan sana yeni bir görev veriyor.",
-        "en": "The trench is full of mud and cannon fire rumbles in the distance. {name}, the commander gives you a new mission."
+        "tr": "Kış şafağı. Siperin dibindeki çamur buz tutmuş, nehrin öte yakasından top sesleri geliyor. Yüzbaşı Aras seni yanına çağırıyor: 'Nehirdeki köprü bu cepheyi ayakta tutuyor, {name}. Düşman zırhlıları sabaha burada olur. Ya köprüyü tutarız ya da patlatırız.'",
+        "en": "Winter dawn. The mud at the bottom of the trench has frozen and cannon fire rumbles from across the river. Captain Aras calls you over: 'The bridge on the river holds this front together, {name}. Enemy armor will be here by morning. Either we hold the bridge or we blow it.'"
       },
       "choices": [
         {
           "text": {
-            "tr": "Gece baskınına katıl",
-            "en": "Join the night raid"
+            "tr": "Geceyi sisten faydalanıp keşfe çık",
+            "en": "Use the fog and scout ahead tonight"
           },
-          "next": "end_a"
+          "next": "a1"
         },
         {
           "text": {
-            "tr": "Siperde kal ve nöbet tut",
-            "en": "Hold the trench"
+            "tr": "Siperde kal ve savunma hazırlığına başla",
+            "en": "Stay in the trench and prepare the defense"
           },
-          "next": "end_b"
+          "next": "b1"
         }
       ]
     },
-    "end_a": {
+    "a1": {
       "text": {
-        "tr": "Karanlıkta ilerledin ve düşman cephaneliğini ele geçirdin. Cephe senin sayende nefes aldı.",
-        "en": "You advanced in the dark and seized the enemy depot. The front line breathes thanks to you."
+        "tr": "Sisin içinde nehir kıyısına sürünüyorsun. Düşman devriyesi bir ateşin başında uyukluyor; yanlarında yaralı bir haberci ve mühürlü bir harita var.",
+        "en": "You crawl through the fog toward the riverbank. An enemy patrol dozes by a fire; beside them lie a wounded courier and a sealed map."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Haritayı kapıp geri dön",
+            "en": "Grab the map and head back"
+          },
+          "next": "a2"
+        },
+        {
+          "text": {
+            "tr": "Devriyeyi atlatıp köprüye patlayıcı yerleştir",
+            "en": "Slip past the patrol and plant explosives on the bridge"
+          },
+          "next": "m2"
+        }
+      ]
+    },
+    "b1": {
+      "text": {
+        "tr": "Çavuş Kemal ve mühendis ekibi köprünün altına patlayıcıları yerleştirirken sen mevzileri kazdırıyorsun. Yolda, karşıya geçmek isteyen kalabalık bir sivil kafilesi beliriyor.",
+        "en": "While Sergeant Kemal and the engineers rig explosives under the bridge, you have positions dug. A large column of civilians appears on the road, begging to cross."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Önce kafileyi karşıya geçir",
+            "en": "Let the civilians cross first"
+          },
+          "next": "m2"
+        },
+        {
+          "text": {
+            "tr": "Kafileyi bekletip mevzileri tamamla",
+            "en": "Hold the civilians back and finish the positions"
+          },
+          "next": "b2"
+        }
+      ]
+    },
+    "a2": {
+      "text": {
+        "tr": "Haritaya göre düşman zırhlıları köprüye değil, iki kilometre aşağıdaki sığ geçide yönelecek. Yüzbaşı Aras haritaya bakıp sana dönüyor: 'Zamanımız az. Ne yapıyoruz?'",
+        "en": "According to the map, the enemy armor will not hit the bridge but the shallow ford two kilometers downstream. Captain Aras studies it, then turns to you: 'We don't have much time. What do we do?'"
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Bütün birliği geçide kaydır",
+            "en": "Shift the entire unit to the ford"
+          },
+          "next": "end1"
+        },
+        {
+          "text": {
+            "tr": "Küçük bir müfrezeyi köprüde bırakıp geri kalanla geçide git",
+            "en": "Leave a small squad at the bridge and take the rest to the ford"
+          },
+          "next": "end2"
+        }
+      ]
+    },
+    "m2": {
+      "text": {
+        "tr": "Sis dağılırken zırhlıların motor sesi vadiyi dolduruyor. Köprünün altındaki patlayıcılar hazır, tetik elinin altında. Son karar senin.",
+        "en": "As the fog lifts, the roar of armored engines fills the valley. The explosives under the bridge are ready and the trigger is in your hand. The final call is yours."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Köprüyü patlat",
+            "en": "Blow the bridge"
+          },
+          "next": "end2"
+        },
+        {
+          "text": {
+            "tr": "Köprüyü tutmak için son bir direniş dene",
+            "en": "Make a last stand to hold the bridge"
+          },
+          "next": "end3"
+        }
+      ]
+    },
+    "b2": {
+      "text": {
+        "tr": "Beklettiğin kafilenin arasından bir adam yaklaşıyor. Sivil kılığındaki bir düşman keşif subayı! Silahını çekmeden önce kalabalığın içine karışıyor.",
+        "en": "A man steps out of the column you held back, and you realize he is an enemy scout officer in civilian clothes. He melts into the crowd before you can draw your weapon."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Kalabalığı riske atmadan peşine düş",
+            "en": "Follow him without endangering the crowd"
+          },
+          "next": "end3"
+        },
+        {
+          "text": {
+            "tr": "Alarm ver ve köprüyü hemen patlat",
+            "en": "Raise the alarm and blow the bridge at once"
+          },
+          "next": "end4"
+        }
+      ]
+    },
+    "end1": {
+      "text": {
+        "tr": "Birliği geçide kaydırdın. Zırhlılar sığ suda tuzağa düştü, köprü ise hiç dokunulmadan kaldı. Cephe nefes aldı; Yüzbaşı Aras sana başını sallıyor. Bu savaşın kaderini harita değil, senin kararın değiştirdi.",
+        "en": "You shifted the unit to the ford. The armor was trapped in the shallow water, and the bridge stood untouched. The front line can breathe again; Captain Aras gives you a nod. It was not the map but your decision that changed the fate of this battle."
       }
     },
-    "end_b": {
+    "end2": {
       "text": {
-        "tr": "Nöbette kaldın, sabaha kadar saldırıyı püskürttün. Zafer küçük ama değerli.",
-        "en": "You held the trench and repelled the assault until dawn. A small but precious victory."
+        "tr": "Köprü gökyüzüne yükseldi ve zırhlılar nehrin öbür yakasında takılı kaldı. Bedeli ağır: köprüyle birlikte geri çekilme yolunuz da gitti. Ama cephe hâlâ ayakta ve sen hayattasın.",
+        "en": "The bridge rose into the sky and the armor was stranded on the far bank. The cost was heavy: your own line of retreat went down with it. But the front still stands, and you are alive."
+      }
+    },
+    "end3": {
+      "text": {
+        "tr": "Son mermiye kadar direndin. Sabaha doğru takviye birlikleri geldi ve düşman geri çekildi. Çok kayıp verdin ama köprü ve ardındaki köyler sana borçlu.",
+        "en": "You held out to the last bullet. Toward morning reinforcements arrived and the enemy pulled back. You lost many, but the bridge and the villages behind it owe you everything."
+      }
+    },
+    "end4": {
+      "text": {
+        "tr": "Alarm sesi sirenlerle karıştı ve kalabalık panikle dağıldı. Köprüyü patlattın ama düşman keşif subayı kaçıp planınızı iletti. Bu zafer değil, acı bir hayatta kalış.",
+        "en": "The alarm mixed with the sirens and the crowd scattered in panic. You blew the bridge, but the enemy scout slipped away and carried your plans back. This is not a victory, only a bitter survival."
       }
     }
   }

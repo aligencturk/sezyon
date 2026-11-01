@@ -36,6 +36,26 @@ class LanguageService {
   /// İngilizce mi kontrol eder
   bool get isEnglish => _currentLanguage == AppLanguage.english;
 
+  /// İsme tamlayan eki ekler: Türkçe'de ünlü uyumuna göre (Ali'nin, Alı'nın), İngilizce'de 's
+  String possessive(String name) {
+    if (name.isEmpty) return name;
+    if (!isTurkish) return "$name's";
+
+    const vowels = 'aeıioöuü';
+    final lower = name.replaceAll('I', 'ı').replaceAll('İ', 'i').toLowerCase();
+    final lastVowel = lower
+        .split('')
+        .lastWhere(vowels.contains, orElse: () => 'e');
+    final suffix = switch (lastVowel) {
+      'a' || 'ı' => 'ın',
+      'o' || 'u' => 'un',
+      'ö' || 'ü' => 'ün',
+      _ => 'in',
+    };
+    final endsWithVowel = vowels.contains(lower[lower.length - 1]);
+    return "$name'${endsWithVowel ? 'n' : ''}$suffix";
+  }
+
   /// Dil tercihini yükler
   Future<void> loadLanguagePreference() async {
     try {

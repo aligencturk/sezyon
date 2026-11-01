@@ -3,36 +3,158 @@
   "nodes": {
     "intro": {
       "text": {
-        "tr": "Ejderha gölgesi köyün üzerinden geçti. {name}, yaşlı büyücü seni çağırıyor.",
-        "en": "A dragon's shadow passes over the village. {name}, the old wizard calls for you."
+        "tr": "Ejderha gölgesi Kayalık Han'ın üzerinden üçüncü kez geçti. Yaşlı büyücü Zorvan seni kulübesine çağırıyor: 'Kızıl Ateşkanat bir sebepten uyandı, {name}. Ya mağarasına gidip nedenini öğreneceksin ya da köyü savunacaksın.'",
+        "en": "The dragon's shadow passes over Rockhaven for the third time. The old wizard Zorvan summons you to his hut: 'Redwing has awakened for a reason, {name}. Either you go to its cave and find out why, or you defend the village.'"
       },
       "choices": [
         {
           "text": {
-            "tr": "Mağaraya git",
-            "en": "Go to the cave"
+            "tr": "Mağaraya git, ejderhayla konuş",
+            "en": "Go to the cave and speak with the dragon"
           },
-          "next": "end_a"
+          "next": "a1"
         },
         {
           "text": {
-            "tr": "Köyü savun",
-            "en": "Defend the village"
+            "tr": "Köyde kal ve savunmayı hazırla",
+            "en": "Stay in the village and prepare its defense"
           },
-          "next": "end_b"
+          "next": "b1"
         }
       ]
     },
-    "end_a": {
+    "a1": {
       "text": {
-        "tr": "Mağarada ejderhayla anlaştın. Efsanen krallıkta anlatılacak.",
-        "en": "In the cave you struck a deal with the dragon. Your legend will be told across the kingdom."
+        "tr": "Mağaranın girişinde kemikler ve erimiş zırhlar yatıyor. İçeride ejderha, altın yığınının üzerinde kıvrılmış; yanında çatlak bir yuva boş duruyor. 'Yumurtamı çaldılar,' diyor ejderha, 've çalanlar köyünüzden.'",
+        "en": "Bones and melted armor lie at the cave mouth. Inside, the dragon is curled on a heap of gold, and an empty, cracked nest sits beside it. 'My egg was stolen,' the dragon says, 'and the thieves came from your village.'"
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Yumurtayı bulmaya söz ver",
+            "en": "Promise to find the egg"
+          },
+          "next": "a2"
+        },
+        {
+          "text": {
+            "tr": "Ejderhayı çaldığı altınlar için sorgula",
+            "en": "Question the dragon about the gold it has hoarded"
+          },
+          "next": "m2"
+        }
+      ]
+    },
+    "b1": {
+      "text": {
+        "tr": "Köylüler surları onarırken demirci Hild sana kırık bir kılıç uzatıyor. Gece, nöbet kulesinden vadide titreşen meşaleler görüyorsun: köyün batısında birileri bir şey taşıyor.",
+        "en": "While the villagers repair the walls, the blacksmith Hild hands you a broken sword. At night, from the watchtower, you see torches flickering in the valley: someone is carrying something west of the village."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Meşaleleri takip et",
+            "en": "Follow the torches"
+          },
+          "next": "m2"
+        },
+        {
+          "text": {
+            "tr": "Surlarda kal ve gözetle",
+            "en": "Stay on the walls and keep watch"
+          },
+          "next": "b2"
+        }
+      ]
+    },
+    "a2": {
+      "text": {
+        "tr": "Yumurtayı bulmak için köye dönüyorsun. Muhtar kapısını açmıyor, ama bacasından tuhaf bir kızıl ışık sızıyor.",
+        "en": "You return to the village to find the egg. The headman refuses to open his door, but a strange red glow seeps from his chimney."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Kapıyı kır",
+            "en": "Break down the door"
+          },
+          "next": "end1"
+        },
+        {
+          "text": {
+            "tr": "Zorvan'dan yardım iste",
+            "en": "Ask Zorvan for help"
+          },
+          "next": "end2"
+        }
+      ]
+    },
+    "m2": {
+      "text": {
+        "tr": "İz seni vadinin batısındaki bir kervana götürüyor. Kervanın lideri, muhtarın kardeşi Toros, çalıntı yumurtayı büyük paraya satmaya hazırlanıyor. Yanında silahlı adamlar var.",
+        "en": "The trail leads you to a caravan west of the valley. Its leader, Toros, the headman's brother, is preparing to sell the stolen egg for a fortune. Armed men stand beside him."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Toros'la pazarlık et",
+            "en": "Bargain with Toros"
+          },
+          "next": "end2"
+        },
+        {
+          "text": {
+            "tr": "Kervana baskın yap ve yumurtayı kurtar",
+            "en": "Raid the caravan and rescue the egg"
+          },
+          "next": "end3"
+        }
+      ]
+    },
+    "b2": {
+      "text": {
+        "tr": "Nöbette gökyüzü kızarıyor: ejderha köye doğru geliyor, ağzında ateş topu! Surların dibinde halk çığlık atıyor.",
+        "en": "On watch, the sky turns red: the dragon is coming for the village with fire in its jaws! The people below the walls scream."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Zorvan'ın asasını kap ve ejderhayı yatıştırmayı dene",
+            "en": "Seize Zorvan's staff and try to calm the dragon"
+          },
+          "next": "end2"
+        },
+        {
+          "text": {
+            "tr": "Surları savun ve oklarla karşı koy",
+            "en": "Defend the walls and answer with arrows"
+          },
+          "next": "end4"
+        }
+      ]
+    },
+    "end1": {
+      "text": {
+        "tr": "Yumurta muhtarın mahzeninde bulundu. Ejderhaya geri verdiğinde seni yakmak yerine kanatlarının altına aldı. Efsanende artık bir ejderha dostu var.",
+        "en": "The egg was found in the headman's cellar. When you returned it, the dragon took you under its wing instead of burning you. Your legend now includes a dragon friend."
       }
     },
-    "end_b": {
+    "end2": {
       "text": {
-        "tr": "Köylülerle birlikte surları tuttun. Ejderha geri çekildi, ama geri dönecek.",
-        "en": "You held the walls with the villagers. The dragon retreated, but it will return."
+        "tr": "Kılıcını kınından çıkarmadan çözdün. Pazarlıkla, büyüyle ya da sakin bir sözle yumurta ve ejderha buluştu; köy tek bir ev bile yanmadan kurtuldu. Kayalık Han seni hep hatırlayacak.",
+        "en": "You solved it without drawing your sword. Through bargaining, magic or a calm word, the egg and the dragon were reunited, and the village was saved without a single house burning. Rockhaven will always remember you."
+      }
+    },
+    "end3": {
+      "text": {
+        "tr": "Çatışma kısa sürdü; yumurtayı kurtardın ama kervanın yarısı yandı. Ejderha minnettar, ama köy seni biraz korkuyla anıyor.",
+        "en": "The fight was short; you rescued the egg, but half the caravan burned. The dragon is grateful, yet the village remembers you with a touch of fear."
+      }
+    },
+    "end4": {
+      "text": {
+        "tr": "Savaş ateşle ve okla yapıldı. Ejderha geri çekildi ama yumurtasını arayarak her gece döneceğini biliyorsun. Köy surlarını yeniden kuracak; efsanen kanlı başladı.",
+        "en": "The battle was fought with fire and arrows. The dragon withdrew, but you know it will return every night searching for its egg. The village will rebuild its walls; your legend began in blood."
       }
     }
   }

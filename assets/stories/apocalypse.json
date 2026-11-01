@@ -3,36 +3,158 @@
   "nodes": {
     "intro": {
       "text": {
-        "tr": "Dünyanın yıkıntıları arasında su azalıyor. {name}, haritada işaretli bir sığınak var.",
-        "en": "Water is running low in the ruins of the world. {name}, there is a marked shelter on the map."
+        "tr": "Gökyüzü yıllardır gri. Su mataran neredeyse boş, {name}. Yıkık bir benzin istasyonunda eski bir harita buluyorsun: kuzeyde kırmızı bir daire, yanında 'Sığınak 9' yazıyor. Uzaktan bir motor sesi yaklaşıyor.",
+        "en": "The sky has been gray for years. Your canteen is almost empty, {name}. In a ruined gas station you find an old map: a red circle in the north, labeled 'Shelter 9'. In the distance, an engine growls closer."
       },
       "choices": [
         {
           "text": {
-            "tr": "Sığınağa git",
-            "en": "Head to the shelter"
+            "tr": "Hemen kuzeye, sığınağa doğru yola çık",
+            "en": "Set out north toward the shelter at once"
           },
-          "next": "end_a"
+          "next": "a1"
         },
         {
           "text": {
-            "tr": "Yağmacıları atlat",
-            "en": "Evade the raiders"
+            "tr": "Saklan ve motor sesinin sahibini gözetle",
+            "en": "Hide and watch whoever is making that engine noise"
           },
-          "next": "end_b"
+          "next": "b1"
         }
       ]
     },
-    "end_a": {
+    "a1": {
       "text": {
-        "tr": "Sığınağa ulaştın. İçeride diğer hayatta kalanlar seni bekliyordu.",
-        "en": "You reached the shelter. Other survivors were waiting inside."
+        "tr": "Kuzeye giden otoyol terk edilmiş araçlarla dolu. Bir otobüsün içinde yaralı bir kız çocuğu, Mira, senden su istiyor. Yanındaki radyodan cızırtılı bir yayın geliyor: 'Sığınak 9 doluyor.'",
+        "en": "The highway north is clogged with abandoned cars. Inside a bus, a wounded girl named Mira asks you for water. A crackling broadcast comes from her radio: 'Shelter 9 is filling up.'"
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Mira'yı yanına al",
+            "en": "Take Mira with you"
+          },
+          "next": "a2"
+        },
+        {
+          "text": {
+            "tr": "Suyu paylaş ve yoluna devam et",
+            "en": "Share the water and keep going"
+          },
+          "next": "m2"
+        }
+      ]
+    },
+    "b1": {
+      "text": {
+        "tr": "Motor sesi bir yağmacı grubundan, Kuzgunlar'dan geliyor. Lider kolundaki harita işaretiyle sana bakıyor gibi: sığınağın yerini onlar da biliyorlar.",
+        "en": "The engine belongs to a band of raiders called the Ravens. Their leader wears the same map mark on his sleeve: they know where the shelter is too."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Gizlice peşlerine takıl",
+            "en": "Tail them in secret"
+          },
+          "next": "m2"
+        },
+        {
+          "text": {
+            "tr": "Kuzgunlar'a karşı tuzak kur",
+            "en": "Set a trap for the Ravens"
+          },
+          "next": "b2"
+        }
+      ]
+    },
+    "a2": {
+      "text": {
+        "tr": "Mira ile birlikte yürürken harita iki yol gösteriyor: kısa yol radyoaktif bir bölgeden geçiyor, uzun yol ise Kuzgunlar'ın bölgesinden.",
+        "en": "As you walk with Mira, the map offers two routes: the short one crosses a radioactive zone, the long one runs through Raven territory."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Radyoaktif bölgeden geç",
+            "en": "Cross the radioactive zone"
+          },
+          "next": "end1"
+        },
+        {
+          "text": {
+            "tr": "Kuzgunlar'ın bölgesinden sızmayı dene",
+            "en": "Try to sneak through Raven territory"
+          },
+          "next": "end2"
+        }
+      ]
+    },
+    "m2": {
+      "text": {
+        "tr": "Sığınağın girişi bir tünelin ucunda. Kapıdaki muhafız yalnızca bir kişi alabileceğini söylüyor; arkandan ayak sesleri yaklaşıyor.",
+        "en": "The shelter's entrance lies at the end of a tunnel. The guard at the door says he can admit only one person, and footsteps are closing in behind you."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Sığınağa gir ve kapıyı arkandan kapat",
+            "en": "Step inside and shut the door behind you"
+          },
+          "next": "end3"
+        },
+        {
+          "text": {
+            "tr": "Kapıyı açık tut ve arkandakini bekle",
+            "en": "Hold the door open and wait for whoever is behind you"
+          },
+          "next": "end2"
+        }
+      ]
+    },
+    "b2": {
+      "text": {
+        "tr": "Tuzağı kurarken şiddetli bir kum fırtınası başlıyor. Kuzgunlar ya tuzağa düşecek ya da fırtınayı fırsat bilecek.",
+        "en": "As you set the trap, a violent sandstorm begins. The Ravens will either walk into it or use the storm to their advantage."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Fırtınanın içinde sığınağa kaç",
+            "en": "Flee to the shelter through the storm"
+          },
+          "next": "end3"
+        },
+        {
+          "text": {
+            "tr": "Yerinde kal ve savaş",
+            "en": "Stay put and fight"
+          },
+          "next": "end4"
+        }
+      ]
+    },
+    "end1": {
+      "text": {
+        "tr": "Mira ile radyoaktif bölgeyi koşarak geçtiniz. Sığınağa yarı hasta vardınız ama ikiniz de hayattaydınız. Kapı açıldığında içeride bir doktor sizi bekliyordu. Yeni dünya küçük adımlarla başlıyor.",
+        "en": "You and Mira ran across the radioactive zone. You reached the shelter half sick, but both of you were alive. When the door opened, a doctor was waiting inside. The new world begins in small steps."
       }
     },
-    "end_b": {
+    "end2": {
       "text": {
-        "tr": "Yağmacıları atlattın ve su buldun. Yarın yine hayattasın.",
-        "en": "You evaded the raiders and found water. You live to see tomorrow."
+        "tr": "Kimseyi geride bırakmadın. Sığınağın kapısı biraz geç açıldı ama yeni bir topluluk kuruldu: Kuzgunlar'dan kaçanlar, Mira ve sen. İnsanlık bir arada daha güçlü.",
+        "en": "You left no one behind. The shelter door opened a little late, but a new community formed: those who fled the Ravens, Mira and you. Humanity is stronger together."
+      }
+    },
+    "end3": {
+      "text": {
+        "tr": "Kapı kapandı ve dışarıdaki sesler sustu. Sığınak güvenli ama soğuk. Arkanda bıraktıklarını düşünmemeye çalışıyorsun... ve başaramıyorsun.",
+        "en": "The door closed and the sounds outside went quiet. The shelter is safe but cold. You try not to think about what you left behind... and you fail."
+      }
+    },
+    "end4": {
+      "text": {
+        "tr": "Fırtınada savaştın. Kuzgunlar dağıldı ama sen ağır yaralısın. Sığınağın kapısına sürünerek vardığında, ilk defa birinin elini tuttuğunu hissediyorsun. Hayatta kal, {name}.",
+        "en": "You fought in the storm. The Ravens scattered, but you are badly wounded. When you crawl to the shelter door, you feel someone take your hand for the first time in years. Stay alive, {name}."
       }
     }
   }

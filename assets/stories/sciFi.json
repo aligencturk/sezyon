@@ -3,36 +3,158 @@
   "nodes": {
     "intro": {
       "text": {
-        "tr": "Gemi alarm veriyor. {name}, bilinmeyen bir sinyal ana bilgisayarı kilitledi.",
-        "en": "The ship's alarm is blaring. {name}, an unknown signal has locked the main computer."
+        "tr": "Aurora-7'nin alarmı üçüncü kez çalıyor. {name}, ana bilgisayar ORA, gaz devi Kheron'un yörüngesindeki terk edilmiş bir istasyondan gelen sinyal yüzünden kilitlenmiş. Yakıtın yalnızca kısa bir sıçrayışa yetiyor.",
+        "en": "The alarm on Aurora-7 sounds for the third time. {name}, the ship's main computer, ORA, has locked up because of a signal from an abandoned station orbiting the gas giant Kheron. You have fuel for only one short jump."
       },
       "choices": [
         {
           "text": {
-            "tr": "Sinyali takip et",
-            "en": "Follow the signal"
+            "tr": "İstasyona yanaş ve sinyalin kaynağını bul",
+            "en": "Dock with the station and find the source of the signal"
           },
-          "next": "end_a"
+          "next": "a1"
         },
         {
           "text": {
-            "tr": "Sinyali kes",
-            "en": "Cut the signal"
+            "tr": "Sinyali engelle ve ORA'yı yeniden başlat",
+            "en": "Block the signal and reboot ORA"
           },
-          "next": "end_b"
+          "next": "b1"
         }
       ]
     },
-    "end_a": {
+    "a1": {
       "text": {
-        "tr": "Sinyal seni kadim bir istasyona götürdü. Yıldızların ötesindeki sır artık senin.",
-        "en": "The signal led you to an ancient station. The secret beyond the stars is now yours."
+        "tr": "İstasyonun şlüzü kendiliğinden açılıyor. İçeride loş ışıklar, boş koridorlar ve duvarlara kazınmış tekrar eden bir sembol var. Koridorun sonunda iki yol: aşağıda reaktör çekirdeği, ileride bir komuta odası.",
+        "en": "The station's airlock opens on its own. Inside are dim lights, empty corridors and a repeating symbol carved into the walls. At the end of the corridor the path splits: down to the reactor core, or ahead to a command room."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Komuta odasına git",
+            "en": "Head for the command room"
+          },
+          "next": "a2"
+        },
+        {
+          "text": {
+            "tr": "Reaktör çekirdeğine in",
+            "en": "Descend to the reactor core"
+          },
+          "next": "m2"
+        }
+      ]
+    },
+    "b1": {
+      "text": {
+        "tr": "ORA yeniden başlarken bir an kendi sesiyle konuşuyor: 'Sinyal bir davet değil, bir uyarı.' Sonra ekranlar yeniden kararıyor ve geminin dışında bir şey gövdeye vuruyor.",
+        "en": "As ORA reboots, it speaks in its own voice for a moment: 'The signal is not an invitation. It is a warning.' Then the screens go dark again and something strikes the hull from the outside."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "ORA'ya sinyalin içeriğini çözdür",
+            "en": "Have ORA decode the contents of the signal"
+          },
+          "next": "m2"
+        },
+        {
+          "text": {
+            "tr": "Gemiyi hemen sıçrayışa hazırla",
+            "en": "Prepare the ship for an immediate jump"
+          },
+          "next": "b2"
+        }
+      ]
+    },
+    "a2": {
+      "text": {
+        "tr": "Komuta odasındaki kayıtlar, mürettebatın yüzyıllar önce bir şeyden kaçtığını gösteriyor. Ana ekranda bir geri sayım var: istasyon kendini imha etmeye hazırlanıyor ve sıfıra yirmi dakika kaldı.",
+        "en": "The logs in the command room show that the crew fled something centuries ago. A countdown is running on the main screen: the station is preparing to destroy itself, twenty minutes from zero."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Kayıtları kopyala ve kaç",
+            "en": "Copy the logs and run"
+          },
+          "next": "end1"
+        },
+        {
+          "text": {
+            "tr": "İstasyonun yapay zekâsıyla iletişim kur",
+            "en": "Open contact with the station's AI"
+          },
+          "next": "end2"
+        }
+      ]
+    },
+    "m2": {
+      "text": {
+        "tr": "Çekirdekteki ışık ve ORA'nın çözdüğü veri aynı şeyi söylüyor: istasyonun yapay zekâsı yüzyıllardır tek bir amaçla sinyal gönderiyor, bir taşıyıcı gemi arıyor. Şimdi sana 'Beni götür, karşılığında yakıt ve harita vereceğim,' diyor.",
+        "en": "The light in the core and the data ORA decodes tell the same story: the station's AI has been broadcasting for centuries with a single purpose, searching for a ship to carry it. Now it speaks to you: 'Take me with you, and I will give you fuel and star charts in return.'"
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Teklifi kabul et, kopyayı ORA'ya yükle",
+            "en": "Accept the offer and upload the copy into ORA"
+          },
+          "next": "end2"
+        },
+        {
+          "text": {
+            "tr": "Teklifi reddet ve çekirdeği kapat",
+            "en": "Refuse the offer and shut down the core"
+          },
+          "next": "end3"
+        }
+      ]
+    },
+    "b2": {
+      "text": {
+        "tr": "Sıçrayış motoru ısınırken gövdeye vuran şey kameraya yansıyor: istasyondan fırlayan metalik bir ağ gemiyi çekiyor. Yakıtın kısıtlı; ya motoru tam güce vereceksin ya da ağı kesmek için dışarı çıkacaksın.",
+        "en": "As the jump drive spools up, the thing striking the hull shows up on camera: a metallic net shot from the station is dragging the ship in. Your fuel is limited; you can either push the engine to full power or go outside and cut the net."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Motoru tam güce ver",
+            "en": "Push the engine to full power"
+          },
+          "next": "end3"
+        },
+        {
+          "text": {
+            "tr": "Uzay yürüyüşüne çık ve ağı kes",
+            "en": "Go on a spacewalk and cut the net"
+          },
+          "next": "end4"
+        }
+      ]
+    },
+    "end1": {
+      "text": {
+        "tr": "Kayıtlarla birlikte sıçrayışa geçtin. İstasyon arkanda sessizce parçalandı. Aurora-7 eve döndüğünde bulduğun veriler insanlığın o bölgeye bakışını sonsuza dek değiştirdi.",
+        "en": "You jumped with the logs in hand and the station quietly broke apart behind you. When Aurora-7 made it home, the data you recovered changed how humanity looks at that region of space forever."
       }
     },
-    "end_b": {
+    "end2": {
       "text": {
-        "tr": "Sinyali kestin, gemi güvende ama merak içini kemirmeye devam ediyor.",
-        "en": "You cut the signal. The ship is safe, but curiosity keeps gnawing at you."
+        "tr": "ORA ile istasyonun zekâsı birleşti. Yeni, tuhaf ve nazik bir ses konuşuyor artık: 'Teşekkürler, {name}.' Elinde yakıt ve yeni haritalar var, tanıdık olmayan yıldızlara doğru yola çıkıyorsun.",
+        "en": "ORA and the station's intelligence have merged. A new, strange and gentle voice speaks now: 'Thank you, {name}.' With fuel and new star charts in hand, you set out toward stars you do not know."
+      }
+    },
+    "end3": {
+      "text": {
+        "tr": "Sinyal sustu. Çekirdeği kapatmış ya da motoru zorlamış olsan da Aurora-7 istasyonun gölgesinden kurtuldu. Bazen en iyi keşif, dokunmamaktır; yine de içindeki merak seni yıllarca rahat bırakmayacak.",
+        "en": "The signal fell silent. Whether you shut down the core or pushed the engine, Aurora-7 escaped the station's shadow. Sometimes the best discovery is leaving something untouched; still, the curiosity will gnaw at you for years."
+      }
+    },
+    "end4": {
+      "text": {
+        "tr": "Uzay yürüyüşünde ağı kestin ama kıskaç gövdeye zarar verdi. Gemi yara almış hâlde sıçrayışa girdi. Eve varacak mısın bilmiyorsun, ama ORA bir şarkı mırıldanıyor: hâlâ umut var.",
+        "en": "On the spacewalk you cut the net, but the clamp damaged the hull. The ship entered the jump wounded. You do not know if you will make it home, but ORA hums a song: there is still hope."
       }
     }
   }

@@ -136,7 +136,7 @@ class _StoryScreenState extends State<StoryScreen> {
   }
 
   String get _storySummary => _languageService.getLocalizedText(
-    '${widget.characterName}\'in hikayesi tamamlandı! Verdiğin kararlar: ${_chosenTexts.join(', ')}.',
+    '${_languageService.possessive(widget.characterName)} hikayesi tamamlandı! Verdiğin kararlar: ${_chosenTexts.join(', ')}.',
     '${widget.characterName}\'s story is complete! Your decisions: ${_chosenTexts.join(', ')}.',
   );
 
@@ -207,7 +207,7 @@ class _StoryScreenState extends State<StoryScreen> {
             const SizedBox(width: 8),
             Text(
               _languageService.getLocalizedText(
-                '${widget.characterName}\'in Hikayesi',
+                '${_languageService.possessive(widget.characterName)} Hikayesi',
                 '${widget.characterName}\'s Story',
               ),
               style: GoogleFonts.merriweather(
@@ -555,7 +555,7 @@ class _StoryScreenState extends State<StoryScreen> {
                     const SizedBox(height: 12),
                     Text(
                       _languageService.getLocalizedText(
-                        '${widget.characterName}\'in hikayesi tamamlandı!',
+                        '${_languageService.possessive(widget.characterName)} hikayesi tamamlandı!',
                         '${widget.characterName}\'s story is complete!',
                       ),
                       style: GoogleFonts.merriweather(

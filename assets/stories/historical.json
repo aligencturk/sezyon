@@ -3,36 +3,158 @@
   "nodes": {
     "intro": {
       "text": {
-        "tr": "Şehir kapıları kapanmak üzere. {name}, elçi sana mühürlü bir mektup uzatıyor.",
-        "en": "The city gates are about to close. {name}, the envoy hands you a sealed letter."
+        "tr": "Anadolu, 13. yüzyıl. Doğudan gelen Moğol ordusunun haberi her kervansarayda fısıltıyla dolaşıyor. Sultan'ın elçisi sana mühürlü bir mektup uzatıyor: 'Bunu Sivas'taki vezire ulaştır, {name}. Şehir kapıları sabaha kadar kapanacak.'",
+        "en": "Anatolia, the 13th century. News of the Mongol army advancing from the east passes in whispers through every caravanserai. The Sultan's envoy hands you a sealed letter: 'Deliver this to the vizier in Sivas, {name}. The city gates will close by morning.'"
       },
       "choices": [
         {
           "text": {
-            "tr": "Mektubu teslim et",
-            "en": "Deliver the letter"
+            "tr": "Kısa ama tehlikeli dağ yolunu seç",
+            "en": "Take the short but dangerous mountain road"
           },
-          "next": "end_a"
+          "next": "a1"
         },
         {
           "text": {
-            "tr": "Mektubu aç",
-            "en": "Open the letter"
+            "tr": "Kervan yolundan git ve bir kervana katıl",
+            "en": "Take the caravan road and join a caravan"
           },
-          "next": "end_b"
+          "next": "b1"
         }
       ]
     },
-    "end_a": {
+    "a1": {
       "text": {
-        "tr": "Mektubu zamanında teslim ettin ve savaş önlendi. Tarih seni hatırlayacak.",
-        "en": "You delivered the letter in time and war was averted. History will remember you."
+        "tr": "Dağ geçidinde karların arasında bir çoban kulübesi buluyorsun. Çoban, geçidin ilerisinde Moğol öncü kollarının kamp kurduğunu söylüyor ama gizli bir patika bildiğini de ekliyor.",
+        "en": "In the mountain pass you find a shepherd's hut among the snow. The shepherd says a Mongol vanguard has made camp further on, but adds that he knows a hidden trail."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Çobana güven ve patikayı izle",
+            "en": "Trust the shepherd and follow the trail"
+          },
+          "next": "a2"
+        },
+        {
+          "text": {
+            "tr": "Patikayı reddet ve geçitten sessizce sız",
+            "en": "Refuse the trail and creep quietly through the pass"
+          },
+          "next": "m2"
+        }
+      ]
+    },
+    "b1": {
+      "text": {
+        "tr": "Kervan uzun ve yavaş; kervanbaşı Sinan sana güvenmiyor. Akşam hanında yabancı bir tüccar mektubuna merakla bakıyor.",
+        "en": "The caravan is long and slow, and the caravan master Sinan does not trust you. At the evening inn, a foreign merchant eyes your letter with curiosity."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Mektubu sakla ve tüccara hiçbir şey söyleme",
+            "en": "Hide the letter and tell the merchant nothing"
+          },
+          "next": "m2"
+        },
+        {
+          "text": {
+            "tr": "Tüccara güven ve yardım iste",
+            "en": "Trust the merchant and ask for help"
+          },
+          "next": "b2"
+        }
+      ]
+    },
+    "a2": {
+      "text": {
+        "tr": "Patika seni Moğol kampının arkasına çıkarıyor. Çadırların sayısını ve yönünü aklına kazıyorsun, ama bir nöbetçi seni fark ediyor.",
+        "en": "The trail brings you out behind the Mongol camp. You burn the number and direction of the tents into your memory, but a sentry spots you."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Koş ve bilgileri vezire ulaştır",
+            "en": "Run and bring the information to the vizier"
+          },
+          "next": "end1"
+        },
+        {
+          "text": {
+            "tr": "Nöbetçiyi sessizce etkisiz bırak ve mektubu teslim et",
+            "en": "Silently subdue the sentry and deliver the letter"
+          },
+          "next": "end2"
+        }
+      ]
+    },
+    "m2": {
+      "text": {
+        "tr": "İki yol da seni aynı yere getiriyor: Sivas'ın gece surları. Kapılar kapalı ve muhafızlar kimseyi içeri almıyor. Mektubun mührü fener ışığında parlıyor.",
+        "en": "Both roads bring you to the same place: the night walls of Sivas. The gates are shut and the guards admit no one. The letter's seal glints in the lantern light."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Muhafızlara mektubu göster ve kapıyı açtır",
+            "en": "Show the letter to the guards and have the gate opened"
+          },
+          "next": "end2"
+        },
+        {
+          "text": {
+            "tr": "Surun gizli su kemerinden gir",
+            "en": "Enter through the hidden aqueduct in the wall"
+          },
+          "next": "end3"
+        }
+      ]
+    },
+    "b2": {
+      "text": {
+        "tr": "Tüccar gülümsüyor ve kendini tanıtıyor: Moğol hanının casusu! 'Mektubu bana ver, kervan güvende kalsın,' diyor. Kervanbaşı Sinan silahına davranıyor.",
+        "en": "The merchant smiles and reveals himself: a spy of the Mongol khan! 'Give me the letter, and the caravan stays safe,' he says. Caravan master Sinan reaches for his weapon."
+      },
+      "choices": [
+        {
+          "text": {
+            "tr": "Mektubu ver ve kervanı kurtar",
+            "en": "Hand over the letter and save the caravan"
+          },
+          "next": "end4"
+        },
+        {
+          "text": {
+            "tr": "Tüccarı ele ver ve kervanı uyar",
+            "en": "Expose the merchant and warn the caravan"
+          },
+          "next": "end1"
+        }
+      ]
+    },
+    "end1": {
+      "text": {
+        "tr": "Bilgi şehri kurtardı. Topladığın ya da ele geçirdiğin haberler vezire ulaştı, şehir savunmayı hazırladı ve kuşatmayı bir ay savuşturdu. Adın bir vakanüvisin defterinde kaldı.",
+        "en": "Information saved the city. The news you gathered or uncovered reached the vizier, the city prepared its defense and held off the siege for a month. Your name remains in a chronicler's ledger."
       }
     },
-    "end_b": {
+    "end2": {
       "text": {
-        "tr": "Mektubu açtın ve bir ihanet ortaya çıkardın. Tarihin akışı değişti.",
-        "en": "You opened the letter and exposed a betrayal. The course of history changed."
+        "tr": "Mektup teslim edildi ve vezir mührü tanıdı. İçinde bir barış teklifi vardı: Sultan şehri haraçla korumayı seçti. Kan dökülmedi, ama bedeli ağırdı.",
+        "en": "The letter was delivered and the vizier recognized the seal. Inside lay a peace offer: the Sultan chose to protect the city by paying tribute. No blood was shed, but the price was heavy."
+      }
+    },
+    "end3": {
+      "text": {
+        "tr": "Su kemerinden sızdın, ıslak ve yorgun ama zamanında. Vezir mektubu açtı: Sultan'ın gizli emri şehri boşaltmaktı. Binlerce kişi kurtuldu, şehir ise geride kaldı.",
+        "en": "You slipped through the aqueduct, wet and weary but on time. The vizier opened the letter: the Sultan's secret order was to evacuate the city. Thousands were saved; the city itself was left behind."
+      }
+    },
+    "end4": {
+      "text": {
+        "tr": "Mektubu verdin ve kervan hayatta kaldı, ama Sultan'ın planı düşmana ulaştı. Şehir kuşatıldığında bunun ağırlığını yıllarca taşıdın.",
+        "en": "You gave up the letter and the caravan survived, but the Sultan's plan reached the enemy. When the city was besieged, you carried that weight for years."
       }
     }
   }
